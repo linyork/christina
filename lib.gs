@@ -16,14 +16,14 @@ function getCommandList(isMaster) {
   var commandString = '';
   var commandList = {};
   if (isMaster) {
-    commandString = '主人可以吩咐的事：\n';
+    commandString = '主人可以吩咐的事：\n ';
     commandList = Object.assign(guestCommand, masterCommand);
   } else {
-    commandString = '主人授權你的事：\n';
+    commandString = '主人授權你的事：\n ';
     commandList = guestCommand;
   }
   for (var command in commandList) {
-    commandString += ' ```'+commandList[command]+'``` '+command+'\n\n';
+    commandString += ' ```'+commandList[command]+'``` '+command+'\n';
   }
   return commandString;
 }
