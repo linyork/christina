@@ -44,23 +44,6 @@ const guestCommand = {
 //   },
 // };
 
-// 取得指令字串
-function getCommandList(isMaster) {
-  var commandString = '';
-  var commandList = {};
-  if (isMaster) {
-    commandString = '主人可以吩咐的事：';
-    commandList = Object.assign(guestCommand, masterCommand);
-  } else {
-    commandString = '主人授權你的事：';
-    commandList = guestCommand;
-  }
-  for (var command in commandList) {
-    commandString += command + '\t\t' + commandList[command] + '\n';
-  }
-  return commandString;
-}
-
 // // system call
 // function commandScript(isMaster, opt) {
 //   return replyMsg(opt.replyToken, getCommandList(isMaster));
@@ -123,6 +106,23 @@ function getCommandList(isMaster) {
 //     replyMsg(opt.replyToken, 'Christina 已經離開了喔~');
 //   }
 // }
+
+// 取得指令字串
+function getCommandList(isMaster) {
+  var commandString = '';
+  var commandList = {};
+  if (isMaster) {
+    commandString = '主人可以吩咐的事：\n';
+    commandList = Object.assign(guestCommand, masterCommand);
+  } else {
+    commandString = '主人授權你的事：\n';
+    commandList = guestCommand;
+  }
+  for (var command in commandList) {
+    commandString += command + '\t\t' + commandList[command] + '\n';
+  }
+  return commandString;
+}
 
 // 檢查身份
 function checkMaster(userId) {
