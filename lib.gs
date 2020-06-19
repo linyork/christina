@@ -1,8 +1,8 @@
 // 指令集
 const masterCommand = {
+  '/eat': '吃什麼',
   '/start': '啟動',
   '/end': '結束',
-  '/eat': '吃什麼',
 };
 const guestCommand = {
   '/system call': '指令列表',
@@ -17,13 +17,13 @@ function getCommandList(isMaster) {
   var commandList = {};
   if (isMaster) {
     commandString = '主人可以吩咐的事：\n';
-    commandList = Object.assign(masterCommand, guestCommand);
+    commandList = Object.assign(guestCommand, masterCommand);
   } else {
     commandString = '主人授權你的事：\n';
     commandList = guestCommand;
   }
   for (var command in commandList) {
-    commandString += command+'\t\t\t'+commandList[command]+'\n';
+    commandString += '```'+commandList[command]+'```\n'+command+'\n';
   }
   return commandString;
 }
