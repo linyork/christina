@@ -1,21 +1,3 @@
-const scriptProperties = PropertiesService.getScriptProperties();
-const env = {};
-
-// 設定Line token 資訊
-const channelToken = scriptProperties.getProperty('LINE_API_KEY');
-
-// 取得 admin
-const adminString = scriptProperties.getProperty('ADMIN_SATRING');
-
-// google sheet 資訊
-const sheetId = scriptProperties.getProperty('SHEET_ID');
-const christinaSheet = SpreadsheetApp.openById(sheetId);
-
-// 取得 talbe
-const sheetConsoleLog = christinaSheet.getSheetByName('consolelog');
-const sheetEnv = christinaSheet.getSheetByName('env');
-
-
 // Line 主程序
 function doPost(e) {
   try {
@@ -40,15 +22,16 @@ function doPost(e) {
             var messageId = event.message.id;
             var messageText = event.message.text; // 使用者的 Message_字串
             // status 機制
-            if (checkMaster(userId) && getEnv() === false && messageText === '/start') {
-              setEnv(true);
+            if (checkMaster(userId) && getLineStatus() === false && messageText === '/start') {
+              setLineStatus(true);
               replyMsg(replyToken, 'Christina 打擾了～ \n主人有什麼事請吩咐～ \n要 Christina 迴避請輸入 /end');
-            } else if (checkMaster(userId) && getEnv() === true && messageText === '/end') {
-              setEnv(false);
+            } else if (checkMaster(userId) && getLineStatus() === true && messageText === '/end') {
+              setLineStatus(false);
               replyMsg(replyToken, 'Christina 暫時迴避～ \n勿掛念～ \n要 Christina 回來請輸入 /start');
-            } else if (getEnv() === false) {
+            // line bot 關閉
+            } else if (getLineStatus() === false) {
               return;
-              // 是主人 是命令
+            // is admin
             } else if (checkMaster(userId)) {
               if (checkCommand(messageText) === true) {
                 switch (messageText) {
@@ -67,7 +50,7 @@ function doPost(e) {
               } else {
                 replyMsg(replyToken, '主人說：\n' + messageText);
               }
-              // 他人
+            // not admin
             } else {
               if (checkCommand(messageText) === true) {
                 switch (messageText) {
