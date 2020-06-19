@@ -23,7 +23,7 @@ function getCommandList(isMaster) {
     commandList = guestCommand;
   }
   for (var command in commandList) {
-    commandString += ' ```'+commandList[command]+'``` '+command+'\n';
+    commandString += ' ```'+command+'``` '+commandList[command];
   }
   return commandString;
 }
