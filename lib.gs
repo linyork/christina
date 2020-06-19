@@ -31,7 +31,6 @@ const guestCommand = {
     'fn': rollScript,
   },
 };
-const allCommand = Object.assign(guestCommand, masterCommand);
 
 // command
 var commandScript = function (isMaster, opt) {
