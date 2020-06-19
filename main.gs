@@ -36,7 +36,12 @@ function doPost(e) {
               if (checkCommand(messageText) === true) {
                 switch (messageText) {
                   case '/system call':
-                    replyMsg(replyToken, '主人可以吩咐的事：\n/start\t啟動\n/end\t結束\n/leave\t離開\n/myid\t顯示ID');
+                    replyMsg(replyToken, '主人可以吩咐的事：\n' +
+                      '/start\t啟動\n' +
+                      '/end\t結束\n' +
+                      '/leave\t離開\n' +
+                      '/myid\t顯示ID\n'+
+                      '/roll\t擲骰子');
                     break;
                   case '/leave':
                     leave(sourceType, sourceId);
@@ -58,7 +63,10 @@ function doPost(e) {
               if (checkCommand(messageText) === true) {
                 switch (messageText) {
                   case '/system call':
-                    replyMsg(replyToken, '主人授權你的事：\n/leave\t離開\n/myid\t顯示ID');
+                    replyMsg(replyToken, '主人授權你的事：\n' +
+                      '/leave\t離開\n' +
+                      '/myid\t顯示ID\n'+
+                      '/roll\t擲骰子');
                     break;
                   case '/leave':
                     leave(sourceType, sourceId);
