@@ -39,7 +39,7 @@ function doPost(e) {
             } else if (checkMaster(userId)) {
               if (checkCommand(messageText) === true) {
                 switch (messageText) {
-                  case '/system call':
+                  case '/command':
                     replyMsg(replyToken, getCommandList(checkMaster(userId)));
                     break;
                   case '/leave':
@@ -65,7 +65,7 @@ function doPost(e) {
             } else {
               if (checkCommand(messageText) === true) {
                 switch (messageText) {
-                  case '/system call':
+                  case '/command':
                     replyMsg(replyToken, getCommandList(checkMaster(userId)));
                     break;
                   case '/leave':
