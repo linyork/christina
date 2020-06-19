@@ -25,6 +25,7 @@ function getCommandList(isMaster) {
   for (var command in commandList) {
     commandString += command+'\t'+commandList[command]+'\n';
   }
+  return commandString;
 }
 
 // 檢查身份
