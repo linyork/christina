@@ -6,6 +6,15 @@ function doPost(e) {
     var events = value.events;
     if (events != null) {
       for (var i in events) {
+        var opt = {};
+        opt.event = events[i];
+        opt.type = opt.event.type;
+        opt.replyToken = opt.event.replyToken; // 要回復訊息 reToken
+        opt.sourceType = opt.event.source.type;
+        opt.sourceId = LineHelpers.getSourceId(opt.event.source);
+        opt.userId = opt.event.source.userId; // 取得個人userId
+        opt.groupId = opt.event.source.groupId; // 取得群組Id
+        opt.timeStamp = opt.event.timestamp;
         var event = events[i];
         var type = event.type;
         var replyToken = event.replyToken; // 要回復訊息 reToken
@@ -18,9 +27,12 @@ function doPost(e) {
           case 'postback':
             break;
           case 'message':
+            opt.messageType = opt.event.message.type;
+            opt.messageId = opt.event.message.id;
+            opt.messageText = opt.event.message.text;
             var messageType = event.message.type;
             var messageId = event.message.id;
-            var messageText = event.message.text; // 使用者的 Message_字串
+            var messageText = event.message.text;
             // status 機制
             if (checkMaster(userId) && getLineStatus() === false && messageText === '/start') {
               setLineStatus(true);
