@@ -22,13 +22,9 @@ function doPost(e) {
             opt.messageType = opt.event.message.type;
             opt.messageId = opt.event.message.id;
             opt.messageText = opt.event.message.text;
-            setLog(guestCommand);
-            if( opt.messageText in guestCommand) {
-              guestCommand[opt.messageText].fn(checkMaster(opt.userId), opt);
-            }
-            setLog(masterCommand);
-            if( opt.messageText in masterCommand) {
-              masterCommand[opt.messageText].fn(checkMaster(opt.userId), opt);
+            setLog(allCommand);
+            if( opt.messageText in allCommand) {
+              allCommand[opt.messageText].fn(checkMaster(opt.userId), opt);
             }
             break;
           case 'join':

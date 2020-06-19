@@ -1,3 +1,76 @@
+// command
+const commandScript = (isMaster, opt) => {
+  if (getLineStatus()) {
+    return replyMsg(opt.replyToken, getCommandList(isMaster));
+  }
+}
+
+// leave
+const leaveScript = (isMaster, opt) => {
+  if (getLineStatus()) {
+    if (isMaster) {
+      replyMsg(opt.replyToken, '主人掰掰~\nChristina 先行告退了~');
+      leave(opt.sourceType, opt.sourceId);
+    } else {
+      replyMsg(opt.replyToken, '掰掰~\nChristina 先行告退了~');
+      leave(opt.sourceType, opt.sourceId);
+    }
+  }
+}
+
+// myid
+const myidScript = (isMaster, opt) => {
+  if (getLineStatus()) {
+    if (isMaster) {
+      replyMsg(opt.replyToken, '主人您的ID是：\n' + userId);
+    } else {
+      replyMsg(opt.replyToken, '好的~\n客倌你的ID是：\n' + userId);
+    }
+  }
+}
+
+// roll
+const rollScript = (isMaster, opt) => {
+  if (getLineStatus()) {
+    if (isMaster) {
+      replyMsg(opt.replyToken, '好的 Christina 為主人擲骰子~\n擲出的點數是: ' + roll());
+    } else {
+      replyMsg(opt.replyToken, '好的 Christina 為客倌擲骰子~\n擲出的點數是: ' + roll());
+    }
+  }
+}
+
+// eat
+const eatScript = (isMaster, opt) => {
+  if (getLineStatus()) {
+    if (isMaster) {
+      replyMsg(opt.replyToken, 'Christina 覺得主人應該吃~\n' + eatWhat());
+    }
+  }
+}
+
+// start
+const startScript = (isMaster, opt) => {
+  if (isMaster && getLineStatus() === true) {
+    replyMsg(opt.replyToken, 'Christina 在這兒～ \n主人有什麼吩咐嗎～');
+  }
+  if (isMaster && getLineStatus() === false) {
+    setLineStatus(true);
+    replyMsg(opt.replyToken, 'Christina 打擾了～ \n主人有什麼事請吩咐～ \n要 Christina 迴避請輸入 /end');
+  }
+}
+
+// end
+const endScript = (isMaster, opt) => {
+  if (isMaster && getLineStatus() === true) {
+    setLineStatus(false);
+    replyMsg(opt.replyToken, 'Christina 暫時迴避～ \n勿掛念～ \n要 Christina 回來請輸入 /start');
+  }
+  if (isMaster && getLineStatus() === false) {
+    replyMsg(opt.replyToken, 'Christina 已經離開了喔~');
+  }
+}
+
 // 指令集
 const masterCommand = {
   '/eat': {
@@ -31,78 +104,7 @@ const guestCommand = {
     'fn': rollScript,
   },
 };
-
-// command
-var commandScript = function (isMaster, opt) {
-
-  return replyMsg(opt.replyToken, getCommandList(isMaster));
-}
-
-// leave
-var leaveScript = function (isMaster, opt) {
-  if (getLineStatus()) {
-    if (isMaster) {
-      replyMsg(opt.replyToken, '主人掰掰~\nChristina 先行告退了~');
-      leave(opt.sourceType, opt.sourceId);
-    } else {
-      replyMsg(opt.replyToken, '掰掰~\nChristina 先行告退了~');
-      leave(opt.sourceType, opt.sourceId);
-    }
-  }
-}
-
-// myid
-var myidScript = function (isMaster, opt) {
-  if (getLineStatus()) {
-    if (isMaster) {
-      replyMsg(opt.replyToken, '主人您的ID是：\n' + userId);
-    } else {
-      replyMsg(opt.replyToken, '好的~\n客倌你的ID是：\n' + userId);
-    }
-  }
-}
-
-// roll
-var rollScript = function (isMaster, opt) {
-  if (getLineStatus()) {
-    if (isMaster) {
-      replyMsg(opt.replyToken, '好的 Christina 為主人擲骰子~\n擲出的點數是: ' + roll());
-    } else {
-      replyMsg(opt.replyToken, '好的 Christina 為客倌擲骰子~\n擲出的點數是: ' + roll());
-    }
-  }
-}
-
-// eat
-var eatScript = function (isMaster, opt) {
-  if(getLineStatus()){
-    if (isMaster) {
-      replyMsg(opt.replyToken, 'Christina 覺得主人應該吃~\n' + eatWhat());
-    }
-  }
-}
-
-// start
-var startScript = function (isMaster, opt) {
-  if (isMaster && getLineStatus() === true) {
-    replyMsg(opt.replyToken, 'Christina 在這兒～ \n主人有什麼吩咐嗎～');
-  }
-  if (isMaster && getLineStatus() === false) {
-    setLineStatus(true);
-    replyMsg(opt.replyToken, 'Christina 打擾了～ \n主人有什麼事請吩咐～ \n要 Christina 迴避請輸入 /end');
-  }
-}
-
-// end
-var endScript = function (isMaster, opt) {
-  if (isMaster && getLineStatus() === true) {
-    setLineStatus(false);
-    replyMsg(opt.replyToken, 'Christina 暫時迴避～ \n勿掛念～ \n要 Christina 回來請輸入 /start');
-  }
-  if (isMaster && getLineStatus() === false) {
-    replyMsg(opt.replyToken, 'Christina 已經離開了喔~');
-  }
-}
+const allCommand = Object.assign(guestCommand, masterCommand);
 
 // 取得指令字串
 function getCommandList(isMaster) {
