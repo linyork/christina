@@ -1,13 +1,11 @@
 // 問吃什麼
 function eatWhat() {
   var dataExport = {};
-  var lastRow = sheetEat.getLastRow()-1;
+  var lastRow = sheetEat.getLastRow();
   var lastColumn = sheetEat.getLastColumn();
-  var data = sheetEat.getRange(1,1,lastRow, lastColumn).getValues();
-  for (var i = 1; i < data.length; i++) {
-    dataExport[i] = data[1];
+  var data = sheetEat.getRange(1, 1, lastRow, lastColumn).getValues();
+  for (var i = 0; i <= data.length; i++) {
+    dataExport[i] = data[i];
   }
-  JSON.stringify(dataExport);
-
-  return dataExport[Math.floor(Math.random() * data.length + 1)];
+  return dataExport[Math.floor(Math.random() * data.length)];
 }
