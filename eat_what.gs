@@ -1,9 +1,9 @@
 // 問吃什麼
 function eatWhat() {
   var dataExport = {};
-  var lastRow = sheet.getLastRow();
-  var lastColumn = sheet.getLastColumn();
-  var data = sheet.getRange(lastRow, lastColumn);
+  var lastRow = sheetEat.getLastRow();
+  var lastColumn = sheetEat.getLastColumn();
+  var data = sheetEat.getRange(lastRow, lastColumn);
   for (var i = 1; i < data.length; i++) {
     dataExport[i] = data[0];
   }
