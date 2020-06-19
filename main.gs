@@ -22,7 +22,7 @@ function doPost(e) {
             opt.messageType = opt.event.message.type;
             opt.messageId = opt.event.message.id;
             opt.messageText = opt.event.message.text;
-            if( messageText in allCommandTest) {
+            if( messageText in allCommand) {
               allCommand[messageText].fn(checkMaster(opt.userId), opt);
             }
             break;
