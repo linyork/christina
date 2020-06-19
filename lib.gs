@@ -8,3 +8,8 @@ function checkMaster(userId) {
 function checkCommand(msg) {
   return msg.search(/^\//) !== -1;
 }
+
+// 擲骰子
+function roll () {
+  return Math.floor(Math.random()*6 + 1);
+}

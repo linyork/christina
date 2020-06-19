@@ -44,6 +44,9 @@ function doPost(e) {
                   case '/myid':
                     replyMsg(replyToken, '主人您的ID是：\n' + userId);
                     break;
+                  case '/roll':
+                    replyMsg(replyToken, '好的 Christina 為主人擲骰子~\n擲出的點數是: '+roll());
+                    break;
                   default:
                     replyMsg(replyToken, '等主人回家教我了～');
                 }
@@ -61,7 +64,10 @@ function doPost(e) {
                     leave(sourceType, sourceId);
                     break;
                   case '/myid':
-                    replyMsg(replyToken, '好的~\n你的ID是：\n' + userId);
+                    replyMsg(replyToken, '好的~\n客倌你的ID是：\n' + userId);
+                    break;
+                  case '/roll':
+                    replyMsg(replyToken, '好的 Christina 為客倌擲骰子~\n擲出的點數是: '+roll());
                     break;
                   default:
                     replyMsg(replyToken, '客官不可以～\n再這樣我要叫了喔');
