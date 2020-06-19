@@ -1,5 +1,5 @@
-// command
-const commandScript = (isMaster, opt) => {
+// cmd
+const cmdScript = (isMaster, opt) => {
   if (getLineStatus()) {
     return replyMsg(opt.replyToken, getCommandList(isMaster));
   }
@@ -53,23 +53,26 @@ const eatScript = (isMaster, opt) => {
 
 // start
 const startScript = (isMaster, opt) => {
-  if (isMaster && getLineStatus() === true) {
-    replyMsg(opt.replyToken, 'Christina 在這兒～ \n主人有什麼吩咐嗎～');
-  }
-  if (isMaster && getLineStatus() === false) {
-    setLineStatus(true);
-    replyMsg(opt.replyToken, 'Christina 打擾了～ \n主人有什麼事請吩咐～ \n要 Christina 迴避請輸入 /end');
+  if (isMaster) {
+    if (getLineStatus() === true) {
+      replyMsg(opt.replyToken, 'Christina 在這兒～ \n主人有什麼吩咐嗎～');
+    } else {
+      setLineStatus(true);
+      replyMsg(opt.replyToken, 'Christina 打擾了～ \n主人有什麼事請吩咐～ \n要 Christina 迴避請輸入 /end');
+    }
   }
 }
 
 // end
 const endScript = (isMaster, opt) => {
-  if (isMaster && getLineStatus() === true) {
-    setLineStatus(false);
-    replyMsg(opt.replyToken, 'Christina 暫時迴避～ \n勿掛念～ \n要 Christina 回來請輸入 /start');
-  }
-  if (isMaster && getLineStatus() === false) {
-    replyMsg(opt.replyToken, 'Christina 已經離開了喔~');
+  if (isMaster) {
+    if (getLineStatus() === true) {
+      setLineStatus(false);
+      replyMsg(opt.replyToken, 'Christina 暫時迴避～ \n勿掛念～ \n要 Christina 回來請輸入 /start');
+    } else {
+      setLineStatus(true);
+      replyMsg(opt.replyToken, 'Christina 已經離開了喔~');
+    }
   }
 }
 
@@ -89,9 +92,9 @@ const masterCommand = {
   },
 };
 const guestCommand = {
-  '/command': {
+  '/cmd': {
     'name': '指令列表',
-    'fn': commandScript,
+    'fn': cmdScript,
   },
   '/leave': {
     'name': '離開',
@@ -106,7 +109,7 @@ const guestCommand = {
     'fn': rollScript,
   },
 };
-const allCommand = Object.assign(guestCommand, masterCommand);
+const allCommand = Object.assign(Object.assign({}, guestCommand), Object.assign({}, masterCommand));
 
 // 取得指令字串
 function getCommandList(isMaster) {
@@ -120,7 +123,7 @@ function getCommandList(isMaster) {
     commandList = guestCommand;
   }
   for (var command in commandList) {
-    commandString += command + '\t\t' + commandList[command]['name'] + '\n';
+    commandString += command + '：' + commandList[command]['name'] + '\n';
   }
   return commandString;
 }
