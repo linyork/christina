@@ -22,8 +22,8 @@ function doPost(e) {
             opt.messageType = opt.event.message.type;
             opt.messageId = opt.event.message.id;
             opt.messageText = opt.event.message.text;
+            setLog(allCommand);
             if( opt.messageText in allCommand) {
-              setLog(opt.messageText);
               allCommand[opt.messageText].fn(checkMaster(opt.userId), opt);
             }
             break;
