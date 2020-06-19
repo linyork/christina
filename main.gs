@@ -25,24 +25,22 @@ function doPost(e) {
             if (checkMaster(userId) && getLineStatus() === false && messageText === '/start') {
               setLineStatus(true);
               replyMsg(replyToken, 'Christina 打擾了～ \n主人有什麼事請吩咐～ \n要 Christina 迴避請輸入 /end');
+            } else if (checkMaster(userId) && getLineStatus() === false && messageText === '/end') {
+              replyMsg(replyToken, 'Christina 已經離開了喔~');
             } else if (checkMaster(userId) && getLineStatus() === true && messageText === '/end') {
               setLineStatus(false);
               replyMsg(replyToken, 'Christina 暫時迴避～ \n勿掛念～ \n要 Christina 回來請輸入 /start');
-            // line bot 關閉
+            } else if (checkMaster(userId) && getLineStatus() === true && messageText === '/start') {
+              replyMsg(replyToken, 'Christina 在這兒～ \n主人有什麼吩咐嗎～');
+              // line bot 關閉
             } else if (getLineStatus() === false) {
               return;
-            // is admin
+              // is admin
             } else if (checkMaster(userId)) {
               if (checkCommand(messageText) === true) {
                 switch (messageText) {
                   case '/system call':
-                    replyMsg(replyToken, '主人可以吩咐的事：\n' +
-                      '/start\t啟動\n' +
-                      '/end\t結束\n' +
-                      '/leave\t離開\n' +
-                      '/myid\t顯示ID\n'+
-                      '/roll\t擲骰子\n' +
-                      '/eat\t吃什麼\n');
+                    replyMsg(replyToken, getCommandList(checkMaster(userId)));
                     break;
                   case '/leave':
                     replyMsg(replyToken, '主人掰掰~\nChristina 先行告退了~');
@@ -52,10 +50,10 @@ function doPost(e) {
                     replyMsg(replyToken, '主人您的ID是：\n' + userId);
                     break;
                   case '/roll':
-                    replyMsg(replyToken, '好的 Christina 為主人擲骰子~\n擲出的點數是: '+roll());
+                    replyMsg(replyToken, '好的 Christina 為主人擲骰子~\n擲出的點數是: ' + roll());
                     break;
                   case '/eat':
-                    replyMsg(replyToken, 'Christina 覺得主人應該吃~\n'+eatWhat());
+                    replyMsg(replyToken, 'Christina 覺得主人應該吃~\n' + eatWhat());
                     break;
                   default:
                     replyMsg(replyToken, '等主人回家教我了～');
@@ -63,15 +61,12 @@ function doPost(e) {
               } else {
                 // replyMsg(replyToken, '主人說：\n' + messageText);
               }
-            // not admin
+              // not admin
             } else {
               if (checkCommand(messageText) === true) {
                 switch (messageText) {
                   case '/system call':
-                    replyMsg(replyToken, '主人授權你的事：\n' +
-                      '/leave\t離開\n' +
-                      '/myid\t顯示ID\n'+
-                      '/roll\t擲骰子');
+                    replyMsg(replyToken, getCommandList(checkMaster(userId)));
                     break;
                   case '/leave':
                     replyMsg(replyToken, '掰掰~\nChristina 先行告退了~');
@@ -81,7 +76,7 @@ function doPost(e) {
                     replyMsg(replyToken, '好的~\n客倌你的ID是：\n' + userId);
                     break;
                   case '/roll':
-                    replyMsg(replyToken, '好的 Christina 為客倌擲骰子~\n擲出的點數是: '+roll());
+                    replyMsg(replyToken, '好的 Christina 為客倌擲骰子~\n擲出的點數是: ' + roll());
                     break;
                   default:
                     replyMsg(replyToken, '客官不可以～\n再這樣我要叫了喔');
