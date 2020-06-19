@@ -17,7 +17,7 @@ function getCommandList(isMaster) {
   var commandList = {};
   if (isMaster) {
     commandString = '主人可以吩咐的事：\n';
-    commandList = masterCommand.concat(guestCommand);
+    commandList = Object.assign(masterCommand, guestCommand);
   } else {
     commandString = '主人授權你的事：\n';
     commandList = guestCommand;
