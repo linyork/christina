@@ -5,7 +5,7 @@ function eatWhat() {
   var lastColumn = sheetEat.getLastColumn();
   var data = sheetEat.getRange(lastRow, lastColumn);
   for (var i = 1; i < data.length; i++) {
-    dataExport[i] = data[0];
+    dataExport[i] = data[1];
   }
   return dataExport[Math.floor(Math.random()*data.length + 1)];
 }
