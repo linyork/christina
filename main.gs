@@ -22,8 +22,12 @@ function doPost(e) {
             opt.messageType = opt.event.message.type;
             opt.messageId = opt.event.message.id;
             opt.messageText = opt.event.message.text;
-            if( opt.messageText in allCommand) {
+            if (opt.messageText in allCommand) {
               allCommand[opt.messageText].fn(checkMaster(opt.userId), opt);
+            } else if (checkCommand() && checkMaster(opt.userId) === true) {
+              replyMsg(replyToken, '等主人回家教我了～');
+            } else if (checkCommand() && checkMaster(opt.userId) === false) {
+              replyMsg(replyToken, '客官不可以～\n再這樣我要叫了喔');
             }
             break;
           case 'join':

@@ -45,6 +45,8 @@ const eatScript = (isMaster, opt) => {
   if (getLineStatus()) {
     if (isMaster) {
       replyMsg(opt.replyToken, 'Christina 覺得主人應該吃~\n' + eatWhat());
+    } else {
+      replyMsg(opt.replyToken, 'Christina 還沒獲得主人同意~\n來幫客倌決定要吃什麼~');
     }
   }
 }
