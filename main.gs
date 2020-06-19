@@ -41,10 +41,11 @@ function doPost(e) {
                       '/end\t結束\n' +
                       '/leave\t離開\n' +
                       '/myid\t顯示ID\n'+
-                      '/roll\t擲骰子' +
+                      '/roll\t擲骰子\n' +
                       '/eat\t吃什麼\n');
                     break;
                   case '/leave':
+                    replyMsg(replyToken, '主人掰掰~\nChristina 先行告退了~');
                     leave(sourceType, sourceId);
                     break;
                   case '/myid':
@@ -73,6 +74,7 @@ function doPost(e) {
                       '/roll\t擲骰子');
                     break;
                   case '/leave':
+                    replyMsg(replyToken, '掰掰~\nChristina 先行告退了~');
                     leave(sourceType, sourceId);
                     break;
                   case '/myid':
