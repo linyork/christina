@@ -41,7 +41,8 @@ function doPost(e) {
                       '/end\t結束\n' +
                       '/leave\t離開\n' +
                       '/myid\t顯示ID\n'+
-                      '/roll\t擲骰子');
+                      '/roll\t擲骰子' +
+                      '/eat\t吃什麼\n');
                     break;
                   case '/leave':
                     leave(sourceType, sourceId);
@@ -51,6 +52,9 @@ function doPost(e) {
                     break;
                   case '/roll':
                     replyMsg(replyToken, '好的 Christina 為主人擲骰子~\n擲出的點數是: '+roll());
+                    break;
+                  case '/eat':
+                    replyMsg(replyToken, 'Christina 覺得主人應該吃~\n'+eatWhat());
                     break;
                   default:
                     replyMsg(replyToken, '等主人回家教我了～');
