@@ -15,14 +15,13 @@ function doPost(e) {
         opt.userId = opt.event.source.userId; // 取得個人userId
         opt.groupId = opt.event.source.groupId; // 取得群組Id
         opt.timeStamp = opt.event.timestamp;
-        switch (type) {
+        switch (opt.type) {
           case 'postback':
             break;
           case 'message':
             opt.messageType = opt.event.message.type;
             opt.messageId = opt.event.message.id;
             opt.messageText = opt.event.message.text;
-            setLog(allCommand);
             if( messageText in allCommand) {
               allCommand[messageText].fn(checkMaster(opt.userId), opt);
             }
