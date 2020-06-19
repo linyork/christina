@@ -48,7 +48,7 @@ function doPost(e) {
                     replyMsg(replyToken, '等主人回家教我了～');
                 }
               } else {
-                replyMsg(replyToken, '主人說：\n' + messageText);
+                // replyMsg(replyToken, '主人說：\n' + messageText);
               }
             // not admin
             } else {
@@ -67,7 +67,7 @@ function doPost(e) {
                     replyMsg(replyToken, '客官不可以～\n再這樣我要叫了喔');
                 }
               } else {
-                replyMsg(replyToken, '客官說：\n' + messageText);
+                // replyMsg(replyToken, '客官說：\n' + messageText);
               }
             }
             break;
