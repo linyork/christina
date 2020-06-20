@@ -5,8 +5,8 @@ function doPost(e) {
     var value = JSON.parse(e.postData.contents);
     if (value.events != null) {
       for (var i in value.events) {
-        var event = LineHelpers.eventInit(value.events[i]);
-        LineHelpers.startEvent(event);
+        LineHelpers.init(value.events[i]);
+        LineHelpers.startEvent();
       }
     }
   } catch (e) {

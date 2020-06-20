@@ -1,7 +1,10 @@
 // Line helper
 var LineHelpers = (function (helpers) {
+  // event
+  helpers.event = {};
+
   // 初始化 event 物件
-  helpers.eventInit = (event) => {
+  helpers.init = (event) => {
     try {
       if (event.message != null) {
         event.isCommand = checkCommand(event.message.text);
@@ -22,7 +25,7 @@ var LineHelpers = (function (helpers) {
       // event.source.groupId
       // 時間
       // event.timestamp
-      return event;
+      LineHelpers.event = event;
     } catch (ex) {
       setLog('LineHelpers, eventInit, ex = ' + ex);
     }
@@ -48,40 +51,40 @@ var LineHelpers = (function (helpers) {
   };
 
   // 執行 event 事件
-  helpers.startEvent = (event) => {
+  helpers.startEvent = () => {
     try {
-      switch (event.type) {
+      switch (LineHelpers.event.type) {
         case 'postback':
           break;
         case 'message':
           // event.messageType = event.message.type;
           // event.messageId = event.message.id;
           // event.messageText = event.message.text;
-          if (event.message.text in allCommand) {
-            allCommand[event.message.text].fn(event.isMaster, event);
-          } else if (event.isCommand && event.isMaster === true) {
-            LineHelpers.replyMsg(event.replyToken, '等主人回家教我了～');
-          } else if (event.isCommand && event.isMaster === false) {
-            LineHelpers.replyMsg(event.replyToken, '客官不可以～\n再這樣我要叫了喔');
+          if (LineHelpers.event.message.text in allCommand) {
+            allCommand[LineHelpers.event.message.text].fn(LineHelpers.event.isMaster, LineHelpers.event);
+          } else if (LineHelpers.event.isCommand && LineHelpers.event.isMaster === true) {
+            LineHelpers.replyMsg(LineHelpers.event.replyToken, '等主人回家教我了～');
+          } else if (LineHelpers.event.isCommand && LineHelpers.event.isMaster === false) {
+            LineHelpers.replyMsg(LineHelpers.event.replyToken, '客官不可以～\n再這樣我要叫了喔');
           }
           break;
         case 'join':
-          LineHelpers.pushMsg(event.sourceId, 'Hello！我是貼身助理 Christina');
+          LineHelpers.pushMsg(LineHelpers.event.sourceId, 'Hello！我是貼身助理 Christina');
           break;
         case 'leave':
-          LineHelpers.pushMsg(event.sourceId, 'Good Bye！');
+          LineHelpers.pushMsg(LineHelpers.event.sourceId, 'Good Bye！');
           break;
         case 'memberLeft':
-          LineHelpers.pushMsg(event.sourceId, 'Bye！');
+          LineHelpers.pushMsg(LineHelpers.event.sourceId, 'Bye！');
           break;
         case 'memberJoined':
-          LineHelpers.pushMsg(event.sourceId, 'Hello！我是貼身助理 Christina');
+          LineHelpers.pushMsg(LineHelpers.event.sourceId, 'Hello！我是貼身助理 Christina');
           break;
         case 'follow':
-          LineHelpers.pushMsg(event.sourceId, 'Hello！我是貼身助理 Christina');
+          LineHelpers.pushMsg(LineHelpers.event.sourceId, 'Hello！我是貼身助理 Christina');
           break;
         case 'unfollow':
-          LineHelpers.pushMsg(event.sourceId, 'Bye bye！');
+          LineHelpers.pushMsg(LineHelpers.event.sourceId, 'Bye bye！');
           break;
         default:
           break;
