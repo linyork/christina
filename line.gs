@@ -61,7 +61,7 @@ var LineHelpers = (function (helpers) {
           // event.messageId = event.message.id;
           // event.messageText = event.message.text;
           if (LineHelpers.event.message.text in allCommand) {
-            allCommand[LineHelpers.event.message.text].fn(LineHelpers.event.isMaster, LineHelpers.event);
+            allCommand[LineHelpers.event.message.text].fn(LineHelpers.event);
           } else if (LineHelpers.event.isCommand && LineHelpers.event.isMaster === true) {
             LineHelpers.replyMsg(LineHelpers.event.replyToken, '等主人回家教我了～');
           } else if (LineHelpers.event.isCommand && LineHelpers.event.isMaster === false) {

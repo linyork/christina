@@ -1,14 +1,14 @@
 // cmd
-const cmdScript = (isMaster, event) => {
+const cmdScript = (event) => {
   if (getLineStatus()) {
-    LineHelpers.replyMsg(event.replyToken, getCommandList(isMaster));
+    LineHelpers.replyMsg(event.replyToken, getCommandList(event.isMaster));
   }
 }
 
 // leave
-const leaveScript = (isMaster, event) => {
+const leaveScript = (event) => {
   if (getLineStatus()) {
-    if (isMaster) {
+    if (event.isMaster) {
       LineHelpers.replyMsg(event.replyToken, '主人掰掰~\nChristina 先行告退了~');
       LineHelpers.leave(event.source.type, event.sourceId);
     } else {
@@ -19,9 +19,9 @@ const leaveScript = (isMaster, event) => {
 }
 
 // myid
-const myidScript = (isMaster, event) => {
+const myidScript = (event) => {
   if (getLineStatus()) {
-    if (isMaster) {
+    if (event.isMaster) {
       LineHelpers.replyMsg(event.replyToken, '主人您的ID是：\n' + event.source.userId);
     } else {
       LineHelpers.replyMsg(event.replyToken, '好的~\n客倌你的ID是：\n' + event.source.userId);
@@ -30,9 +30,9 @@ const myidScript = (isMaster, event) => {
 }
 
 // roll
-const rollScript = (isMaster, event) => {
+const rollScript = (event) => {
   if (getLineStatus()) {
-    if (isMaster) {
+    if (event.isMaster) {
       LineHelpers.replyMsg(event.replyToken, '好的 Christina 為主人擲骰子~\n擲出的點數是: ' + roll());
     } else {
       LineHelpers.replyMsg(event.replyToken, '好的 Christina 為客倌擲骰子~\n擲出的點數是: ' + roll());
@@ -41,9 +41,9 @@ const rollScript = (isMaster, event) => {
 }
 
 // eat
-const eatScript = (isMaster, event) => {
+const eatScript = (event) => {
   if (getLineStatus()) {
-    if (isMaster) {
+    if (event.isMaster) {
       LineHelpers.replyMsg(event.replyToken, 'Christina 覺得主人應該吃~\n' + eatWhat());
     } else {
       LineHelpers.replyMsg(event.replyToken, 'Christina 還沒獲得主人同意~\n來幫客倌決定要吃什麼~');
@@ -52,8 +52,8 @@ const eatScript = (isMaster, event) => {
 }
 
 // start
-const startScript = (isMaster, event) => {
-  if (isMaster) {
+const startScript = (event) => {
+  if (event.isMaster) {
     if (getLineStatus() === true) {
       LineHelpers.replyMsg(event.replyToken, 'Christina 在這兒～ \n主人有什麼吩咐嗎～');
     } else {
@@ -64,8 +64,8 @@ const startScript = (isMaster, event) => {
 }
 
 // end
-const endScript = (isMaster, event) => {
-  if (isMaster) {
+const endScript = (event) => {
+  if (event.isMaster) {
     if (getLineStatus() === true) {
       setLineStatus(false);
       LineHelpers.replyMsg(event.replyToken, 'Christina 暫時迴避～ \n勿掛念～ \n要 Christina 回來請輸入 /start');
