@@ -3,7 +3,11 @@ var LineHelpers = (function (helpers) {
   // 初始化 event 物件
   helpers.eventInit = (event) => {
     try {
-      event.isCommand = checkCommand(event.message.text);
+      if (event.message != null) {
+        event.isCommand = checkCommand(event.message.text);
+      } else {
+        event.isCommand = false;
+      }
       event.isMaster = checkMaster(event.source.userId);
       event.sourceId = LineHelpers.getSourceId(event.source);
       // event類型
