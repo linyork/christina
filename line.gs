@@ -1,46 +1,7 @@
-// 離開
-function leave(sourceType, sourceId) {
-  var url = 'https://api.line.me/v2/bot/' + sourceType + '/' + sourceId + '/leave';
-  var opt = {
-    'headers': {
-      'Content-Type': 'application/json; charset=UTF-8',
-      'Authorization': 'Bearer ' + channelToken,
-    },
-    'method': 'post',
-  };
-  UrlFetchApp.fetch(url, opt);
-}
-
-// 回覆訊息
-function sendMsg(url, payload) {
-  UrlFetchApp.fetch(url, {
-    'headers': {
-      'Content-Type': 'application/json; charset=UTF-8',
-      'Authorization': 'Bearer ' + channelToken,
-    },
-    'method': 'post',
-    'payload': payload
-  });
-}
-
-function replyMsg(replyToken, userMsg) {
-  sendMsg('https://api.line.me/v2/bot/message/reply',
-    JSON.stringify({
-      'replyToken': replyToken,
-      'messages': [{'type': 'text', 'text': userMsg}]
-    }));
-}
-
-function pushMsg(usrId, message) {
-  sendMsg('https://api.line.me/v2/bot/message/push', JSON.stringify({
-    'to': usrId,
-    'messages': [{'type': 'text', 'text': message}]
-  }));
-}
-
 // Line helper
 var LineHelpers = (function (helpers) {
-  helpers.eventInit = function (event) {
+  // 初始化 event 物件
+  helpers.eventInit = (event) => {
     try {
       event.isCommand = checkCommand(event.message.text);
       event.isMaster = checkMaster(event.source.userId);
@@ -63,7 +24,8 @@ var LineHelpers = (function (helpers) {
     }
   };
 
-  helpers.getSourceId = function (source) {
+  // 取得該所在地 SourceId
+  helpers.getSourceId = (source) => {
     try {
       switch (source.type) {
         case 'user':
@@ -81,7 +43,8 @@ var LineHelpers = (function (helpers) {
     }
   };
 
-  helpers.startEvent = function (event) {
+  // 執行 event 事件
+  helpers.startEvent = (event) => {
     try {
       switch (event.type) {
         case 'postback':
@@ -124,5 +87,61 @@ var LineHelpers = (function (helpers) {
     }
   };
 
+  // 回覆
+  helpers.replyMsg = (replyToken, userMsg) => {
+    try {
+      this.sendMsg('https://api.line.me/v2/bot/message/reply',
+        JSON.stringify({
+          'replyToken': replyToken,
+          'messages': [{'type': 'text', 'text': userMsg}]
+        }));
+    } catch (ex) {
+      setLog('LineHelpers, replyMsg, ex = ' + ex);
+    }
+  }
+
+  // 發送
+  helpers.pushMsg = (usrId, message) => {
+    try {
+      this.sendMsg('https://api.line.me/v2/bot/message/push', JSON.stringify({
+        'to': usrId,
+        'messages': [{'type': 'text', 'text': message}]
+      }));
+    } catch (ex) {
+      setLog('LineHelpers, pushMsg, ex = ' + ex);
+    }
+  }
+
+  // 傳送 payload
+  helpers.sendMsg = (url, payload) => {
+    try {
+      UrlFetchApp.fetch(url, {
+        'headers': {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer ' + channelToken,
+        },
+        'method': 'post',
+        'payload': payload
+      });
+    } catch (ex) {
+      setLog('LineHelpers, sendMsg, ex = ' + ex);
+    }
+  }
+
+  // 離開
+  helpers.leave = (sourceType, sourceId) => {
+    try {
+      var url = 'https://api.line.me/v2/bot/' + sourceType + '/' + sourceId + '/leave';
+      UrlFetchApp.fetch(url, {
+        'headers': {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer ' + channelToken,
+        },
+        'method': 'post',
+      });
+    } catch (ex) {
+      setLog('LineHelpers, leave, ex = ' + ex);
+    }
+  }
   return helpers;
 })(LineHelpers || {});
