@@ -56,9 +56,9 @@ var LineHelpers = (function (helpers) {
           if (event.message.text in allCommand) {
             allCommand[event.message.text].fn(event.isMaster, event);
           } else if (event.isCommand && event.isMaster === true) {
-            replyMsg(event.replyToken, '等主人回家教我了～');
+            LineHelpers.replyMsg(event.replyToken, '等主人回家教我了～');
           } else if (event.isCommand && event.isMaster === false) {
-            replyMsg(event.replyToken, '客官不可以～\n再這樣我要叫了喔');
+            LineHelpers.replyMsg(event.replyToken, '客官不可以～\n再這樣我要叫了喔');
           }
           break;
         case 'join':
