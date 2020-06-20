@@ -66,22 +66,22 @@ var LineHelpers = (function (helpers) {
           }
           break;
         case 'join':
-          pushMsg(event.sourceId, 'Hello！我是貼身助理 Christina');
+          LineHelpers.pushMsg(event.sourceId, 'Hello！我是貼身助理 Christina');
           break;
         case 'leave':
-          pushMsg(event.sourceId, 'Good Bye！');
+          LineHelpers.pushMsg(event.sourceId, 'Good Bye！');
           break;
         case 'memberLeft':
-          pushMsg(event.sourceId, 'Bye！');
+          LineHelpers.pushMsg(event.sourceId, 'Bye！');
           break;
         case 'memberJoined':
-          pushMsg(event.sourceId, 'Hello！我是貼身助理 Christina');
+          LineHelpers.pushMsg(event.sourceId, 'Hello！我是貼身助理 Christina');
           break;
         case 'follow':
-          pushMsg(event.sourceId, 'Hello！我是貼身助理 Christina');
+          LineHelpers.pushMsg(event.sourceId, 'Hello！我是貼身助理 Christina');
           break;
         case 'unfollow':
-          pushMsg(event.sourceId, 'Bye bye！');
+          LineHelpers.pushMsg(event.sourceId, 'Bye bye！');
           break;
         default:
           break;
