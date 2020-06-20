@@ -5,7 +5,7 @@ var LineHelpers = (function (helpers) {
     try {
       event.isCommand = checkCommand(event.message.text);
       event.isMaster = checkMaster(event.source.userId);
-      event.sourceId = this.getSourceId(event.source);
+      event.sourceId = LineHelpers.getSourceId(event.source);
       // event類型
       // event.type;
       // 要回復訊息 reToken
@@ -90,7 +90,7 @@ var LineHelpers = (function (helpers) {
   // 回覆
   helpers.replyMsg = (replyToken, userMsg) => {
     try {
-      this.sendMsg('https://api.line.me/v2/bot/message/reply',
+      LineHelpers.sendMsg('https://api.line.me/v2/bot/message/reply',
         JSON.stringify({
           'replyToken': replyToken,
           'messages': [{'type': 'text', 'text': userMsg}]
@@ -103,7 +103,7 @@ var LineHelpers = (function (helpers) {
   // 發送
   helpers.pushMsg = (usrId, message) => {
     try {
-      this.sendMsg('https://api.line.me/v2/bot/message/push', JSON.stringify({
+      LineHelpers.sendMsg('https://api.line.me/v2/bot/message/push', JSON.stringify({
         'to': usrId,
         'messages': [{'type': 'text', 'text': message}]
       }));
@@ -131,8 +131,7 @@ var LineHelpers = (function (helpers) {
   // 離開
   helpers.leave = (sourceType, sourceId) => {
     try {
-      var url = 'https://api.line.me/v2/bot/' + sourceType + '/' + sourceId + '/leave';
-      UrlFetchApp.fetch(url, {
+      UrlFetchApp.fetch('https://api.line.me/v2/bot/' + sourceType + '/' + sourceId + '/leave', {
         'headers': {
           'Content-Type': 'application/json; charset=UTF-8',
           'Authorization': 'Bearer ' + channelToken,
