@@ -1,77 +1,77 @@
 // cmd
-const cmdScript = (isMaster, opt) => {
+const cmdScript = (isMaster, event) => {
   if (getLineStatus()) {
-    return replyMsg(opt.replyToken, getCommandList(isMaster));
+    return replyMsg(event.replyToken, getCommandList(isMaster));
   }
 }
 
 // leave
-const leaveScript = (isMaster, opt) => {
+const leaveScript = (isMaster, event) => {
   if (getLineStatus()) {
     if (isMaster) {
-      replyMsg(opt.replyToken, '主人掰掰~\nChristina 先行告退了~');
-      leave(opt.sourceType, opt.sourceId);
+      replyMsg(event.replyToken, '主人掰掰~\nChristina 先行告退了~');
+      leave(event.source.type, event.sourceId);
     } else {
-      replyMsg(opt.replyToken, '掰掰~\nChristina 先行告退了~');
-      leave(opt.sourceType, opt.sourceId);
+      replyMsg(event.replyToken, '掰掰~\nChristina 先行告退了~');
+      leave(event.source.type, event.sourceId);
     }
   }
 }
 
 // myid
-const myidScript = (isMaster, opt) => {
+const myidScript = (isMaster, event) => {
   if (getLineStatus()) {
     if (isMaster) {
-      replyMsg(opt.replyToken, '主人您的ID是：\n' + userId);
+      replyMsg(event.replyToken, '主人您的ID是：\n' + event.source.userId);
     } else {
-      replyMsg(opt.replyToken, '好的~\n客倌你的ID是：\n' + userId);
+      replyMsg(event.replyToken, '好的~\n客倌你的ID是：\n' + event.source.userId);
     }
   }
 }
 
 // roll
-const rollScript = (isMaster, opt) => {
+const rollScript = (isMaster, event) => {
   if (getLineStatus()) {
     if (isMaster) {
-      replyMsg(opt.replyToken, '好的 Christina 為主人擲骰子~\n擲出的點數是: ' + roll());
+      replyMsg(event.replyToken, '好的 Christina 為主人擲骰子~\n擲出的點數是: ' + roll());
     } else {
-      replyMsg(opt.replyToken, '好的 Christina 為客倌擲骰子~\n擲出的點數是: ' + roll());
+      replyMsg(event.replyToken, '好的 Christina 為客倌擲骰子~\n擲出的點數是: ' + roll());
     }
   }
 }
 
 // eat
-const eatScript = (isMaster, opt) => {
+const eatScript = (isMaster, event) => {
   if (getLineStatus()) {
     if (isMaster) {
-      replyMsg(opt.replyToken, 'Christina 覺得主人應該吃~\n' + eatWhat());
+      replyMsg(event.replyToken, 'Christina 覺得主人應該吃~\n' + eatWhat());
     } else {
-      replyMsg(opt.replyToken, 'Christina 還沒獲得主人同意~\n來幫客倌決定要吃什麼~');
+      replyMsg(event.replyToken, 'Christina 還沒獲得主人同意~\n來幫客倌決定要吃什麼~');
     }
   }
 }
 
 // start
-const startScript = (isMaster, opt) => {
+const startScript = (isMaster, event) => {
   if (isMaster) {
     if (getLineStatus() === true) {
-      replyMsg(opt.replyToken, 'Christina 在這兒～ \n主人有什麼吩咐嗎～');
+      replyMsg(event.replyToken, 'Christina 在這兒～ \n主人有什麼吩咐嗎～');
     } else {
       setLineStatus(true);
-      replyMsg(opt.replyToken, 'Christina 打擾了～ \n主人有什麼事請吩咐～ \n要 Christina 迴避請輸入 /end');
+      replyMsg(event.replyToken, 'Christina 打擾了～ \n主人有什麼事請吩咐～ \n要 Christina 迴避請輸入 /end');
     }
   }
 }
 
 // end
-const endScript = (isMaster, opt) => {
+const endScript = (isMaster, event) => {
   if (isMaster) {
     if (getLineStatus() === true) {
       setLineStatus(false);
-      replyMsg(opt.replyToken, 'Christina 暫時迴避～ \n勿掛念～ \n要 Christina 回來請輸入 /start');
+      replyMsg(event.replyToken, 'Christina 暫時迴避～ \n勿掛念～ \n要 Christina 回來請輸入 /start');
     } else {
       setLineStatus(true);
-      replyMsg(opt.replyToken, 'Christina 已經離開了喔~');
+      replyMsg(event.replyToken, 'Christina 已經離開了喔~');
     }
   }
 }
