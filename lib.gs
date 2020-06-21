@@ -145,7 +145,7 @@ function getCommandTemp() {
   var template = {};
   template.type = 'buttons';
   template.title = "開始使用 Christina";
-  template.thumbnailImageUrl = 'https://api.reh.tw/line/bot/example/assets/images/example.jpg';
+  template.thumbnailImageUrl = 'https://scontent.ftpe7-3.fna.fbcdn.net/v/t31.0-8/176372_480432751996994_333402828_o.jpg?_nc_cat=102&_nc_sid=2c4854&_nc_ohc=gloUUqwPeaQAX9BNsAE&_nc_ht=scontent.ftpe7-3.fna&oh=f85b31dac0771502ffcae5bde05026f1&oe=5F1661BA';
   template.text = '基礎指令清單';
   template.actions = [{
     "type": "message",
