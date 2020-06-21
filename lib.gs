@@ -65,8 +65,10 @@ const startScript = (event) => {
       LineHelpers.replyMsg(event.replyToken, 'Christina 在這兒～ \n主人有什麼吩咐嗎～');
     } else {
       setLineStatus(true);
-      LineHelpers.replyMsg(event.replyToken, 'Christina 打擾了～ \n主人有什麼事請吩咐～ \n要 Christina 迴避請輸入 /end');
+      LineHelpers.replyMsg(event.replyToken, 'Christina 開始上班～ \n主人有什麼事請吩咐～ \n要 Christina 下班請輸入 /end');
     }
+  } else {
+    LineHelpers.replyMsg(event.replyToken, 'Christina 還沒獲得主人同意~\n讓客倌決定上班時間~');
   }
 }
 
@@ -75,10 +77,12 @@ const endScript = (event) => {
   if (event.isMaster) {
     if (getLineStatus() === true) {
       setLineStatus(false);
-      LineHelpers.replyMsg(event.replyToken, 'Christina 暫時迴避～ \n勿掛念～ \n要 Christina 回來請輸入 /start');
+      LineHelpers.replyMsg(event.replyToken, 'Christina 暫時下班～ \n勿掛念～ \n要 Christina 上班請輸入 /start');
     } else {
-      LineHelpers.replyMsg(event.replyToken, 'Christina 已經離開了喔~');
+      LineHelpers.replyMsg(event.replyToken, 'Christina 已經下班了喔~');
     }
+  } else {
+    LineHelpers.replyMsg(event.replyToken, 'Christina 還沒獲得主人同意~\n讓客倌決定下班時間~');
   }
 }
 
@@ -98,13 +102,13 @@ const masterCommand = {
   },
 };
 const guestCommand = {
-  '/cmd': {
-    'name': '指令列表(文字版)',
-    'fn': cmdScript,
-  },
-  '/cmdsp': {
-    'name': '指令列表(手機版)',
+  '/h': {
+    'name': '基礎指令',
     'fn': cmdSpScript,
+  },
+  '/cmd': {
+    'name': '指令列表',
+    'fn': cmdScript,
   },
   '/leave': {
     'name': '離開',
@@ -141,7 +145,6 @@ function getCommandList(isMaster) {
 // 取得指令template
 function getCommandTemp(isMaster) {
   var template = {};
-  var commandList = {};
   template.type = 'buttons';
   template.title = "指令清單";
   if (isMaster) {
@@ -151,15 +154,19 @@ function getCommandTemp(isMaster) {
     template.text = '主人授權你的事';
     commandList = guestCommand;
   }
-  template.actions = [];
-  for (var command in commandList) {
-    template.actions.push({
-      "type": "message",
-      "label": commandList[command]['name'],
-      "text": command
-    });
-  }
-  setLog(template);
+  template.actions = [{
+    "type": "message",
+    "label": masterCommand['/leave']['name'],
+    "text": "/laeve",
+  },{
+    "type": "message",
+    "label": masterCommand['/start']['name'],
+    "text": "/start",
+  },{
+    "type": "message",
+    "label": masterCommand['/end']['name'],
+    "text": "/end",
+  },];
   return template;
 }
 
