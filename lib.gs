@@ -104,7 +104,7 @@ const masterCommand = {
 const guestCommand = {
   '/h': {
     'name': '基礎指令',
-    'fn': cmdSpScript,
+    'fn': hScript,
   },
   '/cmd': {
     'name': '指令列表',
@@ -142,29 +142,27 @@ function getCommandList(isMaster) {
   return commandString;
 }
 
-// 取得指令template
-function getCommandTemp(isMaster) {
+// 基礎指令
+function hScript(isMaster) {
   var template = {};
   template.type = 'buttons';
   template.title = "指令清單";
   if (isMaster) {
     template.text = '主人可以吩咐的事';
-    commandList = allCommand;
   } else {
     template.text = '主人授權你的事';
-    commandList = guestCommand;
   }
   template.actions = [{
     "type": "message",
-    "label": masterCommand['/leave']['name'],
+    "label": allCommand['/leave']['name'],
     "text": "/laeve",
   },{
     "type": "message",
-    "label": masterCommand['/start']['name'],
+    "label": allCommand['/start']['name'],
     "text": "/start",
   },{
     "type": "message",
-    "label": masterCommand['/end']['name'],
+    "label": allCommand['/end']['name'],
     "text": "/end",
   },];
   return template;
