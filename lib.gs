@@ -160,7 +160,7 @@ function getCommandTemp() {
   },{
     "type": "message",
     "label": allCommand['/leave'].name,
-    "text": "/laeve"
+    "text": "/leave"
   }];
   return template;
 }
