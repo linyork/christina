@@ -4,6 +4,7 @@ function doPost(e) {
     setLog(e.postData.contents);
     var value = JSON.parse(e.postData.contents);
     if (value.events != null) {
+      Christina.init();
       for (var i in value.events) {
         LineHelpers.init(value.events[i]);
         LineHelpers.startEvent();

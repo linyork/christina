@@ -1,17 +1,17 @@
 // Line helper
 var LineHelpers = (function (helpers) {
-  // event
+  // line event object
   helpers.event = {};
 
   // 初始化 event 物件
   helpers.init = (event) => {
     try {
       if (event.message != null) {
-        event.isCommand = checkCommand(event.message.text);
+        event.isCommand = Christina.checkCommand(event.message.text);
       } else {
         event.isCommand = false;
       }
-      event.isMaster = checkMaster(event.source.userId);
+      event.isMaster = Christina.checkMaster(event.source.userId);
       event.sourceId = LineHelpers.getSourceId(event.source);
       // event類型
       // event.type;
@@ -60,12 +60,15 @@ var LineHelpers = (function (helpers) {
           // event.messageType = event.message.type;
           // event.messageId = event.message.id;
           // event.messageText = event.message.text;
-          if (LineHelpers.event.message.text in allCommand) {
-            allCommand[LineHelpers.event.message.text].fn(LineHelpers.event);
+          if (LineHelpers.event.message.text in Christina.allCommand) {
+            Christina.allCommand[LineHelpers.event.message.text].fn(LineHelpers.event);
+
           } else if (LineHelpers.event.isCommand && LineHelpers.event.isMaster === true) {
             LineHelpers.replyMsg(LineHelpers.event.replyToken, '等主人回家教我了～');
+
           } else if (LineHelpers.event.isCommand && LineHelpers.event.isMaster === false) {
             LineHelpers.replyMsg(LineHelpers.event.replyToken, '客官不可以～\n再這樣我要叫了喔');
+
           }
           break;
         case 'join':
@@ -117,7 +120,10 @@ var LineHelpers = (function (helpers) {
       LineHelpers.sendMsg('https://api.line.me/v2/bot/message/reply',
         JSON.stringify({
           'replyToken': replyToken,
-          'messages': [{'type': 'text', 'text': userMsg}]
+          'messages': [{
+            'type': 'text',
+            'text': userMsg
+          }]
         }));
     } catch (ex) {
       setLog('LineHelpers, replyMsg, ex = ' + ex);
@@ -129,7 +135,10 @@ var LineHelpers = (function (helpers) {
     try {
       LineHelpers.sendMsg('https://api.line.me/v2/bot/message/push', JSON.stringify({
         'to': usrId,
-        'messages': [{'type': 'text', 'text': message}]
+        'messages': [{
+          'type': 'text',
+          'text': message
+        }]
       }));
     } catch (ex) {
       setLog('LineHelpers, pushMsg, ex = ' + ex);
