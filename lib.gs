@@ -159,6 +159,7 @@ function getCommandTemp(isMaster) {
       "text": command
     });
   }
+  setLog(template);
   return template;
 }
 
