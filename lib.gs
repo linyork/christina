@@ -1,21 +1,27 @@
 // cmd
 const cmdScript = (event) => {
   if (getLineStatus()) {
-    LineHelpers.replyBtnTemp(event.replyToken,1,1)
-    // LineHelpers.replyMsg(event.replyToken, getCommandList(event.isMaster));
+    LineHelpers.replyMsg(event.replyToken, getCommandList(event.isMaster));
   }
 }
+
+// cmdsp
+const cmdSpScript = (event) => {
+  if (getLineStatus()) {
+    LineHelpers.replyBtnTemp(event.replyToken, 'Christina 指令清單', getCommandTemp(event.isMaster))
+  }
+}
+
 
 // leave
 const leaveScript = (event) => {
   if (getLineStatus()) {
     if (event.isMaster) {
       LineHelpers.replyMsg(event.replyToken, '主人掰掰~\nChristina 先行告退了~');
-      LineHelpers.leave(event.source.type, event.sourceId);
     } else {
       LineHelpers.replyMsg(event.replyToken, '掰掰~\nChristina 先行告退了~');
-      LineHelpers.leave(event.source.type, event.sourceId);
     }
+    LineHelpers.leave(event.source.type, event.sourceId);
   }
 }
 
@@ -93,8 +99,12 @@ const masterCommand = {
 };
 const guestCommand = {
   '/cmd': {
-    'name': '指令列表',
+    'name': '指令列表(文字版)',
     'fn': cmdScript,
+  },
+  '/cmdsp': {
+    'name': '指令列表(手機版)',
+    'fn': cmdSpScript,
   },
   '/leave': {
     'name': '離開',
@@ -117,7 +127,7 @@ function getCommandList(isMaster) {
   var commandList = {};
   if (isMaster) {
     commandString = '主人可以吩咐的事：\n';
-    commandList = Object.assign(guestCommand, masterCommand);
+    commandList = allCommand;
   } else {
     commandString = '主人授權你的事：\n';
     commandList = guestCommand;
@@ -126,6 +136,30 @@ function getCommandList(isMaster) {
     commandString += command + '：' + commandList[command]['name'] + '\n';
   }
   return commandString;
+}
+
+// 取得指令template
+function getCommandTemp(isMaster) {
+  var template = {};
+  var commandList = {};
+  template.type = 'buttons';
+  template.title = "指令清單";
+  if (isMaster) {
+    template.text = '主人可以吩咐的事';
+    commandList = allCommand;
+  } else {
+    template.text = '主人授權你的事';
+    commandList = guestCommand;
+  }
+  template.actions = [];
+  for (var command in commandList) {
+    template.actions.push({
+      "type": "message",
+      "label": commandList[command]['name'],
+      "text": command
+    });
+  }
+  return template;
 }
 
 // 檢查身份
