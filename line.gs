@@ -103,7 +103,7 @@ var LineHelpers = (function (helpers) {
         JSON.stringify({
           'replyToken': replyToken,
           'messages': [{
-            'type': 'text',
+            'type': 'template',
             'altText': 'altText...',
             "template": {
               "type": "buttons",
