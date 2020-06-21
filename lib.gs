@@ -1,7 +1,7 @@
 // h
 const hScript = (event) => {
   if (getLineStatus()) {
-    LineHelpers.replyBtnTemp(event.replyToken, 'Christina 指令清單', getCommandTemp(event.isMaster))
+    LineHelpers.replyBtnTemp(event.replyToken, '歡迎雇用 Christina', getCommandTemp())
   }
 }
 // cmd
@@ -141,17 +141,17 @@ function getCommandList(isMaster) {
 }
 
 // 基礎指令
-function getCommandTemp(isMaster) {
+function getCommandTemp() {
   var template = {};
   template.type = 'buttons';
-  template.title = "指令清單";
+  template.title = "開始使用 Christina";
   template.thumbnailImageUrl = 'https://api.reh.tw/line/bot/example/assets/images/example.jpg';
-  if (isMaster) {
-    template.text = '主人可以吩咐的事';
-  } else {
-    template.text = '主人授權你的事';
-  }
+  template.text = '基礎指令清單';
   template.actions = [{
+    "type": "message",
+    "label": allCommand['/cmd'].name,
+    "text": "/cmd"
+  },{
     "type": "message",
     "label": allCommand['/leave'].name,
     "text": "/laeve"
