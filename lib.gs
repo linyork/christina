@@ -1,7 +1,8 @@
 // cmd
 const cmdScript = (event) => {
   if (getLineStatus()) {
-    LineHelpers.replyMsg(event.replyToken, getCommandList(event.isMaster));
+    LineHelpers.replyBtnTemp(event.replyToken,1,1)
+    // LineHelpers.replyMsg(event.replyToken, getCommandList(event.isMaster));
   }
 }
 
@@ -70,7 +71,6 @@ const endScript = (event) => {
       setLineStatus(false);
       LineHelpers.replyMsg(event.replyToken, 'Christina 暫時迴避～ \n勿掛念～ \n要 Christina 回來請輸入 /start');
     } else {
-      setLineStatus(true);
       LineHelpers.replyMsg(event.replyToken, 'Christina 已經離開了喔~');
     }
   }

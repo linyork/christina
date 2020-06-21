@@ -94,7 +94,49 @@ var LineHelpers = (function (helpers) {
     }
   };
 
-  // 回覆
+  // 回覆按鈕模板
+  helpers.replyBtnTemp = (replyToken, altText, template) => {
+    template = 1;
+    altText = 1
+    try {
+      LineHelpers.sendMsg('https://api.line.me/v2/bot/message/reply',
+        JSON.stringify({
+          'replyToken': replyToken,
+          'messages': [{
+            'type': 'text',
+            'altText': 'altText...',
+            "template": {
+              "type": "buttons",
+              "thumbnailImageUrl": "https://api.reh.tw/line/bot/example/assets/images/example.jpg",
+              "title": "Example Menu",
+              "text": "Please select",
+              "actions": [
+                {
+                  "type": "postback",
+                  "label": "Postback example",
+                  "data": "action=buy&itemid=123"
+                },
+                {
+                  "type": "message",
+                  "label": "Message example",
+                  "text": "Message example"
+                },
+                {
+                  "type": "uri",
+                  "label": "Uri example",
+                  "uri": "https://github.com/GoneTone/line-example-bot-php"
+                }
+              ]
+            }
+
+          }]
+        }));
+    } catch (ex) {
+      setLog('LineHelpers, replyBtnTemp, ex = ' + ex);
+    }
+  }
+
+  // 回覆文字訊息
   helpers.replyMsg = (replyToken, userMsg) => {
     try {
       LineHelpers.sendMsg('https://api.line.me/v2/bot/message/reply',
@@ -107,7 +149,7 @@ var LineHelpers = (function (helpers) {
     }
   }
 
-  // 發送
+  // 發送文字訊息
   helpers.pushMsg = (usrId, message) => {
     try {
       LineHelpers.sendMsg('https://api.line.me/v2/bot/message/push', JSON.stringify({
