@@ -1,17 +1,15 @@
+// h
+const hScript = (event) => {
+  if (getLineStatus()) {
+    LineHelpers.replyBtnTemp(event.replyToken, 'Christina 指令清單', getCommandTemp(event.isMaster))
+  }
+}
 // cmd
 const cmdScript = (event) => {
   if (getLineStatus()) {
     LineHelpers.replyMsg(event.replyToken, getCommandList(event.isMaster));
   }
 }
-
-// cmdsp
-const cmdSpScript = (event) => {
-  if (getLineStatus()) {
-    LineHelpers.replyBtnTemp(event.replyToken, 'Christina 指令清單', getCommandTemp(event.isMaster))
-  }
-}
-
 
 // leave
 const leaveScript = (event) => {
@@ -143,7 +141,7 @@ function getCommandList(isMaster) {
 }
 
 // 基礎指令
-function hScript(isMaster) {
+function getCommandTemp(isMaster) {
   var template = {};
   template.type = 'buttons';
   template.title = "指令清單";
@@ -155,17 +153,17 @@ function hScript(isMaster) {
   }
   template.actions = [{
     "type": "message",
-    "label": allCommand['/leave']['name'],
-    "text": "/laeve",
+    "label": allCommand['/leave'].name,
+    "text": "/laeve"
   },{
     "type": "message",
-    "label": allCommand['/start']['name'],
-    "text": "/start",
+    "label": allCommand['/start'].name,
+    "text": "/start"
   },{
     "type": "message",
-    "label": allCommand['/end']['name'],
-    "text": "/end",
-  },];
+    "label": allCommand['/end'].name,
+    "text": "/end"
+  }];
   return template;
 }
 
