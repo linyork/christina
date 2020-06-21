@@ -147,6 +147,7 @@ function hScript(isMaster) {
   var template = {};
   template.type = 'buttons';
   template.title = "指令清單";
+  template.thumbnailImageUrl = 'https://api.reh.tw/line/bot/example/assets/images/example.jpg';
   if (isMaster) {
     template.text = '主人可以吩咐的事';
   } else {
