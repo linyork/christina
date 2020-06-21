@@ -100,7 +100,7 @@ var LineHelpers = (function (helpers) {
       LineHelpers.sendMsg('https://api.line.me/v2/bot/message/reply',
         JSON.stringify({
           'replyToken': replyToken,
-          'messages': [{
+          'template': [{
             'type': 'template',
             'altText': altText,
             "template": template
