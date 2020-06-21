@@ -1,5 +1,40 @@
 // Line helper
 var LineHelpers = (function (helpers) {
+  // 取得該所在地 SourceId
+  var getSourceId = (source) => {
+    try {
+      switch (source.type) {
+        case 'user':
+          return source.userId;
+        case 'group':
+          return source.groupId;
+        case 'room':
+          return source.roomId;
+        default:
+          setLog('LineHelpers, getSourceId, invalid source type!');
+          break;
+      }
+    } catch (ex) {
+      setLog('LineHelpers, getSourceId, ex = ' + ex);
+    }
+  };
+
+  // 傳送 payload
+  var sendMsg = (url, payload) => {
+    try {
+      UrlFetchApp.fetch(url, {
+        'headers': {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer ' + channelToken,
+        },
+        'method': 'post',
+        'payload': payload
+      });
+    } catch (ex) {
+      setLog('LineHelpers, sendMsg, ex = ' + ex);
+    }
+  };
+
   // line event object
   helpers.event = {};
 
@@ -12,7 +47,7 @@ var LineHelpers = (function (helpers) {
         event.isCommand = false;
       }
       event.isMaster = Christina.checkMaster(event.source.userId);
-      event.sourceId = LineHelpers.getSourceId(event.source);
+      event.sourceId = getSourceId(event.source);
       // event類型
       // event.type;
       // 要回復訊息 reToken
@@ -28,25 +63,6 @@ var LineHelpers = (function (helpers) {
       LineHelpers.event = event;
     } catch (ex) {
       setLog('LineHelpers, eventInit, ex = ' + ex);
-    }
-  };
-
-  // 取得該所在地 SourceId
-  helpers.getSourceId = (source) => {
-    try {
-      switch (source.type) {
-        case 'user':
-          return source.userId;
-        case 'group':
-          return source.groupId;
-        case 'room':
-          return source.roomId;
-        default:
-          setLog('LineHelpers, getSourceId, invalid source type!');
-          break;
-      }
-    } catch (ex) {
-      setLog('LineHelpers, getSourceId, ex = ' + ex);
     }
   };
 
@@ -100,7 +116,7 @@ var LineHelpers = (function (helpers) {
   // 回覆按鈕模板
   helpers.replyBtnTemp = (replyToken, altText, template) => {
     try {
-      LineHelpers.sendMsg('https://api.line.me/v2/bot/message/reply',
+      sendMsg('https://api.line.me/v2/bot/message/reply',
         JSON.stringify({
           'replyToken': replyToken,
           'messages': [{
@@ -112,12 +128,12 @@ var LineHelpers = (function (helpers) {
     } catch (ex) {
       setLog('LineHelpers, replyBtnTemp, ex = ' + ex);
     }
-  }
+  };
 
   // 回覆文字訊息
   helpers.replyMsg = (replyToken, userMsg) => {
     try {
-      LineHelpers.sendMsg('https://api.line.me/v2/bot/message/reply',
+      sendMsg('https://api.line.me/v2/bot/message/reply',
         JSON.stringify({
           'replyToken': replyToken,
           'messages': [{
@@ -128,12 +144,12 @@ var LineHelpers = (function (helpers) {
     } catch (ex) {
       setLog('LineHelpers, replyMsg, ex = ' + ex);
     }
-  }
+  };
 
   // 發送文字訊息
   helpers.pushMsg = (usrId, message) => {
     try {
-      LineHelpers.sendMsg('https://api.line.me/v2/bot/message/push', JSON.stringify({
+      sendMsg('https://api.line.me/v2/bot/message/push', JSON.stringify({
         'to': usrId,
         'messages': [{
           'type': 'text',
@@ -143,23 +159,7 @@ var LineHelpers = (function (helpers) {
     } catch (ex) {
       setLog('LineHelpers, pushMsg, ex = ' + ex);
     }
-  }
-
-  // 傳送 payload
-  helpers.sendMsg = (url, payload) => {
-    try {
-      UrlFetchApp.fetch(url, {
-        'headers': {
-          'Content-Type': 'application/json; charset=UTF-8',
-          'Authorization': 'Bearer ' + channelToken,
-        },
-        'method': 'post',
-        'payload': payload
-      });
-    } catch (ex) {
-      setLog('LineHelpers, sendMsg, ex = ' + ex);
-    }
-  }
+  };
 
   // 離開
   helpers.leave = (sourceType, sourceId) => {
@@ -174,6 +174,7 @@ var LineHelpers = (function (helpers) {
     } catch (ex) {
       setLog('LineHelpers, leave, ex = ' + ex);
     }
-  }
+  };
+
   return helpers;
 })(LineHelpers || {});
