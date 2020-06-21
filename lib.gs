@@ -151,16 +151,16 @@ function getCommandTemp() {
     "text": "/cmd"
   },{
     "type": "message",
-    "label": allCommand['/leave'].name,
-    "text": "/laeve"
-  },{
-    "type": "message",
     "label": allCommand['/start'].name,
     "text": "/start"
   },{
     "type": "message",
     "label": allCommand['/end'].name,
     "text": "/end"
+  },{
+    "type": "message",
+    "label": allCommand['/leave'].name,
+    "text": "/laeve"
   }];
   return template;
 }
