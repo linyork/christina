@@ -99,7 +99,7 @@ var Christina = (function (ct) {
      *  功能性 function
      */
     // 初始化 command 物件
-    ct.init = () => {
+    (() => {
         Christina.guestCommand = {
             '/h': {
                 'name': '基礎指令',
@@ -137,7 +137,7 @@ var Christina = (function (ct) {
             },
         };
         Christina.allCommand = Object.assign(Object.assign({}, Christina.guestCommand), Object.assign({}, Christina.masterCommand))
-    };
+    })();
 
     // 取得指令字串
     ct.getCommandList = (isMaster) => {
