@@ -1,5 +1,5 @@
 // Line
-var Line = (function (l) {
+var Line = ((l) => {
     // 取得該所在地 SourceId
     var getSourceId = (source) => {
         try {

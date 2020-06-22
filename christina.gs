@@ -1,5 +1,5 @@
 //  Christina
-var Christina = (function (ct) {
+var Christina = ((ct) => {
     /**
      * 匹配指令 function
      */

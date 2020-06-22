@@ -1,5 +1,5 @@
 // google sheet
-var GoogleSheet = (function (gsh) {
+var GoogleSheet = ((gsh) => {
 
     // 寫 log
     gsh.setLog = (e) => {
