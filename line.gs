@@ -1,5 +1,12 @@
 // Line
 var Line = ((l) => {
+    /**
+     * private member
+     * 環境相關
+     */
+    // 設定Line token 資訊
+    var channelToken = scriptProperties.getProperty('LINE_API_KEY');
+
     // 取得該所在地 SourceId
     var getSourceId = (source) => {
         try {
@@ -11,11 +18,11 @@ var Line = ((l) => {
                 case 'room':
                     return source.roomId;
                 default:
-                    setLog('Line, getSourceId, invalid source type!');
+                    GoogleSheet.setLog('Line, getSourceId, invalid source type!');
                     break;
             }
         } catch (ex) {
-            setLog('Line, getSourceId, ex = ' + ex);
+            GoogleSheet.setLog('Line, getSourceId, ex = ' + ex);
         }
     };
 
@@ -31,10 +38,14 @@ var Line = ((l) => {
                 'payload': payload
             });
         } catch (ex) {
-            setLog('Line, sendMsg, ex = ' + ex);
+            GoogleSheet.setLog('Line, sendMsg, ex = ' + ex);
         }
     };
 
+    /**
+     * public member
+     * Line 工具
+     */
     // line event object
     l.event = {};
 
@@ -62,7 +73,7 @@ var Line = ((l) => {
             // event.timestamp
             Line.event = event;
         } catch (ex) {
-            setLog('Line, eventInit, ex = ' + ex);
+            GoogleSheet.setLog('Line, eventInit, ex = ' + ex);
         }
     };
 
@@ -109,7 +120,7 @@ var Line = ((l) => {
                     break;
             }
         } catch (ex) {
-            setLog('Line, startEvent, ex = ' + ex);
+            GoogleSheet.setLog('Line, startEvent, ex = ' + ex);
         }
     };
 
@@ -126,7 +137,7 @@ var Line = ((l) => {
                     }]
                 }));
         } catch (ex) {
-            setLog('Line, replyBtnTemp, ex = ' + ex);
+            GoogleSheet.setLog('Line, replyBtnTemp, ex = ' + ex);
         }
     };
 
@@ -142,7 +153,7 @@ var Line = ((l) => {
                     }]
                 }));
         } catch (ex) {
-            setLog('Line, replyMsg, ex = ' + ex);
+            GoogleSheet.setLog('Line, replyMsg, ex = ' + ex);
         }
     };
 
@@ -157,7 +168,7 @@ var Line = ((l) => {
                 }]
             }));
         } catch (ex) {
-            setLog('Line, pushMsg, ex = ' + ex);
+            GoogleSheet.setLog('Line, pushMsg, ex = ' + ex);
         }
     };
 
@@ -172,7 +183,7 @@ var Line = ((l) => {
                 'method': 'post',
             });
         } catch (ex) {
-            setLog('Line, leave, ex = ' + ex);
+            GoogleSheet.setLog('Line, leave, ex = ' + ex);
         }
     };
 
