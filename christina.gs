@@ -132,6 +132,7 @@ var Christina = ((ct) => {
      * 匹配指令 function
      */
     // 取得 admin
+    var scriptProperties = PropertiesService.getScriptProperties();
     ct.adminString = scriptProperties.getProperty('ADMIN_SATRING');
 
     // admin command list

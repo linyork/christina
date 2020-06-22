@@ -5,6 +5,7 @@ var Line = ((l) => {
      * 環境相關
      */
     // 設定Line token 資訊
+    var scriptProperties = PropertiesService.getScriptProperties();
     var channelToken = scriptProperties.getProperty('LINE_API_KEY');
 
     // 取得該所在地 SourceId
