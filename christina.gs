@@ -129,7 +129,7 @@ var Christina = (function (ct) {
     };
     ct.masterCommand = mCommand;
     ct.guestCommand = gCommand;
-    ct.allCommand = Christina.allCommand = Object.assign(Object.assign({}, gCommand), Object.assign({}, mCommand));
+    ct.allCommand = Object.assign(Object.assign({}, gCommand), Object.assign({}, mCommand));
 
     /**
      *  功能性 function
