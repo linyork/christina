@@ -4,8 +4,9 @@ var GoogleSheet = ((gsh) => {
      * private member
      * 宣告各個表
      */
-    // google sheet 資訊
     var scriptProperties = PropertiesService.getScriptProperties();
+
+    // google sheet 資訊
     var sheetId = scriptProperties.getProperty('SHEET_ID');
 
     // 取得 sheet
