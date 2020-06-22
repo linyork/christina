@@ -91,7 +91,7 @@ var Christina = ((ct) => {
     /**
      *  指令集
      */
-    var mCommand = {
+    var gCommand = {
         '/h': {
             'name': '基礎指令',
             'fn': hScript,
@@ -113,7 +113,7 @@ var Christina = ((ct) => {
             'fn': rollScript,
         },
     };
-    var gCommand = {
+    var mCommand = {
         '/eat': {
             'name': '吃什麼',
             'fn': eatScript,
