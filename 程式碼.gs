@@ -1,16 +1,16 @@
 // Line 主程序
 function doPost(e) {
-  try {
-    setLog(e.postData.contents);
-    var value = JSON.parse(e.postData.contents);
-    if (value.events != null) {
-      Christina.init();
-      for (var i in value.events) {
-        LineHelpers.init(value.events[i]);
-        LineHelpers.startEvent();
-      }
+    try {
+        setLog(e.postData.contents);
+        var value = JSON.parse(e.postData.contents);
+        if (value.events != null) {
+            Christina.init();
+            for (var i in value.events) {
+                Line.init(value.events[i]);
+                Line.startEvent();
+            }
+        }
+    } catch (e) {
+        setLog(e);
     }
-  } catch (e) {
-    setLog(e);
-  }
 }
