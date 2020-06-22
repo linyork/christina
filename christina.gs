@@ -91,54 +91,49 @@ var Christina = (function (ct) {
     /**
      *  指令集
      */
-    ct.masterCommand = {};
-    ct.guestCommand = {};
-    ct.allCommand = {};
+    var mCommand = {
+        '/h': {
+            'name': '基礎指令',
+            'fn': hScript,
+        },
+        '/cmd': {
+            'name': '指令列表',
+            'fn': cmdScript,
+        },
+        '/leave': {
+            'name': '離開',
+            'fn': leaveScript,
+        },
+        '/myid': {
+            'name': '顯示ID',
+            'fn': myidScript,
+        },
+        '/roll': {
+            'name': '擲骰子',
+            'fn': rollScript,
+        },
+    };
+    var gCommand = {
+        '/eat': {
+            'name': '吃什麼',
+            'fn': eatScript,
+        },
+        '/start': {
+            'name': '啟動',
+            'fn': startScript,
+        },
+        '/end': {
+            'name': '結束',
+            'fn': endScript,
+        },
+    };
+    ct.masterCommand = mCommand;
+    ct.guestCommand = gCommand;
+    ct.allCommand = Christina.allCommand = Object.assign(Object.assign({}, gCommand), Object.assign({}, mCommand));
 
     /**
      *  功能性 function
      */
-    // 初始化 command 物件
-    (() => {
-        Christina.guestCommand = {
-            '/h': {
-                'name': '基礎指令',
-                'fn': hScript,
-            },
-            '/cmd': {
-                'name': '指令列表',
-                'fn': cmdScript,
-            },
-            '/leave': {
-                'name': '離開',
-                'fn': leaveScript,
-            },
-            '/myid': {
-                'name': '顯示ID',
-                'fn': myidScript,
-            },
-            '/roll': {
-                'name': '擲骰子',
-                'fn': rollScript,
-            },
-        };
-        Christina.masterCommand = {
-            '/eat': {
-                'name': '吃什麼',
-                'fn': eatScript,
-            },
-            '/start': {
-                'name': '啟動',
-                'fn': startScript,
-            },
-            '/end': {
-                'name': '結束',
-                'fn': endScript,
-            },
-        };
-        Christina.allCommand = Object.assign(Object.assign({}, Christina.guestCommand), Object.assign({}, Christina.masterCommand))
-    })();
-
     // 取得指令字串
     ct.getCommandList = (isMaster) => {
         var commandString = '';
