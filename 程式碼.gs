@@ -1,7 +1,7 @@
 // Line 主程序
 function doPost(e) {
     try {
-        setLog(e.postData.contents);
+        GoogleSheet.setLog(e.postData.contents);
         var value = JSON.parse(e.postData.contents);
         if (value.events != null) {
             for (var i in value.events) {
@@ -10,6 +10,6 @@ function doPost(e) {
             }
         }
     } catch (e) {
-        setLog(e);
+        GoogleSheet.setLog(e);
     }
 }

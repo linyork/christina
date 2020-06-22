@@ -1,6 +1,7 @@
 //  Christina
 var Christina = ((ct) => {
     /**
+     * private member
      * 匹配指令 function
      */
     // h
@@ -10,14 +11,14 @@ var Christina = ((ct) => {
 
     // cmd
     var cmdScript = (event) => {
-        if (getLineStatus()) {
+        if (GoogleSheet.lineStatus) {
             Line.replyMsg(event.replyToken, Christina.getCommandList(event.isMaster));
         }
     };
 
     // leave
     var leaveScript = (event) => {
-        if (getLineStatus()) {
+        if (GoogleSheet.lineStatus) {
             if (event.isMaster) {
                 Line.replyMsg(event.replyToken, '主人掰掰~\nChristina 先行告退了~');
             } else {
@@ -29,7 +30,7 @@ var Christina = ((ct) => {
 
     // myid
     var myidScript = (event) => {
-        if (getLineStatus()) {
+        if (GoogleSheet.lineStatus) {
             if (event.isMaster) {
                 Line.replyMsg(event.replyToken, '主人您的ID是：\n' + event.source.userId);
             } else {
@@ -40,7 +41,7 @@ var Christina = ((ct) => {
 
     // roll
     var rollScript = (event) => {
-        if (getLineStatus()) {
+        if (GoogleSheet.lineStatus) {
             if (event.isMaster) {
                 Line.replyMsg(event.replyToken, '好的 Christina 為主人擲骰子~\n擲出的點數是: ' + Christina.roll());
             } else {
@@ -51,7 +52,7 @@ var Christina = ((ct) => {
 
     // eat
     var eatScript = (event) => {
-        if (getLineStatus()) {
+        if (GoogleSheet.lineStatus) {
             if (event.isMaster) {
                 Line.replyMsg(event.replyToken, 'Christina 覺得主人應該吃~\n' + Christina.eatWhat());
             } else {
@@ -63,10 +64,10 @@ var Christina = ((ct) => {
     // start
     var startScript = (event) => {
         if (event.isMaster) {
-            if (getLineStatus() === true) {
+            if (GoogleSheet.lineStatus) {
                 Line.replyMsg(event.replyToken, 'Christina 在這兒～ \n主人有什麼吩咐嗎～');
             } else {
-                setLineStatus(true);
+                GoogleSheet.setLineStatus(true);
                 Line.replyMsg(event.replyToken, 'Christina 開始上班～ \n主人有什麼事請吩咐～ \n要 Christina 下班請輸入 /end');
             }
         } else {
@@ -77,8 +78,8 @@ var Christina = ((ct) => {
     // end
     var endScript = (event) => {
         if (event.isMaster) {
-            if (getLineStatus() === true) {
-                setLineStatus(false);
+            if (GoogleSheet.lineStatus) {
+                GoogleSheet.setLineStatus(false);
                 Line.replyMsg(event.replyToken, 'Christina 暫時下班～ \n勿掛念～ \n要 Christina 上班請輸入 /start');
             } else {
                 Line.replyMsg(event.replyToken, 'Christina 已經下班了喔~');
@@ -88,9 +89,7 @@ var Christina = ((ct) => {
         }
     };
 
-    /**
-     *  指令集
-     */
+    // 指令集
     var gCommand = {
         '/h': {
             'name': '基礎指令',
@@ -127,12 +126,28 @@ var Christina = ((ct) => {
             'fn': endScript,
         },
     };
+
+    /**
+     * public member
+     * 匹配指令 function
+     */
+    var scriptProperties = PropertiesService.getScriptProperties();
+
+    // 取得 admin
+    ct.adminString = scriptProperties.getProperty('ADMIN_SATRING');
+
+    // admin command list
     ct.masterCommand = mCommand;
+
+    // guest command list
     ct.guestCommand = gCommand;
+
+    // all command list
     ct.allCommand = Object.assign(Object.assign({}, gCommand), Object.assign({}, mCommand));
 
     /**
-     *  功能性 function
+     * public member
+     * 功能性 function
      */
     // 取得指令字串
     ct.getCommandList = (isMaster) => {
@@ -180,7 +195,7 @@ var Christina = ((ct) => {
 
     // 檢查身份
     ct.checkMaster = (userId) => {
-        var adminArray = adminString.split(",");
+        var adminArray = Christina.adminString.split(",");
         return adminArray.includes(userId);
     };
 
@@ -196,14 +211,7 @@ var Christina = ((ct) => {
 
     // 問吃什麼
     ct.eatWhat = () => {
-        var dataExport = {};
-        var lastRow = sheetEat.getLastRow();
-        var lastColumn = sheetEat.getLastColumn();
-        var data = sheetEat.getRange(1, 1, lastRow, lastColumn).getValues();
-        for (var i = 0; i <= data.length; i++) {
-            dataExport[i] = data[i];
-        }
-        return dataExport[Math.floor(Math.random() * data.length)];
+        return GoogleSheet.eatWhat();
     };
 
     return ct;
