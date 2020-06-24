@@ -12,4 +12,4 @@ var GoogleDrive = ((gd) => {
     };
 
     return gd;
-})(gd || {});
+})(GoogleDrive || {});
