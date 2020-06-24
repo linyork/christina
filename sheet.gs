@@ -2,7 +2,6 @@
 var GoogleSheet = ((gsh) => {
     /**
      * private member
-     * 宣告各個表
      */
     var scriptProperties = PropertiesService.getScriptProperties();
 
@@ -23,7 +22,6 @@ var GoogleSheet = ((gsh) => {
 
     /**
      * public member
-     * 匹配指令 function
      */
     // christina 狀態
     gsh.lineStatus = (() => {

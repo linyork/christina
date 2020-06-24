@@ -2,7 +2,6 @@
 var Line = ((l) => {
     /**
      * private member
-     * 環境相關
      */
     var scriptProperties = PropertiesService.getScriptProperties();
 
@@ -46,7 +45,6 @@ var Line = ((l) => {
 
     /**
      * public member
-     * Line 工具
      */
     // line event object
     l.event = {};

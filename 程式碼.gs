@@ -1,4 +1,4 @@
-// Line 主程序
+// 主程序
 function doPost(e) {
     try {
         GoogleSheet.setLog(e.postData.contents);

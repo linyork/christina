@@ -2,8 +2,8 @@
 var Christina = ((ct) => {
     /**
      * private member
-     * 匹配指令 function
      */
+    var scriptProperties = PropertiesService.getScriptProperties();
     // h
     var hScript = (event) => {
             Line.replyBtnTemp(event.replyToken, '歡迎雇用 Christina', Christina.getCommandTemp())
@@ -112,6 +112,7 @@ var Christina = ((ct) => {
             'fn': rollScript,
         },
     };
+
     var mCommand = {
         '/eat': {
             'name': '吃什麼',
@@ -129,10 +130,7 @@ var Christina = ((ct) => {
 
     /**
      * public member
-     * 匹配指令 function
      */
-    var scriptProperties = PropertiesService.getScriptProperties();
-
     // 取得 admin
     ct.adminString = scriptProperties.getProperty('ADMIN_SATRING');
 
@@ -145,10 +143,6 @@ var Christina = ((ct) => {
     // all command list
     ct.allCommand = Object.assign(Object.assign({}, gCommand), Object.assign({}, mCommand));
 
-    /**
-     * public member
-     * 功能性 function
-     */
     // 取得指令字串
     ct.getCommandList = (isMaster) => {
         var commandString = '';
