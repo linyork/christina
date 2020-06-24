@@ -1,9 +1,12 @@
 // google drive
 var GoogleDrive = ((gd) => {
 
+    
+    var driveApp =  DriveApp;
+
     // 取得 drive 裡的圖片
     gd.getImageUrl = (name) => {
-        var files = DriveApp.getFilesByName(name+".jpg");
+        var files = driveApp.getFilesByName(name+".jpg");
         while (files.hasNext()) {
             var file = files.next();
             var fileUrl = file.getUrl();
