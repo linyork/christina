@@ -54,7 +54,7 @@ var Line = ((l) => {
         try {
             event.isCommand = (event.message == null) ? false : Christina.checkCommand(event.message.text);
             event.command = (event.isCommand) ? Christina.getCommand(event.message.text) : "";
-            event.commandPara = (event.message == null) ? false : Christina.getCommandPara(event.message.text);
+            event.commandParam = (event.message == null) ? false : Christina.getCommandParam(event.message.text);
             event.isMaster = Christina.checkMaster(event.source.userId);
             event.sourceId = getSourceId(event.source);
             // event類型
@@ -87,7 +87,7 @@ var Line = ((l) => {
                     // event.messageText = event.message.text;
                     if (Line.event.message.text in Christina.allCommand) {
                         GoogleSheet.setLog(Line.event.command);
-                        GoogleSheet.setLog(Line.event.commandPara);
+                        GoogleSheet.setLog(Line.event.commandParam);
                         Christina.allCommand[Line.event.command].fn(Line.event);
 
                     } else if (Line.event.isCommand && Line.event.isMaster === true) {

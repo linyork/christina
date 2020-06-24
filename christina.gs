@@ -54,7 +54,7 @@ var Christina = ((ct) => {
     var memeScript = (event) => {
         if (GoogleSheet.lineStatus) {
             if (event.isMaster) {
-                Line.replyMsg(event.replyToken, 'Christina 給你梗圖' + JSON.stringify(event.commandPara));
+                Line.replyMsg(event.replyToken, 'Christina 給你梗圖' + JSON.stringify(event.commandParam));
             } else {
                 Line.replyMsg(event.replyToken, 'Christina 還沒獲得主人同意~給客倌梗圖~');
             }
@@ -219,7 +219,7 @@ var Christina = ((ct) => {
     };
 
     // 取得指令參數陣列
-    ct.getCommandPara = (msg) => {
+    ct.getCommandParam = (msg) => {
         var paras = [];
         if (msg !== "") {
             paras = msg.split(" ");
