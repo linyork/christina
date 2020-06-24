@@ -126,7 +126,7 @@ var Christina = ((ct) => {
 
     var mCommand = {
         '/meme': {
-            'name': '吃什麼',
+            'name': '梗圖',
             'fn': memeScript,
         },
         '/eat': {
