@@ -6,8 +6,8 @@ var Christina = ((ct) => {
     var scriptProperties = PropertiesService.getScriptProperties();
     // h
     var hScript = (event) => {
-            Line.replyBtnTemp(event.replyToken, '歡迎雇用 Christina', Christina.getCommandTemp())
-        };
+        Line.replyBtnTemp(event.replyToken, '歡迎雇用 Christina', Christina.getCommandTemp())
+    };
 
     // cmd
     var cmdScript = (event) => {
@@ -49,6 +49,17 @@ var Christina = ((ct) => {
             }
         }
     };
+
+    // meme
+    var memeScript = (event) => {
+        if (GoogleSheet.lineStatus) {
+            if (event.isMaster) {
+                Line.replyMsg(event.replyToken, 'Christina 給你梗圖' + JSON.stringify(event.commandPara));
+            } else {
+                Line.replyMsg(event.replyToken, 'Christina 還沒獲得主人同意~給客倌梗圖~');
+            }
+        }
+    }
 
     // eat
     var eatScript = (event) => {
@@ -114,6 +125,10 @@ var Christina = ((ct) => {
     };
 
     var mCommand = {
+        '/meme': {
+            'name': '吃什麼',
+            'fn': memeScript,
+        },
         '/eat': {
             'name': '吃什麼',
             'fn': eatScript,
@@ -196,6 +211,21 @@ var Christina = ((ct) => {
     // 檢查是否是指令
     ct.checkCommand = (msg) => {
         return msg.search(/^\//) !== -1;
+    };
+
+    // 取得指令參數陣列
+    ct.getCommand = (msg) => {
+        return (msg === "") ? "" : msg.split(" ").shift();
+    };
+
+    // 取得指令參數陣列
+    ct.getCommandPara = (msg) => {
+        var paras = [];
+        if (msg !== "") {
+            paras = msg.split(" ");
+            paras.shift();
+        }
+        return paras;
     };
 
     // 擲骰子

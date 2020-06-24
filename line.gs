@@ -52,11 +52,9 @@ var Line = ((l) => {
     // 初始化 event 物件
     l.init = (event) => {
         try {
-            if (event.message != null) {
-                event.isCommand = Christina.checkCommand(event.message.text);
-            } else {
-                event.isCommand = false;
-            }
+            event.isCommand = (event.message == null) ? false : Christina.checkCommand(event.message.text);
+            event.command = (event.isCommand) ? Christina.getCommand(event.message.text) : "";
+            event.commandPara = (event.message == null) ? false : Christina.getCommandPara(event.message.text);
             event.isMaster = Christina.checkMaster(event.source.userId);
             event.sourceId = getSourceId(event.source);
             // event類型
@@ -88,7 +86,7 @@ var Line = ((l) => {
                     // event.messageId = event.message.id;
                     // event.messageText = event.message.text;
                     if (Line.event.message.text in Christina.allCommand) {
-                        Christina.allCommand[Line.event.message.text].fn(Line.event);
+                        Christina.allCommand[Line.event.command].fn(Line.event);
 
                     } else if (Line.event.isCommand && Line.event.isMaster === true) {
                         Line.replyMsg(Line.event.replyToken, '等主人回家教我了～');
