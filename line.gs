@@ -85,9 +85,7 @@ var Line = ((l) => {
                     // event.messageType = event.message.type;
                     // event.messageId = event.message.id;
                     // event.messageText = event.message.text;
-                    if (Line.event.message.text in Christina.allCommand) {
-                        GoogleSheet.setLog(Line.event.command);
-                        GoogleSheet.setLog(Line.event.commandParam);
+                    if (Line.event.command in Christina.allCommand) {
                         Christina.allCommand[Line.event.command].fn(Line.event);
 
                     } else if (Line.event.isCommand && Line.event.isMaster === true) {
