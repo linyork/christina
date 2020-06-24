@@ -1,6 +1,5 @@
 // google drive
 var GoogleDrive = ((gd) => {
-
     
     var driveApp =  DriveApp;
 
@@ -9,21 +8,12 @@ var GoogleDrive = ((gd) => {
         var files = driveApp.getFilesByName(name+".jpg");
         while (files.hasNext()) {
             var file = files.next();
-            var fileUrl = file.getUrl();
+            var fileUrl = file.getId();
         }
-        return fileUrl;
+        return 'https://drive.google.com/uc?export=view&id='+fileUrl;
     };
 
     return gd;
 })(GoogleDrive || {});
-
-function getImageUrlTest(name) {
-    var files = DriveApp.getFilesByName(name+".jpg");
-    while (files.hasNext()) {
-        var file = files.next();
-        var fileUrl = file.getId();
-    }
-    return 'https://drive.google.com/uc?export=view&id='+fileUrl;
-}
 
 
