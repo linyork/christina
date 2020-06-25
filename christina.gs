@@ -54,7 +54,13 @@ var Christina = ((ct) => {
     var memeScript = (event) => {
         if (GoogleSheet.lineStatus) {
             if (event.isMaster) {
-                Line.replyMsg(event.replyToken, 'Christina 給你梗圖' + JSON.stringify(event.commandParam));
+                var url = GoogleDrive.getImageUrl(event.commandParam[0]);
+                if (url)
+                {
+                    Line.replyImageTemp(event.replyToken, url, url);
+                } else {
+                    Line.replyMsg(event.replyToken, 'Christina 找不到這張圖片QQ');
+                }
             } else {
                 Line.replyMsg(event.replyToken, 'Christina 還沒獲得主人同意~給客倌梗圖~');
             }

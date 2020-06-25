@@ -29,6 +29,7 @@ var Line = ((l) => {
 
     // 傳送 payload
     var sendMsg = (url, payload) => {
+        GoogleSheet.setLog(payload);
         try {
             UrlFetchApp.fetch(url, {
                 'headers': {
@@ -122,23 +123,6 @@ var Line = ((l) => {
         }
     };
 
-    // 回覆按鈕模板
-    l.replyBtnTemp = (replyToken, altText, template) => {
-        try {
-            sendMsg('https://api.line.me/v2/bot/message/reply',
-                JSON.stringify({
-                    'replyToken': replyToken,
-                    'messages': [{
-                        'type': 'template',
-                        'altText': altText,
-                        "template": template
-                    }]
-                }));
-        } catch (ex) {
-            GoogleSheet.setLog('Line, replyBtnTemp, ex = ' + ex);
-        }
-    };
-
     // 回覆文字訊息
     l.replyMsg = (replyToken, userMsg) => {
         try {
@@ -167,6 +151,40 @@ var Line = ((l) => {
             }));
         } catch (ex) {
             GoogleSheet.setLog('Line, pushMsg, ex = ' + ex);
+        }
+    };
+
+    // 回覆按鈕
+    l.replyBtnTemp = (replyToken, altText, template) => {
+        try {
+            sendMsg('https://api.line.me/v2/bot/message/reply',
+                JSON.stringify({
+                    'replyToken': replyToken,
+                    'messages': [{
+                        'type': 'template',
+                        'altText': altText,
+                        "template": template
+                    }]
+                }));
+        } catch (ex) {
+            GoogleSheet.setLog('Line, replyBtnTemp, ex = ' + ex);
+        }
+    };
+
+    // 回復圖片
+    l.replyImageTemp = (replyToken, bUrl, sUrl) => {
+        try {
+            sendMsg('https://api.line.me/v2/bot/message/reply',
+                JSON.stringify({
+                    'replyToken': replyToken,
+                    'messages': [{
+                        'type': 'image',
+                        'originalContentUrl': bUrl,
+                        "previewImageUrl": sUrl
+                    }]
+                }));
+        } catch (ex) {
+            GoogleSheet.setLog('Line, replyBtnTemp, ex = ' + ex);
         }
     };
 
