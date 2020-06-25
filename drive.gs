@@ -5,12 +5,14 @@ var GoogleDrive = ((gd) => {
 
     // 取得 drive 裡的圖片
     gd.getImageUrl = (name) => {
-        var files = driveApp.getFilesByName(name+".jpg");
+        var files = driveApp.getFilesByName(name);
+        var fileUrl = "";
         while (files.hasNext()) {
             var file = files.next();
-            var fileUrl = file.getId();
+            fileUrl = 'https://drive.google.com/uc?export=view&id='+file.getId();
         }
-        return 'https://drive.google.com/uc?export=view&id='+fileUrl;
+
+        return fileUrl;
     };
 
     return gd;
