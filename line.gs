@@ -29,6 +29,7 @@ var Line = ((l) => {
 
     // 傳送 payload
     var sendMsg = (url, payload) => {
+        GoogleSheet.setLog(payload);
         try {
             UrlFetchApp.fetch(url, {
                 'headers': {
