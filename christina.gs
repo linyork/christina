@@ -55,8 +55,7 @@ var Christina = ((ct) => {
         if (GoogleSheet.lineStatus) {
             if (event.isMaster) {
                 var url = GoogleDrive.getImageUrl(event.commandParam[0]);
-                if (url)
-                {
+                if (url) {
                     Line.replyImageTemp(event.replyToken, url, url);
                 } else {
                     Line.replyMsg(event.replyToken, 'Christina 找不到這張圖片QQ');
@@ -152,7 +151,7 @@ var Christina = ((ct) => {
     /**
      * public member
      */
-    // 取得 admin
+    // 取得 line admin
     ct.adminString = scriptProperties.getProperty('ADMIN_SATRING');
 
     // admin command list
@@ -166,82 +165,114 @@ var Christina = ((ct) => {
 
     // 取得指令字串
     ct.getCommandList = (isMaster) => {
-        var commandString = '';
-        var commandList = {};
-        if (isMaster) {
-            commandString = '主人可以吩咐的事：\n';
-            commandList = Christina.allCommand;
-        } else {
-            commandString = '主人授權你的事：\n';
-            commandList = Christina.guestCommand;
+        try {
+            var commandString = '';
+            var commandList = {};
+            if (isMaster) {
+                commandString = '主人可以吩咐的事：\n';
+                commandList = Christina.allCommand;
+            } else {
+                commandString = '主人授權你的事：\n';
+                commandList = Christina.guestCommand;
+            }
+            for (var command in commandList) {
+                commandString += command + '：' + commandList[command]['name'] + '\n';
+            }
+            return commandString;
+        } catch (ex) {
+            GoogleSheet.setLog('Christima.getCommandList, ex = ' + ex);
         }
-        for (var command in commandList) {
-            commandString += command + '：' + commandList[command]['name'] + '\n';
-        }
-        return commandString;
     };
 
     // 基礎指令
     ct.getCommandTemp = () => {
-        var template = {};
-        template.type = 'buttons';
-        template.title = "開始雇用 Christina";
-        template.thumbnailImageUrl = 'https://scontent.ftpe7-3.fna.fbcdn.net/v/t31.0-8/176372_480432751996994_333402828_o.jpg?_nc_cat=102&_nc_sid=2c4854&_nc_ohc=gloUUqwPeaQAX9BNsAE&_nc_ht=scontent.ftpe7-3.fna&oh=f85b31dac0771502ffcae5bde05026f1&oe=5F1661BA';
-        template.text = '基礎指令清單';
-        template.actions = [{
-            "type": "message",
-            "label": Christina.allCommand['/cmd'].name,
-            "text": "/cmd"
-        }, {
-            "type": "message",
-            "label": Christina.allCommand['/start'].name,
-            "text": "/start"
-        }, {
-            "type": "message",
-            "label": Christina.allCommand['/end'].name,
-            "text": "/end"
-        }, {
-            "type": "message",
-            "label": Christina.allCommand['/leave'].name,
-            "text": "/leave"
-        }];
-        return template;
+        try {
+            var template = {};
+            template.type = 'buttons';
+            template.title = "開始雇用 Christina";
+            template.thumbnailImageUrl = 'https://scontent.ftpe7-3.fna.fbcdn.net/v/t31.0-8/176372_480432751996994_333402828_o.jpg?_nc_cat=102&_nc_sid=2c4854&_nc_ohc=gloUUqwPeaQAX9BNsAE&_nc_ht=scontent.ftpe7-3.fna&oh=f85b31dac0771502ffcae5bde05026f1&oe=5F1661BA';
+            template.text = '基礎指令清單';
+            template.actions = [{
+                "type": "message",
+                "label": Christina.allCommand['/cmd'].name,
+                "text": "/cmd"
+            }, {
+                "type": "message",
+                "label": Christina.allCommand['/start'].name,
+                "text": "/start"
+            }, {
+                "type": "message",
+                "label": Christina.allCommand['/end'].name,
+                "text": "/end"
+            }, {
+                "type": "message",
+                "label": Christina.allCommand['/leave'].name,
+                "text": "/leave"
+            }];
+            return template;
+        } catch (ex) {
+            GoogleSheet.setLog('Christima.getCommandTemp, ex = ' + ex);
+        }
     };
 
     // 檢查身份
     ct.checkMaster = (userId) => {
-        var adminArray = Christina.adminString.split(",");
-        return adminArray.includes(userId);
+        try {
+            var adminArray = Christina.adminString.split(",");
+            return adminArray.includes(userId);
+        } catch (ex) {
+            GoogleSheet.setLog('Christima.checkMaster, ex = ' + ex);
+        }
     };
 
     // 檢查是否是指令
     ct.checkCommand = (msg) => {
-        return msg.search(/^\//) !== -1;
+        try {
+            return msg.search(/^\//) !== -1;
+        } catch (ex) {
+            GoogleSheet.setLog('Christima.checkMaster, ex = ' + ex);
+        }
     };
 
     // 取得指令參數陣列
     ct.getCommand = (msg) => {
-        return (msg === "") ? "" : msg.split(" ").shift();
+        try {
+            return (msg === "") ? "" : msg.split(" ").shift();
+        } catch (ex) {
+            GoogleSheet.setLog('Christima.getCommand, ex = ' + ex);
+        }
     };
 
     // 取得指令參數陣列
     ct.getCommandParam = (msg) => {
-        var paras = [];
-        if (msg !== "") {
-            paras = msg.split(" ");
-            paras.shift();
+        try {
+            var paras = [];
+            if (msg !== "") {
+                paras = msg.split(" ");
+                paras.shift();
+            }
+            return paras;
+        } catch (ex) {
+            GoogleSheet.setLog('Christima.getCommandParam, ex = ' + ex);
         }
-        return paras;
     };
 
     // 擲骰子
     ct.roll = () => {
-        return Math.floor(Math.random() * 6 + 1);
+        try {
+            return Math.floor(Math.random() * 6 + 1);
+        } catch (ex) {
+            GoogleSheet.setLog('Christima.roll, ex = ' + ex);
+        }
     };
 
     // 問吃什麼
     ct.eatWhat = () => {
-        return GoogleSheet.eatWhat();
+        try {
+            return GoogleSheet.eatWhat();
+        } catch (ex) {
+            GoogleSheet.setLog('Christima.eatWhat, ex = ' + ex);
+        }
     };
 
     return ct;

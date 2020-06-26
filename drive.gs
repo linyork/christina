@@ -1,12 +1,22 @@
 // google drive
 var GoogleDrive = ((gd) => {
-    
-    var driveApp =  DriveApp;
 
-    // 取得 drive 裡的圖片
+    /**
+     * private member
+     */
+    var driveApp = DriveApp;
+
+    /**
+     * public member
+     */
+    // 取得圖片 從 google drive
     gd.getImageUrl = (name) => {
-        var files = driveApp.getFilesByName(name+".jpg");
-        return (files.hasNext()) ? 'https://drive.google.com/uc?export=view&id='+files.next().getId() : null;
+        try {
+            var files = driveApp.getFilesByName(name + ".jpg");
+            return (files.hasNext()) ? 'https://drive.google.com/uc?export=view&id=' + files.next().getId() : null;
+        } catch (ex) {
+            GoogleSheet.setLog('GoogleDrive.getImageUrl, ex = ' + ex);
+        }
     };
 
     return gd;

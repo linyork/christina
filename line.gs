@@ -5,10 +5,10 @@ var Line = ((l) => {
      */
     var scriptProperties = PropertiesService.getScriptProperties();
 
-    // 取得 Line token
+    // 取得 Line token 從環境變數
     var channelToken = scriptProperties.getProperty('LINE_API_KEY');
 
-    // 取得該所在地 SourceId
+    // 取得該所在地 SourceId 從 line response
     var getSourceId = (source) => {
         try {
             switch (source.type) {
@@ -23,11 +23,11 @@ var Line = ((l) => {
                     break;
             }
         } catch (ex) {
-            GoogleSheet.setLog('Line, getSourceId, ex = ' + ex);
+            GoogleSheet.setLog('Line.getSourceId, ex = ' + ex);
         }
     };
 
-    // 傳送 payload
+    // 傳送 payload 給 line
     var sendMsg = (url, payload) => {
         GoogleSheet.setLog(payload);
         try {
@@ -40,7 +40,7 @@ var Line = ((l) => {
                 'payload': payload
             });
         } catch (ex) {
-            GoogleSheet.setLog('Line, sendMsg, ex = ' + ex);
+            GoogleSheet.setLog('Line.sendMsg, ex = ' + ex);
         }
     };
 
@@ -50,7 +50,7 @@ var Line = ((l) => {
     // line event object
     l.event = {};
 
-    // 初始化 event 物件
+    // 初始化 event 物件 從 line response
     l.init = (event) => {
         try {
             event.isCommand = (event.message == null) ? false : Christina.checkCommand(event.message.text);
@@ -58,34 +58,19 @@ var Line = ((l) => {
             event.commandParam = (event.message == null) ? false : Christina.getCommandParam(event.message.text);
             event.isMaster = Christina.checkMaster(event.source.userId);
             event.sourceId = getSourceId(event.source);
-            // event類型
-            // event.type;
-            // 要回復訊息 reToken
-            // event.replyToken
-            // 說話人的類型 group room user
-            // event.source.type
-            // 說話人的 userId
-            // event.source.userId
-            // 取得群組Id
-            // event.source.groupId
-            // 時間
-            // event.timestamp
             Line.event = event;
         } catch (ex) {
-            GoogleSheet.setLog('Line, eventInit, ex = ' + ex);
+            GoogleSheet.setLog('Line.eventInit, ex = ' + ex);
         }
     };
 
-    // 執行 event 事件
+    // 執行 command
     l.startEvent = () => {
         try {
             switch (Line.event.type) {
                 case 'postback':
                     break;
                 case 'message':
-                    // event.messageType = event.message.type;
-                    // event.messageId = event.message.id;
-                    // event.messageText = event.message.text;
                     if (Line.event.command in Christina.allCommand) {
                         Christina.allCommand[Line.event.command].fn(Line.event);
 
@@ -119,7 +104,22 @@ var Line = ((l) => {
                     break;
             }
         } catch (ex) {
-            GoogleSheet.setLog('Line, startEvent, ex = ' + ex);
+            GoogleSheet.setLog('Line.startEvent, ex = ' + ex);
+        }
+    };
+
+    // 發送文字訊息
+    l.pushMsg = (usrId, message) => {
+        try {
+            sendMsg('https://api.line.me/v2/bot/message/push', JSON.stringify({
+                'to': usrId,
+                'messages': [{
+                    'type': 'text',
+                    'text': message
+                }]
+            }));
+        } catch (ex) {
+            GoogleSheet.setLog('Line.pushMsg, ex = ' + ex);
         }
     };
 
@@ -135,22 +135,7 @@ var Line = ((l) => {
                     }]
                 }));
         } catch (ex) {
-            GoogleSheet.setLog('Line, replyMsg, ex = ' + ex);
-        }
-    };
-
-    // 發送文字訊息
-    l.pushMsg = (usrId, message) => {
-        try {
-            sendMsg('https://api.line.me/v2/bot/message/push', JSON.stringify({
-                'to': usrId,
-                'messages': [{
-                    'type': 'text',
-                    'text': message
-                }]
-            }));
-        } catch (ex) {
-            GoogleSheet.setLog('Line, pushMsg, ex = ' + ex);
+            GoogleSheet.setLog('Line.replyMsg, ex = ' + ex);
         }
     };
 
@@ -167,11 +152,11 @@ var Line = ((l) => {
                     }]
                 }));
         } catch (ex) {
-            GoogleSheet.setLog('Line, replyBtnTemp, ex = ' + ex);
+            GoogleSheet.setLog('Line.replyBtnTemp, ex = ' + ex);
         }
     };
 
-    // 回復圖片
+    // 回覆圖片
     l.replyImageTemp = (replyToken, bUrl, sUrl) => {
         try {
             sendMsg('https://api.line.me/v2/bot/message/reply',
@@ -184,7 +169,7 @@ var Line = ((l) => {
                     }]
                 }));
         } catch (ex) {
-            GoogleSheet.setLog('Line, replyBtnTemp, ex = ' + ex);
+            GoogleSheet.setLog('Line.replyBtnTemp, ex = ' + ex);
         }
     };
 
@@ -199,7 +184,7 @@ var Line = ((l) => {
                 'method': 'post',
             });
         } catch (ex) {
-            GoogleSheet.setLog('Line, leave, ex = ' + ex);
+            GoogleSheet.setLog('Line.leave, ex = ' + ex);
         }
     };
 

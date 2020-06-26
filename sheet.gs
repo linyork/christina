@@ -25,34 +25,43 @@ var GoogleSheet = ((gsh) => {
      */
     // christina 狀態
     gsh.lineStatus = (() => {
-        var data = sheetEnv.getSheetValues(1, 2, 1, 1);
-        if (data[0][0].length) {
-            return false;
+        try {
+            var data = sheetEnv.getSheetValues(1, 2, 1, 1);
+            return (data[0][0].length) ? false : data[0][0];
+        } catch (ex) {
+            GoogleSheet.setLog('GoogleSheet.lineStatus, ex = ' + ex);
         }
-        return data[0][0];
     })();
 
-    // 寫 log
+    // 寫 log 在 google sheet
     gsh.setLog = (e) => {
         var lastRow = sheetConsoleLog.getLastRow();
         sheetConsoleLog.getRange(lastRow + 1, 1).setValue(e);
     };
 
-    // 寫入 line status
+    // 寫入 line status 在 google sheet
     gsh.setLineStatus = (data) => {
-        sheetEnv.getRange(1, 2).setValue(data);
+        try {
+            sheetEnv.getRange(1, 2).setValue(data);
+        } catch (ex) {
+            GoogleSheet.setLog('GoogleSheet.setLineStatus, ex = ' + ex);
+        }
     };
 
-    // 取得吃什麼
+    // 取得吃什麼 從 google sheet
     gsh.eatWhat = () => {
-        var dataExport = {};
-        var lastRow = sheetEat.getLastRow();
-        var lastColumn = sheetEat.getLastColumn();
-        var data = sheetEat.getRange(1, 1, lastRow, lastColumn).getValues();
-        for (var i = 0; i <= data.length; i++) {
-            dataExport[i] = data[i];
+        try {
+            var dataExport = {};
+            var lastRow = sheetEat.getLastRow();
+            var lastColumn = sheetEat.getLastColumn();
+            var data = sheetEat.getRange(1, 1, lastRow, lastColumn).getValues();
+            for (var i = 0; i <= data.length; i++) {
+                dataExport[i] = data[i];
+            }
+            return dataExport[Math.floor(Math.random() * data.length)];
+        } catch (ex) {
+            GoogleSheet.setLog('GoogleSheet.eatWhat, ex = ' + ex);
         }
-        return dataExport[Math.floor(Math.random() * data.length)];
     };
 
     return gsh;
