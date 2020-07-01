@@ -16,6 +16,8 @@ var Query = (() => {
 
     var selectColumns = {};
 
+    var whereCondition = [];
+
     // table
     var table;
 
@@ -28,7 +30,7 @@ var Query = (() => {
     var lastRow;
 
     // 處理讀取的 columns
-    var getSelectColumn = () => {
+    var doSelectColumn = () => {
         if (columns.length) {
             for (var i = 0; i < lastColumn; i++) {
                 if (columns.includes(allData[0][i])) {
@@ -42,26 +44,63 @@ var Query = (() => {
         }
     }
 
+    var doWhere = (rowData) => {
+        whereCondition.forEach((condition) => {
+            switch (condition['condition']) {
+                case '=':
+                case 'is':
+                case 'IS':
+                    if (rowData[condition['name']] !== condition['value']) {
+                        return false;
+                    }
+                    break;
+                case '>':
+                    if (parseInt(rowData[condition['name']]) <= parseInt(condition['value'])) {
+                        return false;
+                    }
+                    break;
+                case '>=':
+                    if (parseInt(rowData[condition['name']]) < parseInt(condition['value'])) {
+                        return false;
+                    }
+                    break;
+                case '<':
+                    if (parseInt(rowData[condition['name']]) >= parseInt(condition['value'])) {
+                        return false;
+                    }
+                    break;
+                case '<=':
+                    if (parseInt(rowData[condition['name']]) > parseInt(condition['value'])) {
+                        return false;
+                    }
+                    break;
+            }
+        });
+        return true;
+    }
+
     // 處理讀取的資料
-    var getResult = () => {
+    var doResult = () => {
         var rowData = {};
+        var tempRowData = {};
         if (Object.keys(selectColumns).length === 0) {
             for (var i = 1; i < lastRow; i++) {
                 for (j = 0; j < lastColumn; j++) {
                     rowData[selectColumns[j]] = allData[i][j];
                 }
-                result.push(rowData);
+                if (doWhere(rowData)) result.push(rowData);
                 rowData = {};
             }
 
         } else {
             for (var i = 1; i < lastRow; i++) {
                 for (j = 0; j < lastColumn; j++) {
+                    tempRowData[selectColumns[j]] = allData[i][j];
                     if (j in selectColumns) {
                         rowData[selectColumns[j]] = allData[i][j];
                     }
                 }
-                result.push(rowData);
+                if (doWhere(tempRowData)) result.push(rowData);
                 rowData = {};
             }
         }
@@ -108,6 +147,7 @@ var Query = (() => {
         },
         where: (name, condition, value) => {
             try {
+                whereCondition.push({name: name, condition: condition, value: value});
             } catch (ex) {
                 GoogleSheet.setLog('query.where, ex = ' + ex);
             }
@@ -115,8 +155,8 @@ var Query = (() => {
         },
         get: () => {
             try {
-                getSelectColumn();
-                getResult();
+                doSelectColumn();
+                doResult();
             } catch (ex) {
                 GoogleSheet.setLog('query.get, ex = ' + ex);
             }
