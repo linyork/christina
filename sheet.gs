@@ -26,8 +26,8 @@ var GoogleSheet = ((gsh) => {
     // christina 狀態
     gsh.lineStatus = (() => {
         try {
-            var result = Query().table('christina').first();
-            return (result.length) ? false : result.status;
+            var data = sheetEnv.getSheetValues(1, 2, 1, 1);
+            return (data[0][0].length) ? false : data[0][0];
         } catch (ex) {
             GoogleSheet.setLog('GoogleSheet.lineStatus, ex = ' + ex);
         }
