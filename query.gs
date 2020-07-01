@@ -176,7 +176,7 @@ var Query = (() => {
             }
         },
         first: () => {
-            return (this.get().length !== 0) ? result[0] : {}
+            return (obj.get().length !== 0) ? result[0] : {}
         },
     }
 
