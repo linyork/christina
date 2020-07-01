@@ -31,80 +31,93 @@ var Query = (() => {
 
     // 處理讀取的 columns
     var doSelectColumn = () => {
-        if (columns.length) {
-            for (var i = 0; i < lastColumn; i++) {
-                if (columns.includes(allData[0][i])) {
+        try {
+            if (columns.length) {
+                for (var i = 0; i < lastColumn; i++) {
+                    if (columns.includes(allData[0][i])) {
+                        selectColumns[i] = allData[0][i];
+                    }
+                }
+            } else {
+                for (var i = 0; i < lastColumn; i++) {
                     selectColumns[i] = allData[0][i];
                 }
             }
-        } else {
-            for (var i = 0; i < lastColumn; i++) {
-                selectColumns[i] = allData[0][i];
-            }
+        } catch (ex) {
+            GoogleSheet.setLog('query.doSelectColumn, ex = ' + ex);
         }
     }
 
     var doWhere = (rowData) => {
-        whereCondition.forEach((condition) => {
-            switch (condition['condition']) {
-                case '=':
-                case 'is':
-                case 'IS':
-                    if (rowData[condition['name']] !== condition['value']) {
-                        return false;
-                    }
-                    break;
-                case '>':
-                    if (parseInt(rowData[condition['name']]) <= parseInt(condition['value'])) {
-                        return false;
-                    }
-                    break;
-                case '>=':
-                    if (parseInt(rowData[condition['name']]) < parseInt(condition['value'])) {
-                        return false;
-                    }
-                    break;
-                case '<':
-                    if (parseInt(rowData[condition['name']]) >= parseInt(condition['value'])) {
-                        return false;
-                    }
-                    break;
-                case '<=':
-                    if (parseInt(rowData[condition['name']]) > parseInt(condition['value'])) {
-                        return false;
-                    }
-                    break;
-            }
-        });
-        return true;
+        try {
+            var bool = true;
+            whereCondition.forEach((condition) => {
+                switch (condition['condition']) {
+                    case '=':
+                    case 'is':
+                    case 'IS':
+                        if (rowData[condition['name']] != condition['value']) {
+                            bool = false;
+                        }
+                        break;
+                    case '>':
+                        if (parseInt(rowData[condition['name']]) <= parseInt(condition['value'])) {
+                            bool = false;
+                        }
+                        break;
+                    case '>=':
+                        if (parseInt(rowData[condition['name']]) < parseInt(condition['value'])) {
+                            bool = false;
+                        }
+                        break;
+                    case '<':
+                        if (parseInt(rowData[condition['name']]) >= parseInt(condition['value'])) {
+                            bool = false;
+                        }
+                        break;
+                    case '<=':
+                        if (parseInt(rowData[condition['name']]) > parseInt(condition['value'])) {
+                            bool = false;
+                        }
+                        break;
+                }
+            });
+            return bool;
+        } catch (ex) {
+            GoogleSheet.setLog('query.doWhere, ex = ' + ex);
+        }
     }
 
     // 處理讀取的資料
     var doResult = () => {
-        var rowData = {};
-        var tempRowData = {};
-        if (Object.keys(selectColumns).length === 0) {
-            for (var i = 1; i < lastRow; i++) {
-                for (j = 0; j < lastColumn; j++) {
-                    rowData[selectColumns[j]] = allData[i][j];
-                }
-                if (doWhere(rowData)) result.push(rowData);
-                rowData = {};
-            }
-
-        } else {
-            for (var i = 1; i < lastRow; i++) {
-                for (j = 0; j < lastColumn; j++) {
-                    tempRowData[selectColumns[j]] = allData[i][j];
-                    if (j in selectColumns) {
+        try {
+            var rowData = {};
+            var tempRowData = {};
+            if (Object.keys(selectColumns).length === 0) {
+                for (var i = 1; i < lastRow; i++) {
+                    for (j = 0; j < lastColumn; j++) {
                         rowData[selectColumns[j]] = allData[i][j];
                     }
+                    if (doWhere(rowData)) result.push(rowData);
+                    rowData = {};
                 }
-                if (doWhere(tempRowData)) result.push(rowData);
-                rowData = {};
+
+            } else {
+                for (var i = 1; i < lastRow; i++) {
+                    for (j = 0; j < lastColumn; j++) {
+                        tempRowData[selectColumns[j]] = allData[i][j];
+                        if (j in selectColumns) {
+                            rowData[selectColumns[j]] = allData[i][j];
+                        }
+                    }
+                    if (doWhere(tempRowData)) result.push(rowData);
+                    rowData = {};
+                }
             }
+            GoogleSheet.setLog(JSON.stringify(result));
+        } catch (ex) {
+            GoogleSheet.setLog('query.doResult, ex = ' + ex);
         }
-        GoogleSheet.setLog(JSON.stringify(result));
     }
 
     // value
@@ -165,3 +178,6 @@ var Query = (() => {
     }
     return obj;
 });
+// example
+// var t = Query();
+// t.table('test').select('id').where('id', '=', '3').get();
