@@ -178,6 +178,3 @@ var Query = (() => {
     }
     return obj;
 });
-// example
-// var t = Query();
-// t.table('test').select('id').where('id', '=', '3').get();
