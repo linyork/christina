@@ -167,7 +167,7 @@ var Query = (() => {
         },
         get: () => {
             try {
-                if(result.length !== 0) return result;
+                if (result.length !== 0) return result;
                 doSelectColumn();
                 doResult();
                 return result;
@@ -175,6 +175,10 @@ var Query = (() => {
                 GoogleSheet.setLog('query.get, ex = ' + ex);
             }
         },
+        first: () => {
+            return (this.get().length !== 0) ? result[0] : {}
+        },
     }
+
     return obj;
 });
