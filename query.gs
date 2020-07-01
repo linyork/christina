@@ -29,6 +29,9 @@ var Query = (() => {
     // last row
     var lastRow;
 
+    // value
+    var result = [];
+
     // 處理讀取的 columns
     var doSelectColumn = () => {
         try {
@@ -114,14 +117,10 @@ var Query = (() => {
                     rowData = {};
                 }
             }
-            GoogleSheet.setLog(JSON.stringify(result));
         } catch (ex) {
             GoogleSheet.setLog('query.doResult, ex = ' + ex);
         }
     }
-
-    // value
-    var result = [];
 
 
     /**
@@ -168,13 +167,18 @@ var Query = (() => {
         },
         get: () => {
             try {
+                if (result.length !== 0) return result;
                 doSelectColumn();
                 doResult();
+                return result;
             } catch (ex) {
                 GoogleSheet.setLog('query.get, ex = ' + ex);
             }
-            return obj;
+        },
+        first: () => {
+            return (obj.get().length !== 0) ? result[0] : {}
         },
     }
+
     return obj;
 });
