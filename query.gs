@@ -47,11 +47,11 @@ var Query = (() => {
         var rowData = {};
         if (Object.keys(selectColumns).length === 0) {
             for (var i = 1; i < lastRow; i++) {
-
                 for (j = 0; j < lastColumn; j++) {
                     rowData[selectColumns[j]] = allData[i][j];
                 }
                 result.push(rowData);
+                rowData = {};
             }
 
         } else {
@@ -62,6 +62,7 @@ var Query = (() => {
                     }
                 }
                 result.push(rowData);
+                rowData = {};
             }
         }
         GoogleSheet.setLog(JSON.stringify(result));
