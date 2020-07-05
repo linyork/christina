@@ -12,7 +12,7 @@ var GoogleDrive = ((gd) => {
             var files = driveApp.getFilesByName(name + ".jpg");
             return (files.hasNext()) ? 'https://drive.google.com/uc?export=view&id=' + files.next().getId() : null;
         } catch (ex) {
-            GoogleSheet().setLog('GoogleDrive.getImageUrl, ex = ' + ex);
+            GoogleSheet().logError('GoogleDrive.getImageUrl, ex = ' + ex);
         }
     };
 

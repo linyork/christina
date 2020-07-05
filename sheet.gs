@@ -24,7 +24,7 @@ const GoogleSheet = () => {
         try {
             return DB().form('christina').execute().first('status');
         } catch (ex) {
-            GoogleSheet().setLog('GoogleSheet.lineStatus, ex = ' + ex);
+            GoogleSheet().logError('GoogleSheet.lineStatus, ex = ' + ex);
         }
     })();
 
@@ -36,7 +36,7 @@ const GoogleSheet = () => {
         try {
             DB().update('christina').set('status', data).execute();
         } catch (ex) {
-            GoogleSheet().setLog('GoogleSheet.setLineStatus, ex = ' + ex);
+            GoogleSheet().logError('GoogleSheet.setLineStatus, ex = ' + ex);
         }
     };
 
@@ -56,9 +56,6 @@ const GoogleSheet = () => {
      * @param msg
      */
     gsh.logInfo = (msg) => {
-        if (!DEBUG) {
-            return;
-        }
         let args = [...arguments].map((v) => JSON.stringify(v));
         args.unshift('info');
         GoogleSheet().setLog(args);
@@ -89,7 +86,7 @@ const GoogleSheet = () => {
             }
             return dataExport[Math.floor(Math.random() * data.length)];
         } catch (ex) {
-            GoogleSheet().setLog('GoogleSheet.eatWhat, ex = ' + ex);
+            GoogleSheet().logError('GoogleSheet.eatWhat, ex = ' + ex);
         }
     };
 

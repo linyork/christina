@@ -178,7 +178,7 @@ var Christina = ((ct) => {
             }
             return commandString;
         } catch (ex) {
-            GoogleSheet().setLog('Christina.getCommandList, ex = ' + ex);
+            GoogleSheet().logError('Christina.getCommandList, ex = ' + ex);
         }
     };
 
@@ -212,7 +212,7 @@ var Christina = ((ct) => {
             }];
             return template;
         } catch (ex) {
-            GoogleSheet().setLog('Christina.getCommandTemp, ex = ' + ex);
+            GoogleSheet().logError('Christina.getCommandTemp, ex = ' + ex);
         }
     };
 
@@ -226,7 +226,7 @@ var Christina = ((ct) => {
             var adminArray = Christina.adminString.split(",");
             return adminArray.includes(userId);
         } catch (ex) {
-            GoogleSheet().setLog('Christina.checkMaster, ex = ' + ex);
+            GoogleSheet().logError('Christina.checkMaster, ex = ' + ex);
         }
     };
 
@@ -239,7 +239,7 @@ var Christina = ((ct) => {
         try {
             return msg.search(/^\//) !== -1;
         } catch (ex) {
-            GoogleSheet().setLog('Christina.checkMaster, ex = ' + ex);
+            GoogleSheet().logError('Christina.checkMaster, ex = ' + ex);
         }
     };
 
@@ -252,7 +252,7 @@ var Christina = ((ct) => {
         try {
             return (msg === "") ? "" : msg.split(" ").shift();
         } catch (ex) {
-            GoogleSheet().setLog('Christina.getCommand, ex = ' + ex);
+            GoogleSheet().logError('Christina.getCommand, ex = ' + ex);
         }
     };
 
@@ -270,7 +270,7 @@ var Christina = ((ct) => {
             }
             return paras;
         } catch (ex) {
-            GoogleSheet().setLog('Christina.getCommandParam, ex = ' + ex);
+            GoogleSheet().logError('Christina.getCommandParam, ex = ' + ex);
         }
     };
 
@@ -282,7 +282,7 @@ var Christina = ((ct) => {
         try {
             return Math.floor(Math.random() * 6 + 1);
         } catch (ex) {
-            GoogleSheet().setLog('Christina.roll, ex = ' + ex);
+            GoogleSheet().logError('Christina.roll, ex = ' + ex);
         }
     };
 
@@ -294,7 +294,7 @@ var Christina = ((ct) => {
         try {
             return GoogleSheet().eatWhat();
         } catch (ex) {
-            GoogleSheet().setLog('Christina.eatWhat, ex = ' + ex);
+            GoogleSheet().logError('Christina.eatWhat, ex = ' + ex);
         }
     };
 

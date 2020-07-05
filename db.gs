@@ -49,7 +49,7 @@ const DB = (() => {
                     }
                 }
             } catch (ex) {
-                GoogleSheet().setLog('db.doSelectColumn, ex = ' + ex);
+                GoogleSheet().logError('db.doSelectColumn, ex = ' + ex);
             }
         }
 
@@ -90,7 +90,7 @@ const DB = (() => {
                 });
                 return bool;
             } catch (ex) {
-                GoogleSheet().setLog('db.doWhere, ex = ' + ex);
+                GoogleSheet().logError('db.doWhere, ex = ' + ex);
             }
         }
 
@@ -121,7 +121,7 @@ const DB = (() => {
                     }
                 }
             } catch (ex) {
-                GoogleSheet().setLog('db.doResult, ex = ' + ex);
+                GoogleSheet().logError('db.doResult, ex = ' + ex);
             }
         }
 
@@ -147,7 +147,7 @@ const DB = (() => {
                     rowData = {};
                 }
             } catch (ex) {
-                GoogleSheet().setLog('db.doUpdate, ex = ' + ex);
+                GoogleSheet().logError('db.doUpdate, ex = ' + ex);
             }
         }
 
@@ -166,7 +166,7 @@ const DB = (() => {
                     }
                 });
             } catch (ex) {
-                GoogleSheet().setLog('db.select, ex = ' + ex);
+                GoogleSheet().logError('db.select, ex = ' + ex);
             }
             return db;
         };
@@ -187,7 +187,7 @@ const DB = (() => {
                 allData = table.getDataRange().getValues();
 
             } catch (ex) {
-                GoogleSheet().setLog('db.table, ex = ' + ex);
+                GoogleSheet().logError('db.table, ex = ' + ex);
             }
             return db;
         };
@@ -202,7 +202,7 @@ const DB = (() => {
             try {
                 whereCondition.push({columnName: columnName, condition: condition, value: value});
             } catch (ex) {
-                GoogleSheet().setLog('db.where, ex = ' + ex);
+                GoogleSheet().logError('db.where, ex = ' + ex);
             }
             return db;
         };
@@ -226,7 +226,7 @@ const DB = (() => {
 
                 }
             } catch (ex) {
-                GoogleSheet().setLog('db.get, ex = ' + ex);
+                GoogleSheet().logError('db.get, ex = ' + ex);
             }
             return db;
         };
@@ -239,7 +239,7 @@ const DB = (() => {
             try {
                 return (result.length === 0) ? {} : result;
             } catch (ex) {
-                GoogleSheet().setLog('db.get, ex = ' + ex);
+                GoogleSheet().logError('db.get, ex = ' + ex);
             }
         };
         /**
@@ -251,7 +251,7 @@ const DB = (() => {
             try {
                 return (result.length === 0) ? {} : (column === undefined) ? result[0] : result[0][column];
             } catch (ex) {
-                GoogleSheet().setLog('db.first, ex = ' + ex);
+                GoogleSheet().logError('db.first, ex = ' + ex);
             }
         };
         /**
@@ -271,7 +271,7 @@ const DB = (() => {
                 allData = table.getDataRange().getValues();
 
             } catch (ex) {
-                GoogleSheet().setLog('db.table, ex = ' + ex);
+                GoogleSheet().logError('db.table, ex = ' + ex);
             }
             return db;
         };
@@ -287,7 +287,7 @@ const DB = (() => {
                 tempData[columnName] = value;
                 updateData.push(tempData);
             } catch (ex) {
-                GoogleSheet().setLog('db.set, ex = ' + ex);
+                GoogleSheet().logError('db.set, ex = ' + ex);
             }
             return db;
         };
