@@ -1,8 +1,5 @@
 //  Christina
 var Christina = ((ct) => {
-    /**
-     * private member
-     */
     var scriptProperties = PropertiesService.getScriptProperties();
     // h
     var hScript = (event) => {
@@ -11,14 +8,14 @@ var Christina = ((ct) => {
 
     // cmd
     var cmdScript = (event) => {
-        if (GoogleSheet.lineStatus) {
+        if (event.lineStatus) {
             Line.replyMsg(event.replyToken, Christina.getCommandList(event.isMaster));
         }
     };
 
     // leave
     var leaveScript = (event) => {
-        if (GoogleSheet.lineStatus) {
+        if (event.lineStatus) {
             if (event.isMaster) {
                 Line.replyMsg(event.replyToken, '主人掰掰~\nChristina 先行告退了~');
             } else {
@@ -30,7 +27,7 @@ var Christina = ((ct) => {
 
     // myid
     var myidScript = (event) => {
-        if (GoogleSheet.lineStatus) {
+        if (event.lineStatus) {
             if (event.isMaster) {
                 Line.replyMsg(event.replyToken, '主人您的ID是：\n' + event.source.userId);
             } else {
@@ -41,7 +38,7 @@ var Christina = ((ct) => {
 
     // roll
     var rollScript = (event) => {
-        if (GoogleSheet.lineStatus) {
+        if (event.lineStatus) {
             if (event.isMaster) {
                 Line.replyMsg(event.replyToken, '好的 Christina 為主人擲骰子~\n擲出的點數是: ' + Christina.roll());
             } else {
@@ -52,7 +49,7 @@ var Christina = ((ct) => {
 
     // meme
     var memeScript = (event) => {
-        if (GoogleSheet.lineStatus) {
+        if (event.lineStatus) {
             if (event.isMaster) {
                 var url = GoogleDrive.getImageUrl(event.commandParam[0]);
                 if (url) {
@@ -68,7 +65,7 @@ var Christina = ((ct) => {
 
     // eat
     var eatScript = (event) => {
-        if (GoogleSheet.lineStatus) {
+        if (event.lineStatus) {
             if (event.isMaster) {
                 Line.replyMsg(event.replyToken, 'Christina 覺得主人應該吃~\n' + Christina.eatWhat());
             } else {
@@ -80,10 +77,10 @@ var Christina = ((ct) => {
     // start
     var startScript = (event) => {
         if (event.isMaster) {
-            if (GoogleSheet.lineStatus) {
+            if (event.lineStatus) {
                 Line.replyMsg(event.replyToken, 'Christina 在這兒～ \n主人有什麼吩咐嗎～');
             } else {
-                GoogleSheet.setLineStatus(true);
+                GoogleSheet().setLineStatus(true);
                 Line.replyMsg(event.replyToken, 'Christina 開始上班～ \n主人有什麼事請吩咐～ \n要 Christina 下班請輸入 /end');
             }
         } else {
@@ -94,8 +91,8 @@ var Christina = ((ct) => {
     // end
     var endScript = (event) => {
         if (event.isMaster) {
-            if (GoogleSheet.lineStatus) {
-                GoogleSheet.setLineStatus(false);
+            if (event.lineStatus) {
+                GoogleSheet().setLineStatus(false);
                 Line.replyMsg(event.replyToken, 'Christina 暫時下班～ \n勿掛念～ \n要 Christina 上班請輸入 /start');
             } else {
                 Line.replyMsg(event.replyToken, 'Christina 已經下班了喔~');
@@ -148,9 +145,6 @@ var Christina = ((ct) => {
         },
     };
 
-    /**
-     * public member
-     */
     // 取得 line admin
     ct.adminString = scriptProperties.getProperty('ADMIN_SATRING');
 
@@ -163,7 +157,11 @@ var Christina = ((ct) => {
     // all command list
     ct.allCommand = Object.assign(Object.assign({}, gCommand), Object.assign({}, mCommand));
 
-    // 取得指令字串
+    /**
+     * 取得指令字串
+     * @param isMaster
+     * @returns {string}
+     */
     ct.getCommandList = (isMaster) => {
         try {
             var commandString = '';
@@ -180,11 +178,14 @@ var Christina = ((ct) => {
             }
             return commandString;
         } catch (ex) {
-            GoogleSheet.setLog('Christima.getCommandList, ex = ' + ex);
+            GoogleSheet().setLog('Christina.getCommandList, ex = ' + ex);
         }
     };
 
-    // 基礎指令
+    /**
+     * 基礎指令
+     * @returns {{}}
+     */
     ct.getCommandTemp = () => {
         try {
             var template = {};
@@ -211,39 +212,55 @@ var Christina = ((ct) => {
             }];
             return template;
         } catch (ex) {
-            GoogleSheet.setLog('Christima.getCommandTemp, ex = ' + ex);
+            GoogleSheet().setLog('Christina.getCommandTemp, ex = ' + ex);
         }
     };
 
-    // 檢查身份
+    /**
+     * 檢查身份
+     * @param userId
+     * @returns {boolean}
+     */
     ct.checkMaster = (userId) => {
         try {
             var adminArray = Christina.adminString.split(",");
             return adminArray.includes(userId);
         } catch (ex) {
-            GoogleSheet.setLog('Christima.checkMaster, ex = ' + ex);
+            GoogleSheet().setLog('Christina.checkMaster, ex = ' + ex);
         }
     };
 
-    // 檢查是否是指令
+    /**
+     * 檢查是否是指令
+     * @param msg
+     * @returns {boolean}
+     */
     ct.checkCommand = (msg) => {
         try {
             return msg.search(/^\//) !== -1;
         } catch (ex) {
-            GoogleSheet.setLog('Christima.checkMaster, ex = ' + ex);
+            GoogleSheet().setLog('Christina.checkMaster, ex = ' + ex);
         }
     };
 
-    // 取得指令參數陣列
+    /**
+     * 取得指令參數陣列
+     * @param msg
+     * @returns {*}
+     */
     ct.getCommand = (msg) => {
         try {
             return (msg === "") ? "" : msg.split(" ").shift();
         } catch (ex) {
-            GoogleSheet.setLog('Christima.getCommand, ex = ' + ex);
+            GoogleSheet().setLog('Christina.getCommand, ex = ' + ex);
         }
     };
 
-    // 取得指令參數陣列
+    /**
+     * 取得指令參數陣列
+     * @param msg
+     * @returns {[]}
+     */
     ct.getCommandParam = (msg) => {
         try {
             var paras = [];
@@ -253,25 +270,31 @@ var Christina = ((ct) => {
             }
             return paras;
         } catch (ex) {
-            GoogleSheet.setLog('Christima.getCommandParam, ex = ' + ex);
+            GoogleSheet().setLog('Christina.getCommandParam, ex = ' + ex);
         }
     };
 
-    // 擲骰子
+    /**
+     * 擲骰子
+     * @returns {number}
+     */
     ct.roll = () => {
         try {
             return Math.floor(Math.random() * 6 + 1);
         } catch (ex) {
-            GoogleSheet.setLog('Christima.roll, ex = ' + ex);
+            GoogleSheet().setLog('Christina.roll, ex = ' + ex);
         }
     };
 
-    // 問吃什麼
+    /**
+     * 問吃什麼
+     * @returns {*}
+     */
     ct.eatWhat = () => {
         try {
-            return GoogleSheet.eatWhat();
+            return GoogleSheet().eatWhat();
         } catch (ex) {
-            GoogleSheet.setLog('Christima.eatWhat, ex = ' + ex);
+            GoogleSheet().setLog('Christina.eatWhat, ex = ' + ex);
         }
     };
 

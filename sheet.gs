@@ -1,68 +1,72 @@
 // google sheet
-var GoogleSheet = ((gsh) => {
-    /**
-     * private member
-     */
-    var scriptProperties = PropertiesService.getScriptProperties();
+const GoogleSheet = () => {
+    let scriptProperties = PropertiesService.getScriptProperties();
 
     // google sheet 資訊
-    var sheetId = scriptProperties.getProperty('SHEET_ID');
+    let sheetId = scriptProperties.getProperty('SHEET_ID');
 
     // 取得 sheet
-    var christinaSheet = SpreadsheetApp.openById(sheetId);
+    let christinaSheet = SpreadsheetApp.openById(sheetId);
 
     // 取得 console log table
-    var sheetConsoleLog = christinaSheet.getSheetByName('consolelog');
-
-    // 取得 env log table
-    var sheetEnv = christinaSheet.getSheetByName('env');
+    let sheetConsoleLog = christinaSheet.getSheetByName('consolelog');
 
     // 取得 eat_what log table
-    var sheetEat = christinaSheet.getSheetByName('eat_what');
+    let sheetEat = christinaSheet.getSheetByName('eat_what');
+
+    let gsh = {}
 
     /**
-     * public member
+     * 取得 line status 狀態
+     * @returns {*}
      */
-    // christina 狀態
     gsh.lineStatus = (() => {
         try {
-            var data = sheetEnv.getSheetValues(1, 2, 1, 1);
-            return (data[0][0].length) ? false : data[0][0];
+            return DB().form('christina').execute().first('status');
         } catch (ex) {
-            GoogleSheet.setLog('GoogleSheet.lineStatus, ex = ' + ex);
+            GoogleSheet().setLog('GoogleSheet.lineStatus, ex = ' + ex);
         }
     })();
 
-    // 寫 log 在 google sheet
+    /**
+     * 寫 log
+     * @param e
+     */
     gsh.setLog = (e) => {
-        var lastRow = sheetConsoleLog.getLastRow();
+        let lastRow = sheetConsoleLog.getLastRow();
         sheetConsoleLog.getRange(lastRow + 1, 1).setValue(e);
     };
 
-    // 寫入 line status 在 google sheet
+    /**
+     * 寫入 line status 狀態
+     * @param data
+     */
     gsh.setLineStatus = (data) => {
         try {
-            sheetEnv.getRange(1, 2).setValue(data);
+            DB().update('christina').set('status', data).execute();
         } catch (ex) {
-            GoogleSheet.setLog('GoogleSheet.setLineStatus, ex = ' + ex);
+            GoogleSheet().setLog('GoogleSheet.setLineStatus, ex = ' + ex);
         }
     };
 
-    // 取得吃什麼 從 google sheet
+    /**
+     * 取得吃什麼
+     * @returns {*}
+     */
     gsh.eatWhat = () => {
         try {
-            var dataExport = {};
-            var lastRow = sheetEat.getLastRow();
-            var lastColumn = sheetEat.getLastColumn();
-            var data = sheetEat.getRange(1, 1, lastRow, lastColumn).getValues();
-            for (var i = 0; i <= data.length; i++) {
+            let dataExport = {};
+            let lastRow = sheetEat.getLastRow();
+            let lastColumn = sheetEat.getLastColumn();
+            let data = sheetEat.getRange(1, 1, lastRow, lastColumn).getValues();
+            for (let i = 0; i <= data.length; i++) {
                 dataExport[i] = data[i];
             }
             return dataExport[Math.floor(Math.random() * data.length)];
         } catch (ex) {
-            GoogleSheet.setLog('GoogleSheet.eatWhat, ex = ' + ex);
+            GoogleSheet().setLog('GoogleSheet.eatWhat, ex = ' + ex);
         }
     };
 
     return gsh;
-})(GoogleSheet || {});
+};
