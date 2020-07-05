@@ -29,15 +29,6 @@ const GoogleSheet = () => {
     })();
 
     /**
-     * 寫 log
-     * @param e
-     */
-    gsh.setLog = (e) => {
-        let lastRow = sheetConsoleLog.getLastRow();
-        sheetConsoleLog.getRange(lastRow + 1, 1).setValue(e);
-    };
-
-    /**
      * 寫入 line status 狀態
      * @param data
      */
@@ -48,6 +39,40 @@ const GoogleSheet = () => {
             GoogleSheet().setLog('GoogleSheet.setLineStatus, ex = ' + ex);
         }
     };
+
+    /**
+     * 寫 log
+     * @param values
+     */
+    gsh.setLog = (values) => {
+        if (sheetConsoleLog != null) {
+            let newRow = sheetConsoleLog.getLastRow() + 1;
+            sheetConsoleLog.getRange(newRow, 1, 1, values.length).setValues([values]);
+        }
+    };
+
+    /**
+     *  log info
+     * @param msg
+     */
+    gsh.logInfo = (msg) => {
+        if (!DEBUG) {
+            return;
+        }
+        let args = [...arguments].map((v) => JSON.stringify(v));
+        args.unshift('info');
+        GoogleSheet().setLog(args);
+    };
+
+    /**
+     * error log
+     * @param msg
+     */
+    gsh.logError = (msg) => {
+        let args = [...arguments].map((v) => JSON.stringify(v));
+        args.unshift('error');
+        GoogleSheet().setLog(args);
+    }
 
     /**
      * 取得吃什麼
