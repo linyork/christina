@@ -19,17 +19,17 @@ var Line = ((l) => {
                 case 'room':
                     return source.roomId;
                 default:
-                    GoogleSheet.setLog('Line, getSourceId, invalid source type!');
+                    GoogleSheet().setLog('Line, getSourceId, invalid source type!');
                     break;
             }
         } catch (ex) {
-            GoogleSheet.setLog('Line.getSourceId, ex = ' + ex);
+            GoogleSheet().setLog('Line.getSourceId, ex = ' + ex);
         }
     };
 
     // 傳送 payload 給 line
     var sendMsg = (url, payload) => {
-        GoogleSheet.setLog(payload);
+        GoogleSheet().setLog(payload);
         try {
             UrlFetchApp.fetch(url, {
                 'headers': {
@@ -40,17 +40,16 @@ var Line = ((l) => {
                 'payload': payload
             });
         } catch (ex) {
-            GoogleSheet.setLog('Line.sendMsg, ex = ' + ex);
+            GoogleSheet().setLog('Line.sendMsg, ex = ' + ex);
         }
     };
 
-    /**
-     * public member
-     */
-    // line event object
     l.event = {};
 
-    // 初始化 event 物件 從 line response
+    /**
+     * 初始化 event 物件 從 line response
+     * @param event
+     */
     l.init = (event) => {
         try {
             event.isCommand = (event.message == null) ? false : Christina.checkCommand(event.message.text);
@@ -58,13 +57,16 @@ var Line = ((l) => {
             event.commandParam = (event.message == null) ? false : Christina.getCommandParam(event.message.text);
             event.isMaster = Christina.checkMaster(event.source.userId);
             event.sourceId = getSourceId(event.source);
+            event.lineStatus = GoogleSheet().lineStatus;
             Line.event = event;
         } catch (ex) {
-            GoogleSheet.setLog('Line.eventInit, ex = ' + ex);
+            GoogleSheet().setLog('Line.eventInit, ex = ' + ex);
         }
     };
 
-    // 執行 command
+    /**
+     * 執行 command
+     */
     l.startEvent = () => {
         try {
             switch (Line.event.type) {
@@ -104,11 +106,15 @@ var Line = ((l) => {
                     break;
             }
         } catch (ex) {
-            GoogleSheet.setLog('Line.startEvent, ex = ' + ex);
+            GoogleSheet().setLog('Line.startEvent, ex = ' + ex);
         }
     };
 
-    // 發送文字訊息
+    /**
+     * 發送文字訊息
+     * @param usrId
+     * @param message
+     */
     l.pushMsg = (usrId, message) => {
         try {
             sendMsg('https://api.line.me/v2/bot/message/push', JSON.stringify({
@@ -119,11 +125,15 @@ var Line = ((l) => {
                 }]
             }));
         } catch (ex) {
-            GoogleSheet.setLog('Line.pushMsg, ex = ' + ex);
+            GoogleSheet().setLog('Line.pushMsg, ex = ' + ex);
         }
     };
 
-    // 回覆文字訊息
+    /**
+     * 回覆文字訊息
+     * @param replyToken
+     * @param userMsg
+     */
     l.replyMsg = (replyToken, userMsg) => {
         try {
             sendMsg('https://api.line.me/v2/bot/message/reply',
@@ -135,11 +145,16 @@ var Line = ((l) => {
                     }]
                 }));
         } catch (ex) {
-            GoogleSheet.setLog('Line.replyMsg, ex = ' + ex);
+            GoogleSheet().setLog('Line.replyMsg, ex = ' + ex);
         }
     };
 
-    // 回覆按鈕
+    /**
+     * 回覆按鈕
+     * @param replyToken
+     * @param altText
+     * @param template
+     */
     l.replyBtnTemp = (replyToken, altText, template) => {
         try {
             sendMsg('https://api.line.me/v2/bot/message/reply',
@@ -152,11 +167,16 @@ var Line = ((l) => {
                     }]
                 }));
         } catch (ex) {
-            GoogleSheet.setLog('Line.replyBtnTemp, ex = ' + ex);
+            GoogleSheet().setLog('Line.replyBtnTemp, ex = ' + ex);
         }
     };
 
-    // 回覆圖片
+    /**
+     * 回覆圖片
+     * @param replyToken
+     * @param bUrl
+     * @param sUrl
+     */
     l.replyImageTemp = (replyToken, bUrl, sUrl) => {
         try {
             sendMsg('https://api.line.me/v2/bot/message/reply',
@@ -169,11 +189,15 @@ var Line = ((l) => {
                     }]
                 }));
         } catch (ex) {
-            GoogleSheet.setLog('Line.replyBtnTemp, ex = ' + ex);
+            GoogleSheet().setLog('Line.replyBtnTemp, ex = ' + ex);
         }
     };
 
-    // 離開
+    /**
+     *     // 離開
+     * @param sourceType
+     * @param sourceId
+     */
     l.leave = (sourceType, sourceId) => {
         try {
             UrlFetchApp.fetch('https://api.line.me/v2/bot/' + sourceType + '/' + sourceId + '/leave', {
@@ -184,7 +208,7 @@ var Line = ((l) => {
                 'method': 'post',
             });
         } catch (ex) {
-            GoogleSheet.setLog('Line.leave, ex = ' + ex);
+            GoogleSheet().setLog('Line.leave, ex = ' + ex);
         }
     };
 
