@@ -55,8 +55,8 @@ const GoogleSheet = () => {
      *  log info
      * @param msg
      */
-    gsh.logInfo = (msg) => {
-        let args = [...arguments].map((v) => JSON.stringify(v));
+    gsh.logInfo = (...msg) => {
+        let args = [...msg].map((v) => JSON.stringify(v));
         args.unshift('info');
         GoogleSheet().setLog(args);
     };
@@ -65,8 +65,8 @@ const GoogleSheet = () => {
      * error log
      * @param msg
      */
-    gsh.logError = (msg) => {
-        let args = [...arguments].map((v) => JSON.stringify(v));
+    gsh.logError = (...msg) => {
+        let args = [...msg].map((v) => JSON.stringify(v));
         args.unshift('error');
         GoogleSheet().setLog(args);
     }
