@@ -14,6 +14,8 @@ const GoogleSheet = () => {
     // 取得 eat_what log table
     let sheetEat = christinaSheet.getSheetByName('eat_what');
 
+    let gsh = {};
+
     /**
      * 取得 line status 狀態
      * @returns {*}
@@ -25,8 +27,6 @@ const GoogleSheet = () => {
             GoogleSheet().logError('GoogleSheet.lineStatus, ex = ' + ex);
         }
     })();
-
-    var gsh = {};
 
     /**
      * 寫入 line status 狀態
