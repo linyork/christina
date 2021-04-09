@@ -1,5 +1,5 @@
 // google sheet
-const GoogleSheet = () => {
+const GoogleSheet = ((gsh) => {
     let scriptProperties = PropertiesService.getScriptProperties();
 
     // google sheet 資訊
@@ -13,8 +13,6 @@ const GoogleSheet = () => {
 
     // 取得 eat_what log table
     let sheetEat = christinaSheet.getSheetByName('eat_what');
-
-    let gsh = {};
 
     /**
      * 取得 line status 狀態
@@ -103,4 +101,4 @@ const GoogleSheet = () => {
     };
 
     return gsh;
-};
+})(GoogleSheet || {});
