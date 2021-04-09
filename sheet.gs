@@ -1,5 +1,5 @@
 // google sheet
-const GoogleSheet = ((gsh) => {
+const GoogleSheet = () => {
     let scriptProperties = PropertiesService.getScriptProperties();
 
     // google sheet 資訊
@@ -25,6 +25,8 @@ const GoogleSheet = ((gsh) => {
             GoogleSheet().logError('GoogleSheet.lineStatus, ex = ' + ex);
         }
     })();
+
+    var gsh = {};
 
     /**
      * 寫入 line status 狀態
@@ -102,4 +104,4 @@ const GoogleSheet = ((gsh) => {
     };
 
     return gsh;
-})(GoogleSheet || {});
+};
