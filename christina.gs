@@ -102,6 +102,17 @@ var Christina = ((ct) => {
         }
     };
 
+    // money
+    var moneyScript = (event) => {
+        if (event.lineStatus) {
+            if (event.isMaster) {
+                Line.replyMsg(event.replyToken, '哇主人已經累積了~\n' + Christina.money());
+            } else {
+                Line.replyMsg(event.replyToken, 'Christina 絕對不會告訴你主人真窮~');
+            }
+        }
+    };
+
     // 指令集
     var gCommand = {
         '/h': {
@@ -134,6 +145,10 @@ var Christina = ((ct) => {
         '/eat': {
             'name': '吃什麼',
             'fn': eatScript,
+        },
+        '/money': {
+            'name': '顯示資產',
+            'fn': moneyScript,
         },
         '/start': {
             'name': '啟動',
@@ -297,6 +312,18 @@ var Christina = ((ct) => {
             GoogleSheet().logError('Christina.eatWhat, ex = ' + ex);
         }
     };
+
+    /**
+     * 取得最新資產
+     * @returns {*}
+     */
+    ct.money = () => {
+        try{
+            return GoogleSheet.money();
+        } catch (ex) {
+            GoogleSheet().logError('Christina.money, ex = ' + ex);
+        }
+    }
 
     return ct;
 })(Christina || {});

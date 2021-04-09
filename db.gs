@@ -255,6 +255,18 @@ const DB = (() => {
             }
         };
         /**
+         * 取得 result 第最後一筆資料
+         * @param column
+         * @returns {*}
+         */
+        db.last = (column) => {
+            try {
+                return (result.length === 0) ? {} : (column === undefined) ? result[result.length-1] : result[result.length-1][column];
+            } catch (ex) {
+                GoogleSheet().logError('db.first, ex = ' + ex);
+            }
+        };
+        /**
          * 設定更新table(sheet)
          * @param tableName String
          * @returns {any}

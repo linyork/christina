@@ -194,7 +194,7 @@ var Line = ((l) => {
     };
 
     /**
-     *     // 離開
+     * 離開
      * @param sourceType
      * @param sourceId
      */

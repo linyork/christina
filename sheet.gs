@@ -90,5 +90,17 @@ const GoogleSheet = () => {
         }
     };
 
+    /**
+     * 取得最新資產
+     * @type {{}}
+     */
+    gsh.money = () => {
+        try {
+            return DB().form('money').execute().first('money');
+        } catch (ex) {
+            GoogleSheet().logError('GoogleSheet.money, ex = ' + ex);
+        }
+    };
+
     return gsh;
 };
