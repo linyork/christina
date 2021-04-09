@@ -14,7 +14,7 @@ const GoogleSheet = () => {
     // 取得 eat_what log table
     let sheetEat = christinaSheet.getSheetByName('eat_what');
 
-    let gsh = {}
+    let gsh = {};
 
     /**
      * 取得 line status 狀態
@@ -69,7 +69,7 @@ const GoogleSheet = () => {
         let args = [...msg].map((v) => JSON.stringify(v));
         args.unshift('error');
         GoogleSheet().setLog(args);
-    }
+    };
 
     /**
      * 取得吃什麼
