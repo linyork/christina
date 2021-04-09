@@ -104,12 +104,16 @@ var Christina = ((ct) => {
 
     // money
     var moneyScript = (event) => {
-        if (event.lineStatus) {
-            if (event.isMaster) {
-                Line.replyMsg(event.replyToken, '哇主人已經累積了~\n' + Christina.money());
-            } else {
-                Line.replyMsg(event.replyToken, 'Christina 絕對不會告訴你主人真窮~');
+        try{
+            if (event.lineStatus) {
+                if (event.isMaster) {
+                    Line.replyMsg(event.replyToken, '哇主人已經累積了~\n' + Christina.money());
+                } else {
+                    Line.replyMsg(event.replyToken, 'Christina 絕對不會告訴你主人真窮~');
+                }
             }
+        } catch (ex) {
+            GoogleSheet().logError('Christina.moneyScript, ex = ' + ex);
         }
     };
 
@@ -323,7 +327,7 @@ var Christina = ((ct) => {
         } catch (ex) {
             GoogleSheet().logError('Christina.money, ex = ' + ex);
         }
-    }
+    };
 
     return ct;
 })(Christina || {});
