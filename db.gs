@@ -262,7 +262,6 @@ const DB = (() => {
 
     db.last = (column) => {
         try {
-            GoogleSheet().logError('db.last, ex = ' + result[result.length-1][column]);
             return (result.length === 0) ? {} : (column === undefined) ? result[result.length-1] : result[result.length-1][column];
         } catch (ex) {
             GoogleSheet().logError('db.last, ex = ' + ex);

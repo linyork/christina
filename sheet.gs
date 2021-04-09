@@ -96,7 +96,7 @@ const GoogleSheet = () => {
      */
     gsh.money = () => {
         try {
-            return DB().form('money').execute().last('money');
+            return 123;
         } catch (ex) {
             GoogleSheet().logError('GoogleSheet.money, ex = ' + ex);
         }
