@@ -319,7 +319,7 @@ var Christina = ((ct) => {
      */
     ct.money = () => {
         try{
-            return GoogleSheet.money();
+            return GoogleSheet().money();
         } catch (ex) {
             GoogleSheet().logError('Christina.money, ex = ' + ex);
         }
