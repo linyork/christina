@@ -92,7 +92,7 @@ const GoogleSheet = () => {
 
     /**
      * 取得最新資產
-     * @type {{}}
+     * @returns {*}
      */
     gsh.money = () => {
         try {
