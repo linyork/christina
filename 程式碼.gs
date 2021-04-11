@@ -336,51 +336,51 @@ var Christina = ((ct) => {
 
 // DB (物件)
 var DB = (() => {
-    let scriptProperties = PropertiesService.getScriptProperties();
+    var scriptProperties = PropertiesService.getScriptProperties();
 
     // google sheet 資訊
-    let sheetId = scriptProperties.getProperty('SHEET_ID');
+    var sheetId = scriptProperties.getProperty('SHEET_ID');
 
     // 取得 sheet
-    let christinaSheet = SpreadsheetApp.openById(sheetId);
+    var christinaSheet = SpreadsheetApp.openById(sheetId);
 
     // type
-    let type;
+    var type;
 
     // columns
-    let columns = [];
+    var columns = [];
 
-    let selectColumns = {};
+    var selectColumns = {};
 
-    let whereCondition = [];
+    var whereCondition = [];
 
-    let updateData = [];
+    var updateData = [];
 
     // table
-    let table;
+    var table;
 
-    let allData;
+    var allData;
 
     // last column
-    let lastColumn;
+    var lastColumn;
 
     // last row
-    let lastRow;
+    var lastRow;
 
     // value
-    let result = [];
+    var result = [];
 
     // 處理讀取的 columns
-    let doSelectColumn = () => {
+    var doSelectColumn = () => {
         try {
             if (columns.length) {
-                for (let i = 0; i < lastColumn; i++) {
+                for (var i = 0; i < lastColumn; i++) {
                     if (columns.includes(allData[0][i])) {
                         selectColumns[i] = allData[0][i];
                     }
                 }
             } else {
-                for (let i = 0; i < lastColumn; i++) {
+                for (var i = 0; i < lastColumn; i++) {
                     selectColumns[i] = allData[0][i];
                 }
             }
@@ -390,9 +390,9 @@ var DB = (() => {
     }
 
     // 處理條件式
-    let doWhere = (rowData) => {
+    var doWhere = (rowData) => {
         try {
-            let bool = true;
+            var bool = true;
             whereCondition.forEach((condition) => {
                 switch (condition['condition']) {
                     case '=':
@@ -431,13 +431,13 @@ var DB = (() => {
     }
 
     // 處理讀取的資料
-    let doResult = () => {
+    var doResult = () => {
         try {
-            let rowData = {};
-            let tempRowData = {};
+            var rowData = {};
+            var tempRowData = {};
             if (Object.keys(selectColumns).length === 0) {
-                for (let i = 1; i < lastRow; i++) {
-                    for (let j = 0; j < lastColumn; j++) {
+                for (var i = 1; i < lastRow; i++) {
+                    for (var j = 0; j < lastColumn; j++) {
                         rowData[selectColumns[j]] = allData[i][j];
                     }
                     if (doWhere(rowData)) result.push(rowData);
@@ -445,8 +445,8 @@ var DB = (() => {
                 }
 
             } else {
-                for (let i = 1; i < lastRow; i++) {
-                    for (let j = 0; j < lastColumn; j++) {
+                for (var i = 1; i < lastRow; i++) {
+                    for (var j = 0; j < lastColumn; j++) {
                         tempRowData[selectColumns[j]] = allData[i][j];
                         if (j in selectColumns) {
                             rowData[selectColumns[j]] = allData[i][j];
@@ -462,19 +462,19 @@ var DB = (() => {
     }
 
     // 處理更新資料
-    let doUpdate = () => {
+    var doUpdate = () => {
         try {
-            let rowData = {};
-            for (let i = 1; i < lastRow; i++) {
-                for (let j = 0; j < lastColumn; j++) {
+            var rowData = {};
+            for (var i = 1; i < lastRow; i++) {
+                for (var j = 0; j < lastColumn; j++) {
                     rowData[selectColumns[j]] = allData[i][j];
                 }
                 if (doWhere(rowData)) {
                     updateData.forEach((data) => {
-                        let key = Object.keys(data)[0];
+                        var key = Object.keys(data)[0];
                         rowData[key] = data[key];
                     });
-                    let tmpArray = [];
+                    var tmpArray = [];
                     Object.keys(rowData).forEach((key) => {
                         tmpArray.push(rowData[key]);
                     });
@@ -487,7 +487,7 @@ var DB = (() => {
         }
     }
 
-    let db = {};
+    var db = {};
 
     /**
      * 設定查詢欄位
@@ -632,7 +632,7 @@ var DB = (() => {
      */
     db.set = (columnName, value) => {
         try {
-            let tempData = {};
+            var tempData = {};
             tempData[columnName] = value;
             updateData.push(tempData);
         } catch (ex) {
@@ -886,19 +886,19 @@ var Line = ((l) => {
 
 // GoogleSheet (單例)
 var GoogleSheet = ((gsh) => {
-    let scriptProperties = PropertiesService.getScriptProperties();
+    var scriptProperties = PropertiesService.getScriptProperties();
 
     // google sheet 資訊
-    let sheetId = scriptProperties.getProperty('SHEET_ID');
+    var sheetId = scriptProperties.getProperty('SHEET_ID');
 
     // 取得 sheet
-    let christinaSheet = SpreadsheetApp.openById(sheetId);
+    var christinaSheet = SpreadsheetApp.openById(sheetId);
 
     // 取得 console log table
-    let sheetConsoleLog = christinaSheet.getSheetByName('consolelog');
+    var sheetConsoleLog = christinaSheet.getSheetByName('consolelog');
 
     // 取得 eat_what log table
-    let sheetEat = christinaSheet.getSheetByName('eat_what');
+    var sheetEat = christinaSheet.getSheetByName('eat_what');
 
     /**
      * 取得 line status 狀態
@@ -930,7 +930,7 @@ var GoogleSheet = ((gsh) => {
      */
     gsh.setLog = (values) => {
         if (sheetConsoleLog != null) {
-            let newRow = sheetConsoleLog.getLastRow() + 1;
+            var newRow = sheetConsoleLog.getLastRow() + 1;
             sheetConsoleLog.getRange(newRow, 1, 1, values.length).setValues([values]);
         }
     };
@@ -940,7 +940,7 @@ var GoogleSheet = ((gsh) => {
      * @param msg
      */
     gsh.logInfo = (...msg) => {
-        let args = [...msg].map((v) => JSON.stringify(v));
+        var args = [...msg].map((v) => JSON.stringify(v));
         args.unshift('info');
         gsh.setLog(args);
     };
@@ -950,7 +950,7 @@ var GoogleSheet = ((gsh) => {
      * @param msg
      */
     gsh.logError = (...msg) => {
-        let args = [...msg].map((v) => JSON.stringify(v));
+        var args = [...msg].map((v) => JSON.stringify(v));
         args.unshift('error');
         gsh.setLog(args);
     };
@@ -961,11 +961,11 @@ var GoogleSheet = ((gsh) => {
      */
     gsh.eatWhat = () => {
         try {
-            let dataExport = {};
-            let lastRow = sheetEat.getLastRow();
-            let lastColumn = sheetEat.getLastColumn();
-            let data = sheetEat.getRange(1, 1, lastRow, lastColumn).getValues();
-            for (let i = 0; i <= data.length; i++) {
+            var dataExport = {};
+            var lastRow = sheetEat.getLastRow();
+            var lastColumn = sheetEat.getLastColumn();
+            var data = sheetEat.getRange(1, 1, lastRow, lastColumn).getValues();
+            for (var i = 0; i <= data.length; i++) {
                 dataExport[i] = data[i];
             }
             return dataExport[Math.floor(Math.random() * data.length)];
