@@ -1,5 +1,5 @@
 //  Christina (單例)
-const Christina = ((ct) => {
+var Christina = ((ct) => {
     var scriptProperties = PropertiesService.getScriptProperties();
     // h
     var hScript = (event) => {
@@ -335,7 +335,7 @@ const Christina = ((ct) => {
 })(Christina || {});
 
 // DB (物件)
-const DB = (() => {
+var DB = (() => {
     let scriptProperties = PropertiesService.getScriptProperties();
 
     // google sheet 資訊
@@ -645,7 +645,7 @@ const DB = (() => {
 });
 
 // GoogleDrive (單例)
-const GoogleDrive = ((gd) => {
+var GoogleDrive = ((gd) => {
     var driveApp = DriveApp;
 
     /**
@@ -668,7 +668,7 @@ const GoogleDrive = ((gd) => {
 })(GoogleDrive || {});
 
 // Line (單例)
-const Line = ((l) => {
+var Line = ((l) => {
     /**
      * private member
      */
@@ -885,7 +885,7 @@ const Line = ((l) => {
 })(Line || {});
 
 // GoogleSheet (單例)
-const GoogleSheet = ((gsh) => {
+var GoogleSheet = ((gsh) => {
     let scriptProperties = PropertiesService.getScriptProperties();
 
     // google sheet 資訊
