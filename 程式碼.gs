@@ -884,7 +884,7 @@ const Line = ((l) => {
     return l;
 })(Line || {});
 
-// GoogleSheet (function)
+// GoogleSheet (單例)
 const GoogleSheet = ((gsh) => {
     let scriptProperties = PropertiesService.getScriptProperties();
 
