@@ -1,5 +1,5 @@
 //  Christina (單例)
-var Christina = ((ct) => {
+const Christina = ((ct) => {
     var scriptProperties = PropertiesService.getScriptProperties();
     // h
     var hScript = (event) => {
@@ -80,7 +80,7 @@ var Christina = ((ct) => {
             if (event.lineStatus) {
                 Line.replyMsg(event.replyToken, 'Christina 在這兒～ \n主人有什麼吩咐嗎～');
             } else {
-                GoogleSheet().setLineStatus(true);
+                GoogleSheet.setLineStatus(true);
                 Line.replyMsg(event.replyToken, 'Christina 開始上班～ \n主人有什麼事請吩咐～ \n要 Christina 下班請輸入 /end');
             }
         } else {
@@ -92,7 +92,7 @@ var Christina = ((ct) => {
     var endScript = (event) => {
         if (event.isMaster) {
             if (event.lineStatus) {
-                GoogleSheet().setLineStatus(false);
+                GoogleSheet.setLineStatus(false);
                 Line.replyMsg(event.replyToken, 'Christina 暫時下班～ \n勿掛念～ \n要 Christina 上班請輸入 /start');
             } else {
                 Line.replyMsg(event.replyToken, 'Christina 已經下班了喔~');
@@ -113,7 +113,7 @@ var Christina = ((ct) => {
                 }
             }
         } catch (ex) {
-            GoogleSheet().logError('Christina.moneyScript, ex = ' + ex);
+            GoogleSheet.logError('Christina.moneyScript, ex = ' + ex);
         }
     };
 
@@ -197,7 +197,7 @@ var Christina = ((ct) => {
             }
             return commandString;
         } catch (ex) {
-            GoogleSheet().logError('Christina.getCommandList, ex = ' + ex);
+            GoogleSheet.logError('Christina.getCommandList, ex = ' + ex);
         }
     };
 
@@ -233,7 +233,7 @@ var Christina = ((ct) => {
             }];
             return template;
         } catch (ex) {
-            GoogleSheet().logError('Christina.getCommandTemp, ex = ' + ex);
+            GoogleSheet.logError('Christina.getCommandTemp, ex = ' + ex);
         }
     };
 
@@ -247,7 +247,7 @@ var Christina = ((ct) => {
             var adminArray = Christina.adminString.split(",");
             return adminArray.includes(userId);
         } catch (ex) {
-            GoogleSheet().logError('Christina.checkMaster, ex = ' + ex);
+            GoogleSheet.logError('Christina.checkMaster, ex = ' + ex);
         }
     };
 
@@ -260,7 +260,7 @@ var Christina = ((ct) => {
         try {
             return msg.search(/^\//) !== -1;
         } catch (ex) {
-            GoogleSheet().logError('Christina.checkMaster, ex = ' + ex);
+            GoogleSheet.logError('Christina.checkMaster, ex = ' + ex);
         }
     };
 
@@ -273,7 +273,7 @@ var Christina = ((ct) => {
         try {
             return (msg === "") ? "" : msg.split(" ").shift();
         } catch (ex) {
-            GoogleSheet().logError('Christina.getCommand, ex = ' + ex);
+            GoogleSheet.logError('Christina.getCommand, ex = ' + ex);
         }
     };
 
@@ -291,7 +291,7 @@ var Christina = ((ct) => {
             }
             return paras;
         } catch (ex) {
-            GoogleSheet().logError('Christina.getCommandParam, ex = ' + ex);
+            GoogleSheet.logError('Christina.getCommandParam, ex = ' + ex);
         }
     };
 
@@ -303,7 +303,7 @@ var Christina = ((ct) => {
         try {
             return Math.floor(Math.random() * 6 + 1);
         } catch (ex) {
-            GoogleSheet().logError('Christina.roll, ex = ' + ex);
+            GoogleSheet.logError('Christina.roll, ex = ' + ex);
         }
     };
 
@@ -313,9 +313,9 @@ var Christina = ((ct) => {
      */
     ct.eatWhat = () => {
         try {
-            return GoogleSheet().eatWhat();
+            return GoogleSheet.eatWhat();
         } catch (ex) {
-            GoogleSheet().logError('Christina.eatWhat, ex = ' + ex);
+            GoogleSheet.logError('Christina.eatWhat, ex = ' + ex);
         }
     };
 
@@ -325,9 +325,9 @@ var Christina = ((ct) => {
      */
     ct.money = () => {
         try{
-            return GoogleSheet().money();
+            return GoogleSheet.money();
         } catch (ex) {
-            GoogleSheet().logError('Christina.money, ex = ' + ex);
+            GoogleSheet.logError('Christina.money, ex = ' + ex);
         }
     };
 
@@ -385,7 +385,7 @@ const DB = (() => {
                 }
             }
         } catch (ex) {
-            GoogleSheet().logError('db.doSelectColumn, ex = ' + ex);
+            GoogleSheet.logError('db.doSelectColumn, ex = ' + ex);
         }
     }
 
@@ -426,7 +426,7 @@ const DB = (() => {
             });
             return bool;
         } catch (ex) {
-            GoogleSheet().logError('db.doWhere, ex = ' + ex);
+            GoogleSheet.logError('db.doWhere, ex = ' + ex);
         }
     }
 
@@ -457,7 +457,7 @@ const DB = (() => {
                 }
             }
         } catch (ex) {
-            GoogleSheet().logError('db.doResult, ex = ' + ex);
+            GoogleSheet.logError('db.doResult, ex = ' + ex);
         }
     }
 
@@ -483,7 +483,7 @@ const DB = (() => {
                 rowData = {};
             }
         } catch (ex) {
-            GoogleSheet().logError('db.doUpdate, ex = ' + ex);
+            GoogleSheet.logError('db.doUpdate, ex = ' + ex);
         }
     }
 
@@ -502,7 +502,7 @@ const DB = (() => {
                 }
             });
         } catch (ex) {
-            GoogleSheet().logError('db.select, ex = ' + ex);
+            GoogleSheet.logError('db.select, ex = ' + ex);
         }
         return db;
     };
@@ -523,7 +523,7 @@ const DB = (() => {
             allData = table.getDataRange().getValues();
 
         } catch (ex) {
-            GoogleSheet().logError('db.table, ex = ' + ex);
+            GoogleSheet.logError('db.table, ex = ' + ex);
         }
         return db;
     };
@@ -538,7 +538,7 @@ const DB = (() => {
         try {
             whereCondition.push({columnName: columnName, condition: condition, value: value});
         } catch (ex) {
-            GoogleSheet().logError('db.where, ex = ' + ex);
+            GoogleSheet.logError('db.where, ex = ' + ex);
         }
         return db;
     };
@@ -562,7 +562,7 @@ const DB = (() => {
 
             }
         } catch (ex) {
-            GoogleSheet().logError('db.get, ex = ' + ex);
+            GoogleSheet.logError('db.get, ex = ' + ex);
         }
         return db;
     };
@@ -575,7 +575,7 @@ const DB = (() => {
         try {
             return (result.length === 0) ? {} : result;
         } catch (ex) {
-            GoogleSheet().logError('db.get, ex = ' + ex);
+            GoogleSheet.logError('db.get, ex = ' + ex);
         }
     };
     /**
@@ -587,7 +587,7 @@ const DB = (() => {
         try {
             return (result.length === 0) ? {} : (column === undefined) ? result[0] : result[0][column];
         } catch (ex) {
-            GoogleSheet().logError('db.first, ex = ' + ex);
+            GoogleSheet.logError('db.first, ex = ' + ex);
         }
     };
     /**
@@ -600,7 +600,7 @@ const DB = (() => {
         try {
             return (result.length === 0) ? {} : (column === undefined) ? result[result.length-1] : result[result.length-1][column];
         } catch (ex) {
-            GoogleSheet().logError('db.last, ex = ' + ex);
+            GoogleSheet.logError('db.last, ex = ' + ex);
         }
     };
     /**
@@ -620,7 +620,7 @@ const DB = (() => {
             allData = table.getDataRange().getValues();
 
         } catch (ex) {
-            GoogleSheet().logError('db.table, ex = ' + ex);
+            GoogleSheet.logError('db.table, ex = ' + ex);
         }
         return db;
     };
@@ -636,7 +636,7 @@ const DB = (() => {
             tempData[columnName] = value;
             updateData.push(tempData);
         } catch (ex) {
-            GoogleSheet().logError('db.set, ex = ' + ex);
+            GoogleSheet.logError('db.set, ex = ' + ex);
         }
         return db;
     };
@@ -645,7 +645,7 @@ const DB = (() => {
 });
 
 // GoogleDrive (單例)
-var GoogleDrive = ((gd) => {
+const GoogleDrive = ((gd) => {
     var driveApp = DriveApp;
 
     /**
@@ -659,7 +659,7 @@ var GoogleDrive = ((gd) => {
             return (files.hasNext()) ? 'https://lh3.googleusercontent.com/d/' + files.next().getId() : null;
 
         } catch (ex) {
-            GoogleSheet().logError('GoogleDrive.getImageUrl, ex = ' + ex);
+            GoogleSheet.logError('GoogleDrive.getImageUrl, ex = ' + ex);
         }
     };
 
@@ -668,7 +668,7 @@ var GoogleDrive = ((gd) => {
 })(GoogleDrive || {});
 
 // Line (單例)
-var Line = ((l) => {
+const Line = ((l) => {
     /**
      * private member
      */
@@ -688,17 +688,17 @@ var Line = ((l) => {
                 case 'room':
                     return source.roomId;
                 default:
-                    GoogleSheet().logError('Line, getSourceId, invalid source type!');
+                    GoogleSheet.logError('Line, getSourceId, invalid source type!');
                     break;
             }
         } catch (ex) {
-            GoogleSheet().logError('Line.getSourceId, ex = ' + ex);
+            GoogleSheet.logError('Line.getSourceId, ex = ' + ex);
         }
     };
 
     // 傳送 payload 給 line
     var sendMsg = (url, payload) => {
-        GoogleSheet().logInfo(payload);
+        GoogleSheet.logInfo(payload);
         try {
             UrlFetchApp.fetch(url, {
                 'headers': {
@@ -709,7 +709,7 @@ var Line = ((l) => {
                 'payload': payload
             });
         } catch (ex) {
-            GoogleSheet().logError('Line.sendMsg, ex = ' + ex);
+            GoogleSheet.logError('Line.sendMsg, ex = ' + ex);
         }
     };
 
@@ -726,10 +726,10 @@ var Line = ((l) => {
             event.commandParam = (event.message == null) ? false : Christina.getCommandParam(event.message.text);
             event.isMaster = Christina.checkMaster(event.source.userId);
             event.sourceId = getSourceId(event.source);
-            event.lineStatus = GoogleSheet().lineStatus;
+            event.lineStatus = GoogleSheet.lineStatus;
             Line.event = event;
         } catch (ex) {
-            GoogleSheet().logError('Line.eventInit, ex = ' + ex);
+            GoogleSheet.logError('Line.eventInit, ex = ' + ex);
         }
     };
 
@@ -775,7 +775,7 @@ var Line = ((l) => {
                     break;
             }
         } catch (ex) {
-            GoogleSheet().logError('Line.startEvent, ex = ' + ex);
+            GoogleSheet.logError('Line.startEvent, ex = ' + ex);
         }
     };
 
@@ -794,7 +794,7 @@ var Line = ((l) => {
                 }]
             }));
         } catch (ex) {
-            GoogleSheet().logError('Line.pushMsg, ex = ' + ex);
+            GoogleSheet.logError('Line.pushMsg, ex = ' + ex);
         }
     };
 
@@ -814,7 +814,7 @@ var Line = ((l) => {
                     }]
                 }));
         } catch (ex) {
-            GoogleSheet().logError('Line.replyMsg, ex = ' + ex);
+            GoogleSheet.logError('Line.replyMsg, ex = ' + ex);
         }
     };
 
@@ -836,7 +836,7 @@ var Line = ((l) => {
                     }]
                 }));
         } catch (ex) {
-            GoogleSheet().logError('Line.replyBtnTemp, ex = ' + ex);
+            GoogleSheet.logError('Line.replyBtnTemp, ex = ' + ex);
         }
     };
 
@@ -858,7 +858,7 @@ var Line = ((l) => {
                     }]
                 }));
         } catch (ex) {
-            GoogleSheet().logError('Line.replyBtnTemp, ex = ' + ex);
+            GoogleSheet.logError('Line.replyBtnTemp, ex = ' + ex);
         }
     };
 
@@ -877,7 +877,7 @@ var Line = ((l) => {
                 'method': 'post',
             });
         } catch (ex) {
-            GoogleSheet().logError('Line.leave, ex = ' + ex);
+            GoogleSheet.logError('Line.leave, ex = ' + ex);
         }
     };
 
@@ -885,7 +885,7 @@ var Line = ((l) => {
 })(Line || {});
 
 // GoogleSheet (function)
-const GoogleSheet = () => {
+const GoogleSheet = ((gsh) => {
     let scriptProperties = PropertiesService.getScriptProperties();
 
     // google sheet 資訊
@@ -899,8 +899,6 @@ const GoogleSheet = () => {
 
     // 取得 eat_what log table
     let sheetEat = christinaSheet.getSheetByName('eat_what');
-
-    let gsh = {};
 
     /**
      * 取得 line status 狀態
@@ -922,7 +920,7 @@ const GoogleSheet = () => {
         try {
             DB().update('christina').set('status', data).execute();
         } catch (ex) {
-            GoogleSheet().logError('GoogleSheet.setLineStatus, ex = ' + ex);
+            GoogleSheet.logError('GoogleSheet.setLineStatus, ex = ' + ex);
         }
     };
 
@@ -989,12 +987,12 @@ const GoogleSheet = () => {
     };
 
     return gsh;
-};
+})(GoogleSheet || {});
 
 // 主程序
 function doPost(e) {
     try {
-        GoogleSheet().logInfo(e.postData.contents);
+        GoogleSheet.logInfo(e.postData.contents);
         var value = JSON.parse(e.postData.contents);
         if (value.events != null) {
             for (var i in value.events) {
@@ -1003,7 +1001,7 @@ function doPost(e) {
             }
         }
     } catch (e) {
-        GoogleSheet().logError(e);
+        GoogleSheet.logError(e);
     }
 }
 
@@ -1012,7 +1010,7 @@ function takeBreak() {
     try {
         Line.pushMsg(Christina.adminString.split(",")[0], "請主人起來走一走~\n休息一下了~");
     } catch (ex) {
-        GoogleSheet().logError('crontab, takeBreak, ex = ' + ex);
+        GoogleSheet.logError('crontab, takeBreak, ex = ' + ex);
     }
 }
 
@@ -1021,6 +1019,6 @@ function recordAssets() {
     try {
         Line.pushMsg(Christina.adminString.split(",")[0], "請主人記得紀錄資產價值喔~");
     } catch (ex) {
-        GoogleSheet().logError('crontab, recordAssets, ex = ' + ex);
+        GoogleSheet.logError('crontab, recordAssets, ex = ' + ex);
     }
 }
