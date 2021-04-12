@@ -51,11 +51,11 @@ var Christina = ((ct) => {
     var memeScript = (event) => {
         if (event.lineStatus) {
             var url = GoogleDrive.getImageUrl(event.commandParam[0]);
-            if(event.commandParam[0] === undefined) {
+            if(url === null) {
                 if (event.isMaster) {
-                    Line.replyMsg(event.replyToken, '主人忘了梗圖的指令是 /meme [梗圖] 了嗎?');
+                    Line.replyMsg(event.replyToken, '主人忘了梗圖的指令是 meme [梗圖] 了嗎?');
                 } else {
-                    Line.replyMsg(event.replyToken, '梗圖的指令是 /meme [梗圖]');
+                    Line.replyMsg(event.replyToken, '梗圖的指令是 meme [梗圖]');
                 }
             } else if (url) {
                 Line.replyImageTemp(event.replyToken, url, url);
@@ -83,7 +83,7 @@ var Christina = ((ct) => {
                 Line.replyMsg(event.replyToken, 'Christina 在這兒～ \n主人有什麼吩咐嗎～');
             } else {
                 GoogleSheet.setLineStatus(true);
-                Line.replyMsg(event.replyToken, 'Christina 開始上班～ \n主人有什麼事請吩咐～ \n要 Christina 下班請輸入 /end');
+                Line.replyMsg(event.replyToken, 'Christina 開始上班～ \n主人有什麼事請吩咐～ \n要 Christina 下班請輸入 end');
             }
         } else {
             Line.replyMsg(event.replyToken, 'Christina 還沒獲得主人同意~\n讓客倌決定上班時間~');
@@ -95,7 +95,7 @@ var Christina = ((ct) => {
         if (event.isMaster) {
             if (event.lineStatus) {
                 GoogleSheet.setLineStatus(false);
-                Line.replyMsg(event.replyToken, 'Christina 暫時下班～ \n勿掛念～ \n要 Christina 上班請輸入 /start');
+                Line.replyMsg(event.replyToken, 'Christina 暫時下班～ \n勿掛念～ \n要 Christina 上班請輸入 start');
             } else {
                 Line.replyMsg(event.replyToken, 'Christina 已經下班了喔~');
             }
@@ -125,42 +125,42 @@ var Christina = ((ct) => {
             'name': '基礎指令',
             'fn': christinaScript,
         },
-        '/cmd': {
+        'command': {
             'name': '指令列表',
             'fn': cmdScript,
         },
-        '/leave': {
+        'leave': {
             'name': '離開',
             'fn': leaveScript,
         },
-        '/myid': {
+        'myid': {
             'name': '顯示ID',
             'fn': myidScript,
         },
-        '/roll': {
+        'roll': {
             'name': '擲骰子',
             'fn': rollScript,
         },
     };
 
     var mCommand = {
-        '/meme': {
+        'meme': {
             'name': '梗圖',
             'fn': memeScript,
         },
-        '/eat': {
+        'eat': {
             'name': '吃什麼',
             'fn': eatScript,
         },
-        '/money': {
+        'money': {
             'name': '顯示資產',
             'fn': moneyScript,
         },
-        '/start': {
+        'start': {
             'name': '啟動',
             'fn': startScript,
         },
-        '/end': {
+        'end': {
             'name': '結束',
             'fn': endScript,
         },
@@ -227,16 +227,16 @@ var Christina = ((ct) => {
                 "actions": [
                     {
                         "type": "message",
-                        "label": Christina.allCommand['/myid'].name,
-                        "text": "/myid"
+                        "label": Christina.allCommand['myid'].name,
+                        "text": "myid"
                     }, {
                         "type": "message",
-                        "label": Christina.allCommand['/roll'].name,
-                        "text": "/roll"
+                        "label": Christina.allCommand['roll'].name,
+                        "text": "roll"
                     }, {
                         "type": "message",
-                        "label": Christina.allCommand['/meme'].name,
-                        "text": "/meme"
+                        "label": Christina.allCommand['meme'].name,
+                        "text": "meme"
                     },
                 ]
             });
@@ -252,16 +252,16 @@ var Christina = ((ct) => {
                     "actions": [
                         {
                             "type": "message",
-                            "label": Christina.allCommand['/eat'].name,
-                            "text": "/eat"
+                            "label": Christina.allCommand['eat'].name,
+                            "text": "eat"
                         }, {
                             "type": "message",
-                            "label": Christina.allCommand['/money'].name,
-                            "text": "/money"
+                            "label": Christina.allCommand['money'].name,
+                            "text": "money"
                         }, {
                             "type": "message",
-                            "label": Christina.allCommand['/cmd'].name,
-                            "text": "/cmd"
+                            "label": Christina.allCommand['command'].name,
+                            "text": "command"
                         },
                     ]
                 });
@@ -273,16 +273,16 @@ var Christina = ((ct) => {
                     "actions": [
                         {
                             "type": "message",
-                            "label": Christina.allCommand['/start'].name,
-                            "text": "/start"
+                            "label": Christina.allCommand['start'].name,
+                            "text": "start"
                         }, {
                             "type": "message",
-                            "label": Christina.allCommand['/end'].name,
-                            "text": "/end"
+                            "label": Christina.allCommand['end'].name,
+                            "text": "end"
                         }, {
                             "type": "message",
-                            "label": Christina.allCommand['/leave'].name,
-                            "text": "/leave"
+                            "label": Christina.allCommand['leave'].name,
+                            "text": "leave"
                         },
                     ]
                 });
@@ -316,7 +316,8 @@ var Christina = ((ct) => {
      */
     ct.checkCommand = (isMaster, msg) => {
         try {
-            return (isMaster) ? Christina.allCommand.hasOwnProperty(msg) : Christina.guestCommand.hasOwnProperty(msg);
+            var command = (msg === "") ? "" : msg.split(" ").shift();
+            return (isMaster) ? Christina.allCommand.hasOwnProperty(command) : Christina.guestCommand.hasOwnProperty(command);
         } catch (ex) {
             GoogleSheet.logError('Christina.checkCommand, ex = ' + ex);
         }
@@ -927,7 +928,7 @@ var Line = ((l) => {
      */
     l.leave = (sourceType, sourceId) => {
         try {
-            UrlFetchApp.fetch('https://api.line.me/v2/bot/' + sourceType + '/' + sourceId + '/leave', {
+            UrlFetchApp.fetch('https://api.line.me/v2/bot/' + sourceType + '/' + sourceId + 'leave', {
                 'headers': {
                     'Content-Type': 'application/json; charset=UTF-8',
                     'Authorization': 'Bearer ' + channelToken,
