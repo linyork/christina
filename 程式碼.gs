@@ -8,7 +8,7 @@ var Christina = ((ct) => {
     // christina
     var christinaScript = (event) => {
         if (event.lineStatus) {
-            Line.replyMsg(event.replyToken, Christina.getCommandList(event.isMaster));
+            Line.replyBtnTemp(event.replyToken, 'Christina 在這兒～', Christina.getCommandTemp(event.isMaster))
         } else {
             Line.replyMsg(event.replyToken, "Christina 下班了喔");
         }
@@ -141,27 +141,27 @@ var Christina = ((ct) => {
     var gCommand = {
         'christina': {
             'name': '基礎指令',
-            'alias': ['安安', '在嗎', 'Christina', '哈嘍', 'Hi', 'hi'],
+            'alias': ['christina', '安安', '在嗎', 'Christina', '哈嘍', 'Hi', 'hi'],
             'fn': christinaScript,
         },
         'command': {
             'name': '指令列表',
-            'alias': ['cmd', '指令', '指令列表'],
+            'alias': ['command', 'cmd', '指令', '指令列表'],
             'fn': cmdScript,
         },
         'leave': {
             'name': '離開',
-            'alias': ['滾', 'christina 給我離開', 'Christina 給我滾', '給我滾', '離開'],
+            'alias': ['leave', '滾', 'Christina給我離開', 'christina給我離開', 'Christina給我滾', 'christina給我滾', '給我滾', '離開'],
             'fn': leaveScript,
         },
         'myid': {
             'name': '顯示ID',
-            'alias': ['給我id', 'id',],
+            'alias': ['myid', '給我id', 'id',],
             'fn': myidScript,
         },
         'roll': {
             'name': '擲骰子',
-            'alias': ['擲骰子', '擲'],
+            'alias': ['roll', '擲骰子', '擲'],
             'fn': rollScript,
         },
     };
@@ -169,27 +169,27 @@ var Christina = ((ct) => {
     var mCommand = {
         'meme': {
             'name': '梗圖',
-            'alias': ['圖', '梗圖'],
+            'alias': ['meme', '圖', '梗圖'],
             'fn': memeScript,
         },
         'eat': {
             'name': '吃什麼',
-            'alias': ['吃什麼', 'christina 吃什麼', 'Christina 吃什麼', '今天吃什麼'],
+            'alias': ['eat', '吃什麼', '吃啥', 'christina吃什麼', 'Christina吃什麼', '今天吃什麼'],
             'fn': eatScript,
         },
         'money': {
             'name': '顯示資產',
-            'alias': ['顯示資產', '資產'],
+            'alias': ['money', '顯示資產', '資產'],
             'fn': moneyScript,
         },
         'start': {
             'name': '啟動',
-            'alias': ['啟動', '上班嘍', '上班', 'christina 上班嘍', 'Christina 上班嘍'],
+            'alias': ['start', '啟動', '上班嘍', '上班', 'christina上班嘍', 'Christina上班嘍'],
             'fn': startScript,
         },
         'end': {
             'name': '結束',
-            'alias': ['結束', '下班嘍', '下班', 'christina 下班嘍', 'Christina 下班嘍'],
+            'alias': ['end', '結束', '下班嘍', '下班', 'christina下班嘍', 'Christina下班嘍'],
             'fn': endScript,
         },
     };
@@ -337,30 +337,30 @@ var Christina = ((ct) => {
     };
 
     /**
-     * 檢查是否是指令
+     * 檢查是否是指令並取得指令
      * @param isMaster
      * @param msg
-     * @returns {boolean}
+     * @returns {{isCommand: boolean, command: string}}
      */
     ct.checkCommand = (isMaster, msg) => {
         try {
-            var command = (msg === "") ? "" : msg.split(" ").shift();
-            return (isMaster) ? Christina.allCommand.hasOwnProperty(command) : Christina.guestCommand.hasOwnProperty(command);
+            var msgCommand = msg.split(" ").shift();
+            var commandList = (isMaster) ? Christina.allCommand : Christina.guestCommand;
+            var cmdObj = {
+                "isCommand": false,
+                "command": "",
+            }
+            for (const [command, cObject] of Object.entries(commandList)) {
+                cObject.alias.forEach((alias) => {
+                    if (alias === msgCommand) {
+                        cmdObj.isCommand = true;
+                        cmdObj.command = command;
+                    }
+                });
+            }
+            return cmdObj;
         } catch (ex) {
             GoogleSheet.logError('Christina.checkCommand, ex = ' + ex);
-        }
-    };
-
-    /**
-     * 取得指令參數陣列
-     * @param msg
-     * @returns {*}
-     */
-    ct.getCommand = (msg) => {
-        try {
-            return (msg === "") ? "" : msg.split(" ").shift();
-        } catch (ex) {
-            GoogleSheet.logError('Christina.getCommand, ex = ' + ex);
         }
     };
 
@@ -821,9 +821,16 @@ var Line = ((l) => {
     l.init = (event) => {
         try {
             event.isMaster = Christina.checkMaster(event.source.userId);
-            event.isCommand = (event.message == null) ? false : Christina.checkCommand(event.isMaster,event.message.text);
-            event.command = (event.isCommand) ? Christina.getCommand(event.message.text) : "";
-            event.commandParam = (event.message == null) ? false : Christina.getCommandParam(event.message.text);
+            if(event.message === null){
+                event.isCommand = false;
+                event.command = "";
+                event.commandParam = false;
+            } else {
+                var cmdObj = Christina.checkCommand(event.isMaster,event.message.text);
+                event.isCommand = cmdObj.isCommand;
+                event.command = cmdObj.command;
+                event.commandParam = Christina.getCommandParam(event.message.text);
+            }
             event.sourceId = getSourceId(event.source);
             event.lineStatus = GoogleSheet.lineStatus;
             Line.event = event;
