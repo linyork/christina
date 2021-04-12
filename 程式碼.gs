@@ -1,15 +1,25 @@
-//  Christina (單例)
+/**
+ * Christina
+ * @type {{}}
+ * @description (單例) Christina 所提供的指令
+ */
 var Christina = ((ct) => {
     var scriptProperties = PropertiesService.getScriptProperties();
     // christina
     var christinaScript = (event) => {
-        Line.replyBtnTemp(event.replyToken, 'Christina 在這兒～', Christina.getCommandTemp(event.isMaster))
+        if (event.lineStatus) {
+            Line.replyMsg(event.replyToken, Christina.getCommandList(event.isMaster));
+        } else {
+            Line.replyMsg(event.replyToken, "Christina 下班了喔");
+        }
     };
 
     // cmd
     var cmdScript = (event) => {
         if (event.lineStatus) {
             Line.replyMsg(event.replyToken, Christina.getCommandList(event.isMaster));
+        } else {
+            Line.replyMsg(event.replyToken, "Christina 下班了喔");
         }
     };
 
@@ -17,11 +27,13 @@ var Christina = ((ct) => {
     var leaveScript = (event) => {
         if (event.lineStatus) {
             if (event.isMaster) {
-                Line.replyMsg(event.replyToken, '主人掰掰~\nChristina 先行告退了~');
+                Line.replyMsg(event.replyToken, '主人掰掰~\nChristina 先行告退了');
             } else {
-                Line.replyMsg(event.replyToken, '掰掰~\nChristina 先行告退了~');
+                Line.replyMsg(event.replyToken, 'Bye~\nChristina 先行告退了');
             }
             Line.leave(event.source.type, event.sourceId);
+        } else {
+            Line.replyMsg(event.replyToken, "Christina 下班了喔");
         }
     };
 
@@ -31,8 +43,10 @@ var Christina = ((ct) => {
             if (event.isMaster) {
                 Line.replyMsg(event.replyToken, '主人您的ID是：\n' + event.source.userId);
             } else {
-                Line.replyMsg(event.replyToken, '好的~\n客倌你的ID是：\n' + event.source.userId);
+                Line.replyMsg(event.replyToken, '客倌你的ID是：\n' + event.source.userId);
             }
+        } else {
+            Line.replyMsg(event.replyToken, "Christina 下班了喔");
         }
     };
 
@@ -40,10 +54,12 @@ var Christina = ((ct) => {
     var rollScript = (event) => {
         if (event.lineStatus) {
             if (event.isMaster) {
-                Line.replyMsg(event.replyToken, '好的 Christina 為主人擲骰子~\n擲出的點數是: ' + Christina.roll());
+                Line.replyMsg(event.replyToken, '好的 Christina 為主人擲骰子\n擲出的點數是: ' + Christina.roll());
             } else {
-                Line.replyMsg(event.replyToken, '好的 Christina 為客倌擲骰子~\n擲出的點數是: ' + Christina.roll());
+                Line.replyMsg(event.replyToken, '好的 Christina 為客倌擲骰子\n擲出的點數是: ' + Christina.roll());
             }
+        } else {
+            Line.replyMsg(event.replyToken, "Christina 下班了喔");
         }
     };
 
@@ -62,6 +78,8 @@ var Christina = ((ct) => {
             } else {
                 Line.replyMsg(event.replyToken, 'Christina 找不到這張圖片QQ');
             }
+        } else {
+            Line.replyMsg(event.replyToken, "Christina 下班了喔");
         }
     }
 
@@ -69,10 +87,25 @@ var Christina = ((ct) => {
     var eatScript = (event) => {
         if (event.lineStatus) {
             if (event.isMaster) {
-                Line.replyMsg(event.replyToken, 'Christina 覺得主人應該吃~\n' + Christina.eatWhat());
+                Line.replyMsg(event.replyToken, 'Christina 覺得主人應該吃\n' + Christina.eatWhat());
             } else {
-                Line.replyMsg(event.replyToken, 'Christina 還沒獲得主人同意~\n來幫客倌決定要吃什麼~');
+                Line.replyMsg(event.replyToken, 'Christina 還沒獲得主人同意~\n來幫客倌決定要吃什麼');
             }
+        } else {
+            Line.replyMsg(event.replyToken, "Christina 下班了喔");
+        }
+    };
+
+    // money
+    var moneyScript = (event) => {
+        if (event.lineStatus) {
+            if (event.isMaster) {
+                Line.replyMsg(event.replyToken, '哇主人已經累積了~\n' + Christina.money());
+            } else {
+                Line.replyMsg(event.replyToken, 'Christina 絕對不會告訴你主人真窮~');
+            }
+        } else {
+            Line.replyMsg(event.replyToken, "Christina 下班了喔");
         }
     };
 
@@ -80,13 +113,13 @@ var Christina = ((ct) => {
     var startScript = (event) => {
         if (event.isMaster) {
             if (event.lineStatus) {
-                Line.replyMsg(event.replyToken, 'Christina 在這兒～ \n主人有什麼吩咐嗎～');
+                Line.replyMsg(event.replyToken, '主人有什麼想讓 Christina 服務的嗎');
             } else {
                 GoogleSheet.setLineStatus(true);
-                Line.replyMsg(event.replyToken, 'Christina 開始上班～ \n主人有什麼事請吩咐～ \n要 Christina 下班請輸入 end');
+                Line.replyMsg(event.replyToken, 'Christina 開始上班 \n主人有什麼事請吩咐 \n要 Christina 下班請輸入 end');
             }
         } else {
-            Line.replyMsg(event.replyToken, 'Christina 還沒獲得主人同意~\n讓客倌決定上班時間~');
+            Line.replyMsg(event.replyToken, '客倌不是 Christina 的主人\n不能叫我上班');
         }
     };
 
@@ -95,27 +128,12 @@ var Christina = ((ct) => {
         if (event.isMaster) {
             if (event.lineStatus) {
                 GoogleSheet.setLineStatus(false);
-                Line.replyMsg(event.replyToken, 'Christina 暫時下班～ \n勿掛念～ \n要 Christina 上班請輸入 start');
+                Line.replyMsg(event.replyToken, 'Christina 暫時下班～ \n勿掛念 \n要 Christina 上班請輸入 start');
             } else {
-                Line.replyMsg(event.replyToken, 'Christina 已經下班了喔~');
+                Line.replyMsg(event.replyToken, 'Christina 已經下班了喔');
             }
         } else {
-            Line.replyMsg(event.replyToken, 'Christina 還沒獲得主人同意~\n讓客倌決定下班時間~');
-        }
-    };
-
-    // money
-    var moneyScript = (event) => {
-        try{
-            if (event.lineStatus) {
-                if (event.isMaster) {
-                    Line.replyMsg(event.replyToken, '哇主人已經累積了~\n' + Christina.money());
-                } else {
-                    Line.replyMsg(event.replyToken, 'Christina 絕對不會告訴你主人真窮~');
-                }
-            }
-        } catch (ex) {
-            GoogleSheet.logError('Christina.moneyScript, ex = ' + ex);
+            Line.replyMsg(event.replyToken, '客倌不是 Christina 的主人\n不能叫我下班');
         }
     };
 
@@ -123,22 +141,27 @@ var Christina = ((ct) => {
     var gCommand = {
         'christina': {
             'name': '基礎指令',
+            'alias': ['安安', '在嗎', 'Christina', '哈嘍', 'Hi', 'hi'],
             'fn': christinaScript,
         },
         'command': {
             'name': '指令列表',
+            'alias': ['cmd', '指令', '指令列表'],
             'fn': cmdScript,
         },
         'leave': {
             'name': '離開',
+            'alias': ['滾', 'christina 給我離開', 'Christina 給我滾', '給我滾', '離開'],
             'fn': leaveScript,
         },
         'myid': {
             'name': '顯示ID',
+            'alias': ['給我id', 'id',],
             'fn': myidScript,
         },
         'roll': {
             'name': '擲骰子',
+            'alias': ['擲骰子', '擲'],
             'fn': rollScript,
         },
     };
@@ -146,22 +169,27 @@ var Christina = ((ct) => {
     var mCommand = {
         'meme': {
             'name': '梗圖',
+            'alias': ['圖', '梗圖'],
             'fn': memeScript,
         },
         'eat': {
             'name': '吃什麼',
+            'alias': ['吃什麼', 'christina 吃什麼', 'Christina 吃什麼', '今天吃什麼'],
             'fn': eatScript,
         },
         'money': {
             'name': '顯示資產',
+            'alias': ['顯示資產', '資產'],
             'fn': moneyScript,
         },
         'start': {
             'name': '啟動',
+            'alias': ['啟動', '上班嘍', '上班', 'christina 上班嘍', 'Christina 上班嘍'],
             'fn': startScript,
         },
         'end': {
             'name': '結束',
+            'alias': ['結束', '下班嘍', '下班', 'christina 下班嘍', 'Christina 下班嘍'],
             'fn': endScript,
         },
     };
@@ -393,7 +421,11 @@ var Christina = ((ct) => {
     return ct;
 })(Christina || {});
 
-// DB (物件)
+/**
+ * DB
+ * @type {function(): {}}
+ * @description (物件) 操作 google sheet 的 model
+ */
 var DB = (() => {
     var scriptProperties = PropertiesService.getScriptProperties();
 
@@ -703,7 +735,11 @@ var DB = (() => {
     return db;
 });
 
-// GoogleDrive (單例)
+/**
+ * GoogleDrive
+ * @type {{}}
+ * @description (單例) 客制化操作 google drive 的 model
+ */
 var GoogleDrive = ((gd) => {
     var driveApp = DriveApp;
 
@@ -726,7 +762,11 @@ var GoogleDrive = ((gd) => {
     return gd;
 })(GoogleDrive || {});
 
-// Line (單例)
+/**
+ * Line
+ * @type {{}}
+ * @description (單例) 操作 line 的 model
+ */
 var Line = ((l) => {
     /**
      * private member
@@ -943,7 +983,11 @@ var Line = ((l) => {
     return l;
 })(Line || {});
 
-// GoogleSheet (單例)
+/**
+ * GoogleSheet
+ * @type {{}}
+ * @description (單例) 客製化操作 google sheet 的 model
+ */
 var GoogleSheet = ((gsh) => {
     var scriptProperties = PropertiesService.getScriptProperties();
 
