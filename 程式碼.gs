@@ -1,9 +1,9 @@
 //  Christina (單例)
 var Christina = ((ct) => {
     var scriptProperties = PropertiesService.getScriptProperties();
-    // h
-    var hScript = (event) => {
-        Line.replyBtnTemp(event.replyToken, '歡迎雇用 Christina', Christina.getCommandTemp())
+    // christina
+    var christinaScript = (event) => {
+        Line.replyBtnTemp(event.replyToken, 'Christina 在這兒～', Christina.getCommandTemp(event.isMaster))
     };
 
     // cmd
@@ -50,15 +50,17 @@ var Christina = ((ct) => {
     // meme
     var memeScript = (event) => {
         if (event.lineStatus) {
-            if (event.isMaster) {
-                var url = GoogleDrive.getImageUrl(event.commandParam[0]);
-                if (url) {
-                    Line.replyImageTemp(event.replyToken, url, url);
+            var url = GoogleDrive.getImageUrl(event.commandParam[0]);
+            if(event.commandParam[0] === undefined) {
+                if (event.isMaster) {
+                    Line.replyMsg(event.replyToken, '主人忘了梗圖的指令是 /meme [梗圖] 了嗎?');
                 } else {
-                    Line.replyMsg(event.replyToken, 'Christina 找不到這張圖片QQ');
+                    Line.replyMsg(event.replyToken, '梗圖的指令是 /meme [梗圖]');
                 }
+            } else if (url) {
+                Line.replyImageTemp(event.replyToken, url, url);
             } else {
-                Line.replyMsg(event.replyToken, 'Christina 還沒獲得主人同意~給客倌梗圖~');
+                Line.replyMsg(event.replyToken, 'Christina 找不到這張圖片QQ');
             }
         }
     }
@@ -119,9 +121,9 @@ var Christina = ((ct) => {
 
     // 指令集
     var gCommand = {
-        '/h': {
+        'christina': {
             'name': '基礎指令',
-            'fn': hScript,
+            'fn': christinaScript,
         },
         '/cmd': {
             'name': '指令列表',
@@ -202,35 +204,90 @@ var Christina = ((ct) => {
     };
 
     /**
-     * 基礎指令
+     * 指令集面板
      * @returns {{}}
      */
-    ct.getCommandTemp = () => {
+    ct.getCommandTemp = (isMaster) => {
         try {
             var driveApp = DriveApp;
-            var files = driveApp.getFilesByName("christina.jpg");
-            var template = {};
-            template.type = 'buttons';
-            template.title = "開始雇用 Christina";
-            template.thumbnailImageUrl = 'https://lh3.googleusercontent.com/d/' + files.next().getId();
-            template.text = '基礎指令清單';
-            template.actions = [{
-                "type": "message",
-                "label": Christina.allCommand['/cmd'].name,
-                "text": "/cmd"
-            }, {
-                "type": "message",
-                "label": Christina.allCommand['/start'].name,
-                "text": "/start"
-            }, {
-                "type": "message",
-                "label": Christina.allCommand['/end'].name,
-                "text": "/end"
-            }, {
-                "type": "message",
-                "label": Christina.allCommand['/leave'].name,
-                "text": "/leave"
-            }];
+            var christina = driveApp.getFilesByName("christina.jpg");
+            var christinaImg = 'https://lh3.googleusercontent.com/d/' + christina.next().getId();
+            var template = {"type": 'carousel'};
+            var columns = [];
+            var defaultAction = {
+                    "type": "message",
+                    "label": "點到圖片或標題",
+                    "text": "christina"
+                };
+            columns.push({
+                "thumbnailImageUrl": christinaImg,
+                "title": "Christina的基本服務",
+                "text": "基本服務",
+                "defaultAction": defaultAction,
+                "actions": [
+                    {
+                        "type": "message",
+                        "label": Christina.allCommand['/myid'].name,
+                        "text": "/myid"
+                    }, {
+                        "type": "message",
+                        "label": Christina.allCommand['/roll'].name,
+                        "text": "/roll"
+                    }, {
+                        "type": "message",
+                        "label": Christina.allCommand['/meme'].name,
+                        "text": "/meme"
+                    },
+                ]
+            });
+            if(isMaster)
+            {
+                var christina2 = driveApp.getFilesByName("christina2.jpg");
+                var christina2Img = 'https://lh3.googleusercontent.com/d/' + christina2.next().getId();
+                columns.push({
+                    "thumbnailImageUrl": christina2Img,
+                    "title": "主人的專屬服務",
+                    "text": "娛樂",
+                    "defaultAction": defaultAction,
+                    "actions": [
+                        {
+                            "type": "message",
+                            "label": Christina.allCommand['/eat'].name,
+                            "text": "/eat"
+                        }, {
+                            "type": "message",
+                            "label": Christina.allCommand['/money'].name,
+                            "text": "/money"
+                        }, {
+                            "type": "message",
+                            "label": Christina.allCommand['/cmd'].name,
+                            "text": "/cmd"
+                        },
+                    ]
+                });
+                columns.push({
+                    "thumbnailImageUrl": christina2Img,
+                    "title": "主人的專屬服務",
+                    "text": "設定",
+                    "defaultAction": defaultAction,
+                    "actions": [
+                        {
+                            "type": "message",
+                            "label": Christina.allCommand['/start'].name,
+                            "text": "/start"
+                        }, {
+                            "type": "message",
+                            "label": Christina.allCommand['/end'].name,
+                            "text": "/end"
+                        }, {
+                            "type": "message",
+                            "label": Christina.allCommand['/leave'].name,
+                            "text": "/leave"
+                        },
+                    ]
+                });
+            }
+            template.columns = columns;
             return template;
         } catch (ex) {
             GoogleSheet.logError('Christina.getCommandTemp, ex = ' + ex);
@@ -253,14 +310,15 @@ var Christina = ((ct) => {
 
     /**
      * 檢查是否是指令
+     * @param isMaster
      * @param msg
      * @returns {boolean}
      */
-    ct.checkCommand = (msg) => {
+    ct.checkCommand = (isMaster, msg) => {
         try {
-            return msg.search(/^\//) !== -1;
+            return (isMaster) ? Christina.allCommand.hasOwnProperty(msg) : Christina.guestCommand.hasOwnProperty(msg);
         } catch (ex) {
-            GoogleSheet.logError('Christina.checkMaster, ex = ' + ex);
+            GoogleSheet.logError('Christina.checkCommand, ex = ' + ex);
         }
     };
 
@@ -698,7 +756,7 @@ var Line = ((l) => {
 
     // 傳送 payload 給 line
     var sendMsg = (url, payload) => {
-        GoogleSheet.logInfo(payload);
+        GoogleSheet.logSend(payload);
         try {
             UrlFetchApp.fetch(url, {
                 'headers': {
@@ -721,10 +779,10 @@ var Line = ((l) => {
      */
     l.init = (event) => {
         try {
-            event.isCommand = (event.message == null) ? false : Christina.checkCommand(event.message.text);
+            event.isMaster = Christina.checkMaster(event.source.userId);
+            event.isCommand = (event.message == null) ? false : Christina.checkCommand(event.isMaster,event.message.text);
             event.command = (event.isCommand) ? Christina.getCommand(event.message.text) : "";
             event.commandParam = (event.message == null) ? false : Christina.getCommandParam(event.message.text);
-            event.isMaster = Christina.checkMaster(event.source.userId);
             event.sourceId = getSourceId(event.source);
             event.lineStatus = GoogleSheet.lineStatus;
             Line.event = event;
@@ -942,6 +1000,16 @@ var GoogleSheet = ((gsh) => {
     gsh.logInfo = (...msg) => {
         var args = [...msg].map((v) => JSON.stringify(v));
         args.unshift('info');
+        gsh.setLog(args);
+    };
+
+    /**
+     *  log info
+     * @param msg
+     */
+    gsh.logSend = (...msg) => {
+        var args = [...msg].map((v) => JSON.stringify(v));
+        args.unshift('send');
         gsh.setLog(args);
     };
 
