@@ -127,6 +127,55 @@ var Christina = ((ct) => {
         }
     };
 
+    // todo_
+    var todoScript = (event) => {
+        if (event.lineStatus) {
+            if (event.isMaster) {
+                if(event.commandParam[0] === null) {
+                    Line.replyMsg(event.replyToken, "主人沒說要 Christina 提醒你做什麼");
+                } else {
+                    Christina.todo(event.commandParam[0]);
+                    Line.replyMsg(event.replyToken, 'Christina 已經幫主人記住待辦事項了');
+                }
+            } else {
+                Line.replyMsg(event.replyToken, '你肯定記得不用 Christina 幫你記');
+            }
+        } else {
+            Line.replyMsg(event.replyToken, "Christina 下班了喔");
+        }
+    };
+
+    // todolist
+    var todoListScript = (event) => {
+        if (event.lineStatus) {
+            if (event.isMaster) {
+                Line.replyMsg(event.replyToken, "主人還有\n"+ Christina.todolist() +"沒有做");
+            } else {
+                Line.replyMsg(event.replyToken, '將來的事');
+            }
+        } else {
+            Line.replyMsg(event.replyToken, "Christina 下班了喔");
+        }
+    };
+
+    // do
+    var doScript = (event) => {
+        if (event.lineStatus) {
+            if (event.isMaster) {
+                if(event.commandParam[0] === null) {
+                    Line.replyMsg(event.replyToken, "主人沒說要做完什麼了");
+                } else {
+                    Christina.do(event.commandParam[0]);
+                    Line.replyMsg(event.replyToken, '主人好棒！Christina 抱一個');
+                }
+            } else {
+                Line.replyMsg(event.replyToken, '好棒！可是 Christina 沒有降利給你');
+            }
+        } else {
+            Line.replyMsg(event.replyToken, "Christina 下班了喔");
+        }
+    };
+
     // start
     var startScript = (event) => {
         if (event.isMaster) {
@@ -204,6 +253,21 @@ var Christina = ((ct) => {
             'name': '登錄資產',
             'alias': ['insertmoney', '登錄資產', '登錄', 'insertm'],
             'fn': insertMoneyScript,
+        },
+        'todo': {
+            'name': '待辦事項',
+            'alias': ['todo', '待辦事項', '待辦', '記得', '記得做', '要做'],
+            'fn': todoScript,
+        },
+        'todolist': {
+            'name': '待辦事項列表',
+            'alias': ['todolist', '待辦事項列表', '待辦list', '待辦列表'],
+            'fn': todoListScript,
+        },
+        'do': {
+            'name': '完成事項',
+            'alias': ['do', '完成事項', '完成', '搞定'],
+            'fn': doScript,
         },
         'start': {
             'name': '啟動',
@@ -314,6 +378,27 @@ var Christina = ((ct) => {
                             "label": Christina.allCommand['eat'].name,
                             "text": "eat"
                         }
+                    ]
+                });
+                columns.push({
+                    "thumbnailImageUrl": christina2Img,
+                    "title": "主人的專屬服務",
+                    "text": "錢錢",
+                    "defaultAction": defaultAction,
+                    "actions": [
+                        {
+                            "type": "message",
+                            "label": Christina.allCommand['todo'].name,
+                            "text": "todo"
+                        }, {
+                            "type": "message",
+                            "label": Christina.allCommand['todolist'].name,
+                            "text": "todolist"
+                        }, {
+                            "type": "message",
+                            "label": Christina.allCommand['do'].name,
+                            "text": "do"
+                        },
                     ]
                 });
                 columns.push({
@@ -470,7 +555,43 @@ var Christina = ((ct) => {
         try{
             GoogleSheet.insertMoney(money);
         } catch (ex) {
-            GoogleSheet.logError('Christina.money, ex = ' + ex);
+            GoogleSheet.logError('Christina.insertMoney, ex = ' + ex);
+        }
+    };
+
+    /**
+     * 待辦事項
+     * @param something
+     */
+    ct.todo = (something) => {
+        try{
+            GoogleSheet.todo(something);
+        } catch (ex) {
+            GoogleSheet.logError('Christina.todo, ex = ' + ex);
+        }
+    };
+
+    /**
+     * 代辦事項列表
+     * @returns {*}
+     */
+    ct.todolist = () => {
+        try{
+            return GoogleSheet.todolist();
+        } catch (ex) {
+            GoogleSheet.logError('Christina.todolist, ex = ' + ex);
+        }
+    };
+
+    /**
+     * 完成事項
+     * @param something
+     */
+    ct.do = (something) => {
+        try{
+            GoogleSheet.do(something);
+        } catch (ex) {
+            GoogleSheet.logError('Christina.do, ex = ' + ex);
         }
     };
 
@@ -582,11 +703,11 @@ var DB = (() => {
     // 處理讀取的資料
     var doResult = () => {
         try {
-            var rowData = {};
-            var tempRowData = {};
+            let rowData = {};
+            let tempRowData = {};
             if (Object.keys(selectColumns).length === 0) {
-                for (var i = 1; i < lastRow; i++) {
-                    for (var j = 0; j < lastColumn; j++) {
+                for (let i = 1; i < lastRow; i++) {
+                    for (let j = 0; j < lastColumn; j++) {
                         rowData[selectColumns[j]] = allData[i][j];
                     }
                     if (doWhere(rowData)) result.push(rowData);
@@ -594,8 +715,8 @@ var DB = (() => {
                 }
 
             } else {
-                for (var i = 1; i < lastRow; i++) {
-                    for (var j = 0; j < lastColumn; j++) {
+                for (let i = 1; i < lastRow; i++) {
+                    for (let j = 0; j < lastColumn; j++) {
                         tempRowData[selectColumns[j]] = allData[i][j];
                         if (j in selectColumns) {
                             rowData[selectColumns[j]] = allData[i][j];
@@ -648,7 +769,6 @@ var DB = (() => {
                     if(columnNmae === insertColumnName) tmpArray.push(insertValue);
                 });
             });
-            GoogleSheet.logInfo(tmpArray);
             table.getRange(lastRow + 1, 1, 1, tmpArray.length).setValues([tmpArray]);
         } catch (ex) {
             GoogleSheet.logError('db.doInsert, ex = ' + ex);
@@ -748,6 +868,7 @@ var DB = (() => {
             GoogleSheet.logError('db.get, ex = ' + ex);
         }
     };
+
     /**
      * 取得 result 第一筆資料
      * @param column
@@ -760,12 +881,12 @@ var DB = (() => {
             GoogleSheet.logError('db.first, ex = ' + ex);
         }
     };
+
     /**
      * 取得 result 第最後一筆資料
      * @param column
      * @returns {*}
      */
-
     db.last = (column) => {
         try {
             return (result.length === 0) ? {} : (column === undefined) ? result[result.length-1] : result[result.length-1][column];
@@ -773,6 +894,7 @@ var DB = (() => {
             GoogleSheet.logError('db.last, ex = ' + ex);
         }
     };
+
     /**
      * 設定更新table(sheet)
      * @param tableName String
@@ -790,7 +912,6 @@ var DB = (() => {
         }
         return db;
     };
-
 
     /**
      * 設定新增table(sheet)
@@ -1223,6 +1344,47 @@ var GoogleSheet = ((gsh) => {
         }
     };
 
+    /**
+     * 加入待辦事項
+     * @param something
+     */
+    gsh.todo = (something) => {
+        try {
+            DB().insert('todo').set('content', something).set('do', 0).execute();
+        } catch (ex) {
+            gsh.logError('GoogleSheet.todo, ex = ' + ex);
+        }
+    };
+
+    /**
+     * 待辦事項列表
+     * @returns {*}
+     */
+    gsh.todolist = () => {
+        try {
+            var returnString = ""
+            var todoList = DB().from('todo').where('do','=',0).execute().get();
+            for (let i = 0; i < todoList.length; i++) {
+                returnString = returnString + "[ ]" + todoList[i].content + "\n";
+            }
+            return returnString
+        } catch (ex) {
+            gsh.logError('GoogleSheet.todolist, ex = ' + ex);
+        }
+    };
+
+    /**
+     * 完成事項
+     * @param something
+     */
+    gsh.do = (something) => {
+        try {
+            DB().update('todo').where('content','=', something).set('do', 1).execute();
+        } catch (ex) {
+            gsh.logError('GoogleSheet.do, ex = ' + ex);
+        }
+    };
+
     return gsh;
 })(GoogleSheet || {});
 
@@ -1262,5 +1424,6 @@ function recordAssets() {
 
 // 測試
 function test(){
-    GoogleSheet.logInfo(GoogleSheet.money());
+
+    GoogleSheet.logInfo(GoogleSheet.todolist());
 }
