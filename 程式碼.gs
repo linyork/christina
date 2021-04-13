@@ -256,7 +256,7 @@ var Christina = ((ct) => {
         },
         'todo': {
             'name': '待辦事項',
-            'alias': ['todo', '待辦事項', '待辦', '記得', '記得做', '要做'],
+            'alias': ['todo', '待辦事項', '待辦', '記得', '記得做', '要做', '幫我記'],
             'fn': todoScript,
         },
         'todolist': {
