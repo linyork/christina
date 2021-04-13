@@ -102,7 +102,21 @@ var Christina = ((ct) => {
             if (event.isMaster) {
                 Line.replyMsg(event.replyToken, '哇主人已經累積了~\n' + Christina.money());
             } else {
-                Line.replyMsg(event.replyToken, 'Christina 絕對不會告訴你主人真窮~');
+                Line.replyMsg(event.replyToken, 'Christina 絕對不會告訴你主人真窮');
+            }
+        } else {
+            Line.replyMsg(event.replyToken, "Christina 下班了喔");
+        }
+    };
+
+    // insertmoney
+    var insertMoneyScript = (event) => {
+        if (event.lineStatus) {
+            if (event.isMaster) {
+                Christina.insertMoney(event.commandParam[0]);
+                Line.replyMsg(event.replyToken, 'Christina 已經幫主人登錄錢錢嘍');
+            } else {
+                Line.replyMsg(event.replyToken, '你想給 Christina 錢錢嗎!');
             }
         } else {
             Line.replyMsg(event.replyToken, "Christina 下班了喔");
@@ -181,6 +195,11 @@ var Christina = ((ct) => {
             'name': '顯示資產',
             'alias': ['money', '顯示資產', '資產'],
             'fn': moneyScript,
+        },
+        'insertmoney': {
+            'name': '登錄資產',
+            'alias': ['insertmoney', '登錄資產', '登錄', 'insertm'],
+            'fn': insertMoneyScript,
         },
         'start': {
             'name': '啟動',
@@ -418,6 +437,18 @@ var Christina = ((ct) => {
         }
     };
 
+    /**
+     * 登錄資產
+     * @param money
+     */
+    ct.insertMoney = (money) => {
+        try{
+            GoogleSheet.insertMoney(money);
+        } catch (ex) {
+            GoogleSheet.logError('Christina.money, ex = ' + ex);
+        }
+    };
+
     return ct;
 })(Christina || {});
 
@@ -446,6 +477,8 @@ var DB = (() => {
     var whereCondition = [];
 
     var updateData = [];
+
+    var insertData = [];
 
     // table
     var table;
@@ -578,6 +611,25 @@ var DB = (() => {
         }
     }
 
+    // 處理新增資料
+    var doInsert = () => {
+        try {
+            var tmpArray = [];
+            var columnNameList = allData[0];
+            columnNameList.forEach((columnNmae) => {
+                Object.keys(insertData).forEach((key) => {
+                    var insertColumnName = Object.keys(insertData[key])[0];
+                    var insertValue = Object.values(insertData[key])[0];
+                    if(columnNmae === insertColumnName) tmpArray.push(insertValue);
+                });
+            });
+            GoogleSheet.logInfo(tmpArray);
+            table.getRange(lastRow + 1, 1, 1, tmpArray.length).setValues([tmpArray]);
+        } catch (ex) {
+            GoogleSheet.logError('db.doInsert, ex = ' + ex);
+        }
+    }
+
     var db = {};
 
     /**
@@ -602,7 +654,7 @@ var DB = (() => {
      * @param tableName String
      * @returns {any}
      */
-    db.form = (tableName) => {
+    db.from = (tableName) => {
         type = 'S';
         try {
             table = christinaSheet.getSheetByName(tableName);
@@ -638,9 +690,8 @@ var DB = (() => {
      */
     db.execute = () => {
         try {
-            if (table === undefined) {
-                throw new Error("未設定 Table");
-            }
+            if (table === undefined) throw new Error("未設定 Table");
+            if (type === undefined) throw new Error("未設定 type");
             switch (type) {
                 case 'S':
                     doSelectColumn();
@@ -649,6 +700,9 @@ var DB = (() => {
                 case 'U':
                     doSelectColumn();
                     doUpdate();
+                    break;
+                case 'I':
+                    doInsert();
                     break
 
             }
@@ -697,35 +751,59 @@ var DB = (() => {
     /**
      * 設定更新table(sheet)
      * @param tableName String
-     * @returns {any}
+     * @returns {{}}
      */
     db.update = (tableName) => {
         type = 'U';
         try {
             table = christinaSheet.getSheetByName(tableName);
-
             lastColumn = table.getLastColumn();
-
             lastRow = table.getLastRow();
-
             allData = table.getDataRange().getValues();
-
         } catch (ex) {
-            GoogleSheet.logError('db.table, ex = ' + ex);
+            GoogleSheet.logError('db.update, ex = ' + ex);
         }
         return db;
     };
+
+
     /**
-     * 設定更新資料
+     * 設定新增table(sheet)
+     * @param tableName String
+     * @returns {{}}
+     */
+    db.insert = (tableName) => {
+        type = 'I';
+        try {
+            table = christinaSheet.getSheetByName(tableName);
+            lastColumn = table.getLastColumn();
+            lastRow = table.getLastRow();
+            allData = table.getDataRange().getValues();
+        } catch (ex) {
+            GoogleSheet.logError('db.insert, ex = ' + ex);
+        }
+        return db;
+    };
+
+    /**
+     * 設定資料
      * @param columnName
      * @param value
-     * @returns {any}
+     * @returns {{}}
      */
     db.set = (columnName, value) => {
         try {
+            if (type === undefined) throw new Error("未設定 type");
             var tempData = {};
             tempData[columnName] = value;
-            updateData.push(tempData);
+            switch (type) {
+                case 'U':
+                    updateData.push(tempData);
+                    break;
+                case 'I':
+                    insertData.push(tempData);
+                    break
+            }
         } catch (ex) {
             GoogleSheet.logError('db.set, ex = ' + ex);
         }
@@ -1016,7 +1094,7 @@ var GoogleSheet = ((gsh) => {
      */
     gsh.lineStatus = (() => {
         try {
-            return DB().form('christina').execute().first('status');
+            return DB().from('christina').execute().first('status');
         } catch (ex) {
             gsh.logError('GoogleSheet.lineStatus, ex = ' + ex);
         }
@@ -1100,7 +1178,21 @@ var GoogleSheet = ((gsh) => {
      */
     gsh.money = () => {
         try {
-            return DB().form('money').execute().last('money');
+            return DB().from('money').execute().last('money');
+        } catch (ex) {
+            gsh.logError('GoogleSheet.money, ex = ' + ex);
+        }
+    };
+
+    /**
+     * 登錄資產
+     * @param money
+     */
+    gsh.insertMoney = (money) => {
+        try {
+            var Today = new Date();
+            var date = Today.getFullYear() + "/" + (Today.getMonth() + 1) + "/" + Today.getDate();
+            DB().insert('money').set('money', money).set('date', date).execute();
         } catch (ex) {
             gsh.logError('GoogleSheet.money, ex = ' + ex);
         }
@@ -1141,4 +1233,9 @@ function recordAssets() {
     } catch (ex) {
         GoogleSheet.logError('crontab, recordAssets, ex = ' + ex);
     }
+}
+
+// 測試
+function test(){
+    GoogleSheet.logInfo(GoogleSheet.money());
 }
