@@ -113,8 +113,12 @@ var Christina = ((ct) => {
     var insertMoneyScript = (event) => {
         if (event.lineStatus) {
             if (event.isMaster) {
-                Christina.insertMoney(event.commandParam[0]);
-                Line.replyMsg(event.replyToken, 'Christina 已經幫主人登錄錢錢嘍');
+                if(event.commandParam[0] === null) {
+                    Line.replyMsg(event.replyToken, "主人忘記輸入金額了");
+                } else {
+                    Christina.insertMoney(event.commandParam[0]);
+                    Line.replyMsg(event.replyToken, 'Christina 已經幫主人登錄錢錢嘍');
+                }
             } else {
                 Line.replyMsg(event.replyToken, '你想給 Christina 錢錢嗎!');
             }
@@ -299,16 +303,37 @@ var Christina = ((ct) => {
                     "actions": [
                         {
                             "type": "message",
+                            "label": Christina.allCommand['command'].name,
+                            "text": "command"
+                        }, {
+                            "type": "message",
                             "label": Christina.allCommand['eat'].name,
                             "text": "eat"
                         }, {
+                            "type": "message",
+                            "label": Christina.allCommand['eat'].name,
+                            "text": "eat"
+                        }
+                    ]
+                });
+                columns.push({
+                    "thumbnailImageUrl": christina2Img,
+                    "title": "主人的專屬服務",
+                    "text": "錢錢",
+                    "defaultAction": defaultAction,
+                    "actions": [
+                        {
                             "type": "message",
                             "label": Christina.allCommand['money'].name,
                             "text": "money"
                         }, {
                             "type": "message",
-                            "label": Christina.allCommand['command'].name,
-                            "text": "command"
+                            "label": Christina.allCommand['insertmoney'].name,
+                            "text": "insertmoney"
+                        }, {
+                            "type": "message",
+                            "label": "敬請期待主人教我提供圖表",
+                            "text": "moneychart"
                         },
                     ]
                 });
