@@ -1045,7 +1045,7 @@ var Line = ((l) => {
     l.init = (event) => {
         try {
             event.isMaster = Christina.checkMaster(event.source.userId);
-            if(event.message === null){
+            if(event.message === null || event.message === undefined){
                 event.isCommand = false;
                 event.command = "";
                 event.commandParam = false;
@@ -1199,7 +1199,7 @@ var Line = ((l) => {
      */
     l.leave = (sourceType, sourceId) => {
         try {
-            UrlFetchApp.fetch('https://api.line.me/v2/bot/' + sourceType + '/' + sourceId + 'leave', {
+            UrlFetchApp.fetch('https://api.line.me/v2/bot/' + sourceType + '/' + sourceId + '/leave', {
                 'headers': {
                     'Content-Type': 'application/json; charset=UTF-8',
                     'Authorization': 'Bearer ' + channelToken,
