@@ -5,6 +5,15 @@
  */
 var Christina = ((ct) => {
     var scriptProperties = PropertiesService.getScriptProperties();
+
+    var getName = (event) => {
+        if (event.isMaster) {
+            return ' ' + event.profile.displayName + ' 主人';
+        } else {
+            return ' ' + event.profile.displayName + ' ';
+        }
+    };
+
     // christina
     var christinaScript = (event) => {
         if (event.lineStatus) {
@@ -27,7 +36,7 @@ var Christina = ((ct) => {
     var leaveScript = (event) => {
         if (event.lineStatus) {
             if (event.isMaster) {
-                Line.replyMsg(event.replyToken, '主人掰掰~\nChristina 先行告退了');
+                Line.replyMsg(event.replyToken, getName(event) + '掰掰~\nChristina 先行告退了');
             } else {
                 Line.replyMsg(event.replyToken, 'Bye~\nChristina 先行告退了');
             }
@@ -40,11 +49,7 @@ var Christina = ((ct) => {
     // myid
     var myidScript = (event) => {
         if (event.lineStatus) {
-            if (event.isMaster) {
-                Line.replyMsg(event.replyToken, '主人您的ID是：\n' + event.source.userId);
-            } else {
-                Line.replyMsg(event.replyToken, '客倌你的ID是：\n' + event.source.userId);
-            }
+                Line.replyMsg(event.replyToken, getName(event) + '您的ID是：\n' + event.source.userId);
         } else {
             Line.replyMsg(event.replyToken, "Christina 下班了喔");
         }
@@ -53,11 +58,7 @@ var Christina = ((ct) => {
     // roll
     var rollScript = (event) => {
         if (event.lineStatus) {
-            if (event.isMaster) {
-                Line.replyMsg(event.replyToken, '好的 Christina 為主人擲骰子\n擲出的點數是: ' + Christina.roll());
-            } else {
-                Line.replyMsg(event.replyToken, '好的 Christina 為客倌擲骰子\n擲出的點數是: ' + Christina.roll());
-            }
+                Line.replyMsg(event.replyToken, '好的 Christina 為' + getName(event) + '擲骰子\n擲出的點數是: ' + Christina.roll());
         } else {
             Line.replyMsg(event.replyToken, "Christina 下班了喔");
         }
@@ -69,7 +70,7 @@ var Christina = ((ct) => {
             var url = GoogleDrive.getImageUrl(event.commandParam[0]);
             if(url === null) {
                 if (event.isMaster) {
-                    Line.replyMsg(event.replyToken, '主人忘了梗圖的指令是 meme [梗圖] 了嗎?');
+                    Line.replyMsg(event.replyToken, getName(event) + '忘了梗圖的指令是 meme [梗圖] 了嗎?');
                 } else {
                     Line.replyMsg(event.replyToken, '梗圖的指令是 meme [梗圖]');
                 }
@@ -87,7 +88,7 @@ var Christina = ((ct) => {
     var eatScript = (event) => {
         if (event.lineStatus) {
             if (event.isMaster) {
-                Line.replyMsg(event.replyToken, 'Christina 覺得主人應該吃\n' + Christina.eatWhat());
+                Line.replyMsg(event.replyToken, 'Christina 覺得' + getName(event) + '應該吃\n' + Christina.eatWhat());
             } else {
                 Line.replyMsg(event.replyToken, 'Christina 還沒獲得主人同意~\n來幫客倌決定要吃什麼');
             }
@@ -100,7 +101,7 @@ var Christina = ((ct) => {
     var moneyScript = (event) => {
         if (event.lineStatus) {
             if (event.isMaster) {
-                Line.replyMsg(event.replyToken, '哇主人已經累積了~\n' + Christina.money());
+                Line.replyMsg(event.replyToken, '哇' + getName(event) + '已經累積了~\n' + Christina.money());
             } else {
                 Line.replyMsg(event.replyToken, 'Christina 絕對不會告訴你主人真窮');
             }
@@ -114,16 +115,16 @@ var Christina = ((ct) => {
         if (event.lineStatus) {
             if (event.isMaster) {
                 if(event.commandParam[0] === null) {
-                    Line.replyMsg(event.replyToken, "主人忘記輸入金額了");
+                    Line.replyMsg(event.replyToken, getName(event) + '忘記輸入金額了');
                 } else {
                     Christina.insertMoney(event.commandParam[0]);
-                    Line.replyMsg(event.replyToken, 'Christina 已經幫主人登錄錢錢嘍');
+                    Line.replyMsg(event.replyToken, 'Christina 已經幫' + getName(event) + '登錄錢錢嘍');
                 }
             } else {
-                Line.replyMsg(event.replyToken, '你想給 Christina 錢錢嗎!');
+                Line.replyMsg(event.replyToken, getName(event) + '想給 Christina 錢錢嗎!');
             }
         } else {
-            Line.replyMsg(event.replyToken, "Christina 下班了喔");
+            Line.replyMsg(event.replyToken, 'Christina 下班了喔');
         }
     };
 
@@ -132,16 +133,16 @@ var Christina = ((ct) => {
         if (event.lineStatus) {
             if (event.isMaster) {
                 if(event.commandParam[0] === null) {
-                    Line.replyMsg(event.replyToken, "主人沒說要 Christina 提醒你做什麼");
+                    Line.replyMsg(event.replyToken, getName(event) + '沒說要 Christina 提醒你做什麼');
                 } else {
                     Christina.todo(event.commandParam[0]);
-                    Line.replyMsg(event.replyToken, 'Christina 已經幫主人記住待辦事項了');
+                    Line.replyMsg(event.replyToken, 'Christina 已經幫' + getName(event) + '主人記住待辦事項了');
                 }
             } else {
-                Line.replyMsg(event.replyToken, '你肯定記得不用 Christina 幫你記');
+                Line.replyMsg(event.replyToken, getName(event) + '肯定記得不用 Christina 幫你記');
             }
         } else {
-            Line.replyMsg(event.replyToken, "Christina 下班了喔");
+            Line.replyMsg(event.replyToken, 'Christina 下班了喔');
         }
     };
 
@@ -149,7 +150,7 @@ var Christina = ((ct) => {
     var todoListScript = (event) => {
         if (event.lineStatus) {
             if (event.isMaster) {
-                Line.replyMsg(event.replyToken, "主人還有\n"+ Christina.todolist() +"沒有做");
+                Line.replyMsg(event.replyToken, getName(event) + '還有\n' + Christina.todolist() + '沒有做');
             } else {
                 Line.replyMsg(event.replyToken, '將來的事');
             }
@@ -163,16 +164,16 @@ var Christina = ((ct) => {
         if (event.lineStatus) {
             if (event.isMaster) {
                 if(event.commandParam[0] === null) {
-                    Line.replyMsg(event.replyToken, "主人沒說要做完什麼了");
+                    Line.replyMsg(event.replyToken, getName(event) + '沒說要做完什麼了');
                 } else {
                     Christina.do(event.commandParam[0]);
-                    Line.replyMsg(event.replyToken, '主人好棒！Christina 抱一個');
+                    Line.replyMsg(event.replyToken, getName(event) + '好棒！Christina 抱一個');
                 }
             } else {
-                Line.replyMsg(event.replyToken, '好棒！可是 Christina 沒有降利給你');
+                Line.replyMsg(event.replyToken, '好棒！可是 Christina 沒有獎勵給' + getName(event));
             }
         } else {
-            Line.replyMsg(event.replyToken, "Christina 下班了喔");
+            Line.replyMsg(event.replyToken, 'Christina 下班了喔');
         }
     };
 
@@ -180,10 +181,10 @@ var Christina = ((ct) => {
     var startScript = (event) => {
         if (event.isMaster) {
             if (event.lineStatus) {
-                Line.replyMsg(event.replyToken, '主人有什麼想讓 Christina 服務的嗎');
+                Line.replyMsg(event.replyToken, getName(event) + '有什麼想讓 Christina 服務的嗎');
             } else {
                 GoogleSheet.setLineStatus(true);
-                Line.replyMsg(event.replyToken, 'Christina 開始上班 \n主人有什麼事請吩咐 \n要 Christina 下班請輸入 end');
+                Line.replyMsg(event.replyToken, 'Christina 開始上班 \n' + getName(event) + '有什麼事請吩咐 \n要 Christina 下班請輸入 end');
             }
         } else {
             Line.replyMsg(event.replyToken, '客倌不是 Christina 的主人\n不能叫我上班');
@@ -1045,6 +1046,7 @@ var Line = ((l) => {
     l.init = (event) => {
         try {
             event.isMaster = Christina.checkMaster(event.source.userId);
+            event.profile = l.profile(event.source.userId);
             if(event.message === null || event.message === undefined){
                 event.isCommand = false;
                 event.command = "";
@@ -1208,6 +1210,27 @@ var Line = ((l) => {
             });
         } catch (ex) {
             GoogleSheet.logError('Line.leave, ex = ' + ex);
+        }
+    };
+
+    /**
+     * 取得個人資訊
+     * @param userId
+     */
+    l.profile = (userId) => {
+        try {
+            var profile =JSON.parse(UrlFetchApp.fetch('https://api.line.me/v2/bot/profile/' + userId, {
+                'headers': {
+                    'Authorization': 'Bearer ' + channelToken,
+                },
+            }).getContentText());
+            return {
+                "userId": profile.userId,
+                "displayName": profile.displayName,
+                "pictureUrl": profile.pictureUrl,
+            }
+        } catch (ex) {
+            GoogleSheet.logError('Line.profile, ex = ' + ex);
         }
     };
 
@@ -1424,6 +1447,5 @@ function recordAssets() {
 
 // 測試
 function test(){
-
-    GoogleSheet.logInfo(GoogleSheet.todolist());
+    Line.pushMsg(Christina.adminString,"hi");
 }
