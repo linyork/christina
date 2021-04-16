@@ -7,8 +7,10 @@ var Christina = ((ct) => {
     var scriptProperties = PropertiesService.getScriptProperties();
 
     var getName = (event) => {
-        if (event.isMaster) {
-            return ' ' + event.profile.displayName + ' 主人';
+        if(event.profile === null) {
+            return '客倌';
+        } else if (event.isMaster) {
+            return '主人';
         } else {
             return ' ' + event.profile.displayName + ' ';
         }
@@ -68,7 +70,7 @@ var Christina = ((ct) => {
     var memeScript = (event) => {
         if (event.lineStatus) {
             var url = GoogleDrive.getImageUrl(event.commandParam[0]);
-            if(url === null) {
+            if(event.commandParam[0] === "") {
                 if (event.isMaster) {
                     Line.replyMsg(event.replyToken, getName(event) + '忘了梗圖的指令是 meme [梗圖] 了嗎?');
                 } else {
@@ -472,15 +474,14 @@ var Christina = ((ct) => {
      * @param msg
      * @returns {{isCommand: boolean, command: string}}
      */
-    ct.checkCommand = (isMaster, msg) => {
+    ct.checkCommand = (msg) => {
         try {
             var msgCommand = msg.split(" ").shift();
-            var commandList = (isMaster) ? Christina.allCommand : Christina.guestCommand;
             var cmdObj = {
                 "isCommand": false,
                 "command": "",
             }
-            for (const [command, cObject] of Object.entries(commandList)) {
+            for (const [command, cObject] of Object.entries(Christina.allCommand)) {
                 cObject.alias.forEach((alias) => {
                     if (alias === msgCommand) {
                         cmdObj.isCommand = true;
@@ -1020,6 +1021,45 @@ var Line = ((l) => {
         }
     };
 
+
+    // 取得個人資訊
+    getProfile = (source) => {
+        try {
+            var profile = {}
+            switch (source.type) {
+                case 'user':
+                    profile = JSON.parse(UrlFetchApp.fetch('https://api.line.me/v2/bot/profile/' + source.userId, {
+                        'headers': {
+                            'Authorization': 'Bearer ' + channelToken,
+                        },
+                    }).getContentText());
+                    break;
+                case 'group':
+                    profile = JSON.parse(UrlFetchApp.fetch('https://api.line.me/v2/bot/group/' + source.groupId + '/member/' + source.userId, {
+                        'headers': {
+                            'Authorization': 'Bearer ' + channelToken,
+                        },
+                    }).getContentText());
+                    break;
+                case 'room':
+                    profile = JSON.parse(UrlFetchApp.fetch('https://api.line.me/v2/bot/room/' + source.roomId + '/member/' + source.userId, {
+                        'headers': {
+                            'Authorization': 'Bearer ' + channelToken,
+                        },
+                    }).getContentText());
+                    break;
+                default:
+                    profile.userId = null;
+                    profile.displayName = null;
+                    profile.pictureUrl = null;
+                    break
+            }
+            return profile;
+        } catch (ex) {
+            GoogleSheet.logError('Line.getProfile, ex = ' + ex);
+        }
+    };
+
     // 傳送 payload 給 line
     var sendMsg = (url, payload) => {
         GoogleSheet.logSend(payload);
@@ -1046,13 +1086,13 @@ var Line = ((l) => {
     l.init = (event) => {
         try {
             event.isMaster = Christina.checkMaster(event.source.userId);
-            event.profile = l.profile(event.source.userId);
+            event.profile = getProfile(event.source);
             if(event.message === null || event.message === undefined){
                 event.isCommand = false;
                 event.command = "";
                 event.commandParam = false;
             } else {
-                var cmdObj = Christina.checkCommand(event.isMaster,event.message.text);
+                var cmdObj = Christina.checkCommand(event.message.text);
                 event.isCommand = cmdObj.isCommand;
                 event.command = cmdObj.command;
                 event.commandParam = Christina.getCommandParam(event.message.text);
@@ -1060,6 +1100,7 @@ var Line = ((l) => {
             event.sourceId = getSourceId(event.source);
             event.lineStatus = GoogleSheet.lineStatus;
             Line.event = event;
+            GoogleSheet.logInfo(Line.event);
         } catch (ex) {
             GoogleSheet.logError('Line.eventInit, ex = ' + ex);
         }
@@ -1076,13 +1117,6 @@ var Line = ((l) => {
                 case 'message':
                     if (Line.event.command in Christina.allCommand) {
                         Christina.allCommand[Line.event.command].fn(Line.event);
-
-                    } else if (Line.event.isCommand && Line.event.isMaster === true) {
-                        Line.replyMsg(Line.event.replyToken, '等主人回家教我了～');
-
-                    } else if (Line.event.isCommand && Line.event.isMaster === false) {
-                        Line.replyMsg(Line.event.replyToken, '客官不可以～\n再這樣我要叫了喔');
-
                     }
                     break;
                 case 'join':
@@ -1212,28 +1246,6 @@ var Line = ((l) => {
             GoogleSheet.logError('Line.leave, ex = ' + ex);
         }
     };
-
-    /**
-     * 取得個人資訊
-     * @param userId
-     */
-    l.profile = (userId) => {
-        try {
-            var profile =JSON.parse(UrlFetchApp.fetch('https://api.line.me/v2/bot/profile/' + userId, {
-                'headers': {
-                    'Authorization': 'Bearer ' + channelToken,
-                },
-            }).getContentText());
-            return {
-                "userId": profile.userId,
-                "displayName": profile.displayName,
-                "pictureUrl": profile.pictureUrl,
-            }
-        } catch (ex) {
-            GoogleSheet.logError('Line.profile, ex = ' + ex);
-        }
-    };
-
     return l;
 })(Line || {});
 
