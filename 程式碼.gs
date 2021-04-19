@@ -138,7 +138,7 @@ var Christina = ((ct) => {
                     Line.replyMsg(event.replyToken, getName(event) + '沒說要 Christina 提醒你做什麼');
                 } else {
                     Christina.todo(event.commandParam[0]);
-                    Line.replyMsg(event.replyToken, 'Christina 已經幫' + getName(event) + '主人記住待辦事項了');
+                    Line.replyMsg(event.replyToken, 'Christina 已經幫' + getName(event) + '記住待辦事項了');
                 }
             } else {
                 Line.replyMsg(event.replyToken, getName(event) + '肯定記得不用 Christina 幫你記');
@@ -211,7 +211,7 @@ var Christina = ((ct) => {
     var gCommand = {
         'christina': {
             'name': '基礎指令',
-            'alias': ['christina', '安安', '在嗎', 'Christina', '哈嘍', 'Hi', 'hi'],
+            'alias': ['christina', '安安', '在嗎', '哈嘍', 'hi', '娜娜早安', '娜娜早', '娜娜安安'],
             'fn': christinaScript,
         },
         'command': {
@@ -221,12 +221,12 @@ var Christina = ((ct) => {
         },
         'leave': {
             'name': '離開',
-            'alias': ['leave', '滾', 'Christina給我離開', 'christina給我離開', 'Christina給我滾', 'christina給我滾', '給我滾', '離開'],
+            'alias': ['leave', '滾', 'christina給我離開', 'christina給我滾', '給我滾', '離開', '娜娜你先離開', '娜娜離開'],
             'fn': leaveScript,
         },
         'myid': {
             'name': '顯示ID',
-            'alias': ['myid', '給我id', 'id',],
+            'alias': ['myid', '給我id', 'id', '娜娜給我id'],
             'fn': myidScript,
         },
         'roll': {
@@ -259,12 +259,12 @@ var Christina = ((ct) => {
         },
         'todo': {
             'name': '待辦事項',
-            'alias': ['todo', '待辦事項', '待辦', '記得', '記得做', '要做', '幫我記'],
+            'alias': ['todo', '待辦', '記得', '記得做', '要做', '幫我記'],
             'fn': todoScript,
         },
         'todolist': {
             'name': '待辦事項列表',
-            'alias': ['todolist', '待辦事項列表', '待辦list', '待辦列表'],
+            'alias': ['todolist', '待辦事項', '待辦list', '待辦列表'],
             'fn': todoListScript,
         },
         'do': {
@@ -476,7 +476,8 @@ var Christina = ((ct) => {
      */
     ct.checkCommand = (msg) => {
         try {
-            var msgCommand = msg.split(" ").shift();
+
+            var msgCommand = msg.toLocaleLowerCase().split(" ").shift();
             var cmdObj = {
                 "isCommand": false,
                 "command": "",
@@ -1100,7 +1101,6 @@ var Line = ((l) => {
             event.sourceId = getSourceId(event.source);
             event.lineStatus = GoogleSheet.lineStatus;
             Line.event = event;
-            GoogleSheet.logInfo(Line.event);
         } catch (ex) {
             GoogleSheet.logError('Line.eventInit, ex = ' + ex);
         }
