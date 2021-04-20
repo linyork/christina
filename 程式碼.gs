@@ -47,6 +47,21 @@ var Christina = ((ct) => {
             Line.replyMsg(event.replyToken, '好的 Christina 為' + getName(event) + '擲骰子\n擲出的點數是: ' + Christina.roll());
     };
 
+    // kkboxScript
+    var kkboxScript = (event) => {
+        Line.replyMsg(event.replyToken, '好的 Christina 為' + getName(event) + '擲骰子\n擲出的點數是: ' + Christina.roll());
+    };
+
+    // kkboxSearchTrackScript
+    var kkboxSearchTrackScript = (event) => {
+        Line.replyBtnTemp(event.replyToken, 'Christina 在 KKBOX 找到最相近的歌曲', Christina.kkboxsearchtrack(event.commandParam[0]));
+    };
+
+    // kkboxSearchArtistScript
+    var kkboxSearchArtistScript = (event) => {
+        Line.replyBtnTemp(event.replyToken, 'Christina 在 KKBOX 找到最相近的歌手', Christina.kkboxsearchartist(event.commandParam[0]));
+    };
+
     // meme
     var memeScript = (event) => {
         var url = GoogleDrive.getImageUrl(event.commandParam[0]);
@@ -188,6 +203,24 @@ var Christina = ((ct) => {
             'fn': rollScript,
             'help': '小遊戲擲骰子'
         },
+        'kkbox': {
+            'name': '試聽音樂',
+            'alias': ['kkbox', 'kk', '音樂', '試聽'],
+            'fn': kkboxScript,
+            'help': 'kkbox試聽音樂 (指令: kkbox 殺破狼'
+        },
+        'kksearchtrack': {
+            'name': '搜尋音樂',
+            'alias': ['kkboxsearch', 'kkst', '搜尋音樂', '找音樂'],
+            'fn': kkboxSearchTrackScript,
+            'help': 'kkbox搜尋音樂 (指令: kkst 殺破狼'
+        },
+        'kksearchartist': {
+            'name': '搜尋歌手',
+            'alias': ['kksearchartist', 'kksa', '搜尋歌手', '找歌手'],
+            'fn': kkboxSearchArtistScript,
+            'help': 'kkbox搜尋音樂 (指令: kkra 831'
+        },
     };
 
     var mCommand = {
@@ -321,8 +354,28 @@ var Christina = ((ct) => {
                     },
                 ]
             });
-            if(isMaster)
-            {
+            columns.push({
+                "thumbnailImageUrl": christinaImg,
+                "title": "Christina的基本服務",
+                "text": "音樂服務",
+                "defaultAction": defaultAction,
+                "actions": [
+                    {
+                        "type": "message",
+                        "label": Christina.allCommand['kkbox'].name,
+                        "text": "kkbox"
+                    }, {
+                        "type": "message",
+                        "label": Christina.allCommand['kksearchtrack'].name,
+                        "text": "kksearchtrack"
+                    }, {
+                        "type": "message",
+                        "label": Christina.allCommand['kksearchartist'].name,
+                        "text": "kksearchartist"
+                    },
+                ]
+            });
+            if(isMaster) {
                 var christina2 = driveApp.getFilesByName("christina2.jpg");
                 var christina2Img = 'https://lh3.googleusercontent.com/d/' + christina2.next().getId();
                 columns.push({
@@ -433,7 +486,6 @@ var Christina = ((ct) => {
 
     /**
      * 檢查是否是指令並取得指令
-     * @param isMaster
      * @param msg
      * @returns {{isCommand: boolean, command: string}}
      */
@@ -495,6 +547,82 @@ var Christina = ((ct) => {
             return Math.floor(Math.random() * 6 + 1);
         } catch (ex) {
             GoogleSheet.logError('Christina.roll, ex = ' + ex);
+        }
+    };
+
+    /**
+     * KKBOX 搜尋 track
+     * @param keyword
+     * @returns {{type: string}}
+     */
+    ct.kkboxsearchtrack = (keyword) => {
+        try {
+            var kkJson = KKBOX.searchtrack(keyword);
+            var template = {'type': 'carousel'};
+            var columns = [];
+            var defaultAction = {
+                'type': 'message',
+                'label': '點到圖片或標題',
+                'text': 'kksearch ' + keyword,
+            };
+            for (var i = 0; i < kkJson['tracks']['data'].length; i++) {
+                var thisTrack = kkJson['tracks']['data'][i];
+                columns.push({
+                    'thumbnailImageUrl': thisTrack['album']['images'][1]['url'],
+                    'title': 'KKBOX 搜尋 ['+keyword+']',
+                    'text': thisTrack['album']['name'] + "-" + thisTrack['name'],
+                    'defaultAction': defaultAction,
+                    'actions': [
+                        {
+                            'type': 'uri',
+                            'label': 'kkbox網址',
+                            'uri': thisTrack['url']
+                        }
+                    ]
+                });
+            }
+            template.columns = columns;
+            return template;
+        } catch (ex) {
+            GoogleSheet.logError('Christina.kkboxsearchtrack, ex = ' + ex);
+        }
+    };
+
+    /**
+     * KKBOX 搜尋 artist
+     * @param keyword
+     * @returns {{type: string}}
+     */
+    ct.kkboxsearchartist = (keyword) => {
+        try {
+            var kkJson = KKBOX.searchartist(keyword);
+            var template = {'type': 'carousel'};
+            var columns = [];
+            var defaultAction = {
+                'type': 'message',
+                'label': '點到圖片或標題',
+                'text': 'kksearch ' + keyword,
+            };
+            for (var i = 0; i < kkJson['artists']['data'].length; i++) {
+                var thisArtist = kkJson['artists']['data'][i];
+                columns.push({
+                    'thumbnailImageUrl': thisArtist['images'][1]['url'],
+                    'title': 'KKBOX 搜尋 ['+keyword+']',
+                    'text': thisArtist['name'],
+                    'defaultAction': defaultAction,
+                    'actions': [
+                        {
+                            'type': 'uri',
+                            'label': 'kkbox網址-' + thisArtist['name'],
+                            'uri': thisArtist['url']
+                        }
+                    ]
+                });
+            }
+            template.columns = columns;
+            return template;
+        } catch (ex) {
+            GoogleSheet.logError('Christina.kkboxsearchartist, ex = ' + ex);
         }
     };
 
@@ -962,14 +1090,134 @@ var GoogleDrive = ((gd) => {
 })(GoogleDrive || {});
 
 /**
+ * KKBOX
+ * @type {{}}
+ * @description (單例) 客制化操作 KKBOX 的 model
+ */
+var KKBOX = ((kk) => {
+    var scriptProperties = PropertiesService.getScriptProperties();
+
+    // 取得 KKBOX client id 從環境變數
+    var clientId = scriptProperties.getProperty('KKBOX_CLIENT_ID');
+
+    // 取得 KKBOX client secret token 從環境變數
+    var clientSecret = scriptProperties.getProperty('KKBOX_CLIENT_SECRET');
+
+    // 取得 access token
+    var accessToken = () => {
+        try {
+            return JSON.parse(UrlFetchApp.fetch('https://account.kkbox.com/oauth2/token', {
+                'method': 'post',
+                'payload': {
+                    'grant_type': 'client_credentials',
+                    'client_id': clientId,
+                    'client_secret': clientSecret
+                }
+            }).getContentText())['access_token'];
+        } catch (ex) {
+            GoogleSheet.logError('KKBOX.accessToken, ex = ' + ex);
+        }
+    }
+
+    kk.searchtrack = (keyword) => {
+        try {
+            var q = keyword;
+            var type = 'track';
+            var territory = 'TW';
+            var offset = 0;
+            var limit = 5;
+            var path = 'https://api.kkbox.com/v1.1/search';
+            var apiUrl = path + '?q=' + q + '&type=' + type + '&territory=' + territory + '&offset=' + offset + '&limit=' + limit;
+            return JSON.parse(UrlFetchApp.fetch(apiUrl, {
+                "headers": {
+                    "accept": "application/json",
+                    "authorization": "Bearer " + accessToken()
+                }
+            }).getContentText());
+        } catch (ex) {
+            GoogleSheet.logError('KKBOX.accessToken, ex = ' + ex);
+        }
+    };
+
+    kk.searchartist = (keyword) => {
+        try {
+            var q = keyword;
+            var type = 'artist';
+            var territory = 'TW';
+            var offset = 0;
+            var limit = 5;
+            var path = 'https://api.kkbox.com/v1.1/search';
+            var apiUrl = path + '?q=' + q + '&type=' + type + '&territory=' + territory + '&offset=' + offset + '&limit=' + limit;
+            return JSON.parse(UrlFetchApp.fetch(apiUrl, {
+                "headers": {
+                    "accept": "application/json",
+                    "authorization": "Bearer " + accessToken()
+                }
+            }).getContentText());
+        } catch (ex) {
+            GoogleSheet.logError('KKBOX.accessToken, ex = ' + ex);
+        }
+    };
+
+    return kk;
+})(KKBOX || {});
+
+/**
+ * HTMLTOOl
+ * @type {{}}
+ * @description (單例) 一些自幹的 html tool
+ */
+var HTMLTOOl = ((ht)=>{
+
+    var  unentitize = (strEncoded) => {
+        return strEncoded
+            && XmlService.parse(
+                '<z>' + (strEncoded + '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</z>'
+            ).getRootElement().getText();
+    };
+
+    /**
+     * get meat
+     * @param url
+     * @returns {{metas: {}, title: *}}
+     */
+    ht.getHtmlMeta = (url) => {
+        var strXML = UrlFetchApp.fetch(url, {muteHttpExceptions: true}).getContentText();
+        var metas = {};
+        var result = {
+            title: unentitize((/<title>(.+?)<\/title>/i.exec(strXML) || [])[1]),
+            metas: metas
+        };
+        strXML.replace(/<meta(?=[^>]*\sname="([^"]*)")(?=[^>]*\scontent="([^"]*)")[^>]*\/?>/ig,
+            (m, name, content) =>{
+                metas[name = unentitize(name)] = content = unentitize(content);
+                if (/^description$/i.test(name)) {
+                    result.description = content;
+                } else if (/^keywords?$/i.test(name)) {
+                    result.keywords = content;
+                }
+            });
+        strXML.replace(/<meta(?=[^>]*\sproperty="([^"]*)")(?=[^>]*\scontent="([^"]*)")[^>]*\/?>/ig,
+            (m, name, content) =>{
+                metas[name = unentitize(name)] = content = unentitize(content);
+                if (/^description$/i.test(name)) {
+                    result.description = content;
+                } else if (/^keywords?$/i.test(name)) {
+                    result.keywords = content;
+                }
+            });
+        return result;
+    }
+
+    return ht;
+})(HTMLTOOl || {});
+
+/**
  * Line
  * @type {{}}
  * @description (單例) 操作 line 的 model
  */
 var Line = ((l) => {
-    /**
-     * private member
-     */
     var scriptProperties = PropertiesService.getScriptProperties();
 
     // 取得 Line token 從環境變數
@@ -1444,5 +1692,5 @@ function recordAssets() {
 
 // 測試
 function test(){
-    Line.pushMsg(Christina.adminString,"hi");
+    GoogleSheet.logError('test');
 }
