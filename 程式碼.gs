@@ -231,11 +231,11 @@ var Christina = ((ct) => {
             'name': '搜尋專輯',
             'alias': ['kksearchalbum', 'kksa', '搜尋專輯', '找專輯'],
             'fn': kkboxSearchAlbumScript,
-            'help': 'kkbox試聽音樂 (指令: kksa 殺破狼'
+            'help': 'kkbox搜尋專輯 (指令: kksa 殺破狼'
         },
         'kksearchtrack': {
             'name': '搜尋音樂',
-            'alias': ['kkboxsearch', 'kkst', '搜尋音樂', '找音樂', '找歌曲'],
+            'alias': ['kksearchtrack', 'kkst', '搜尋音樂', '找音樂', '找歌曲'],
             'fn': kkboxSearchTrackScript,
             'help': 'kkbox搜尋音樂 (指令: kkst 殺破狼'
         },
@@ -243,7 +243,7 @@ var Christina = ((ct) => {
             'name': '搜尋歌手',
             'alias': ['kksearchartist', 'kkss', '搜尋歌手', '找歌手'],
             'fn': kkboxSearchArtistScript,
-            'help': 'kkbox搜尋音樂 (指令: kkss 831'
+            'help': 'kkbox搜尋歌手 (指令: kkss 831'
         },
     };
 
@@ -1436,10 +1436,13 @@ var Line = ((l) => {
                 case 'message':
                     if (Line.event.isCommand) {
                         if (Line.event.lineStatus) {
-                            if (Line.event.commandParam.indexOf('help') !== -1) {
-                                Line.replyMsg(Line.event.replyToken, Christina.allCommand[Line.event.command].help.replace(/@user/, Christina.getName(Line.event)));
-                            } else if (Line.event.commandParam.indexOf('alias') !== -1) {
-                                Line.replyMsg(Line.event.replyToken, Christina.allCommand[Line.event.command].alias.toString());
+                            if (Line.event.commandParam.indexOf('help') !== -1 || Line.event.commandParam.indexOf('h') !== -1) {
+                                var commandHelp = Christina.allCommand[Line.event.command].help;
+                                Line.replyMsg(Line.event.replyToken, commandHelp.replace(/@user/, Christina.getName(Line.event)));
+                            } else if (Line.event.commandParam.indexOf('alias') !== -1 || Line.event.commandParam.indexOf('其他指令') !== -1) {
+                                var commandName = Christina.allCommand[Line.event.command].name;
+                                var commandAlias = Christina.allCommand[Line.event.command].alias.toString();
+                                Line.replyMsg(Line.event.replyToken,  commandName + "的其他指令有: " + commandAlias);
                             } else {
                                 Christina.allCommand[Line.event.command].fn(Line.event);
                             }
