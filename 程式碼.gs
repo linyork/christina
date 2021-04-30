@@ -124,10 +124,10 @@ var Christina = ((ct) => {
     var insertMoneyScript = (event) => {
         if (event.isMaster) {
             if(event.commandParam.length) {
-                Line.replyMsg(event.replyToken, getName(event) + '忘記輸入金額了');
-            } else {
                 Christina.insertMoney(event.commandParam[0]);
                 Line.replyMsg(event.replyToken, 'Christina 已經幫' + getName(event) + '登錄錢錢嘍');
+            } else {
+                Line.replyMsg(event.replyToken, getName(event) + '忘記輸入金額了');
             }
         } else {
             Line.replyMsg(event.replyToken, getName(event) + '想給 Christina 錢錢嗎!');
@@ -138,10 +138,10 @@ var Christina = ((ct) => {
     var todoScript = (event) => {
         if (event.isMaster) {
             if(event.commandParam.length) {
-                Line.replyMsg(event.replyToken, getName(event) + '沒說要 Christina 提醒你做什麼');
-            } else {
                 Christina.todo(event.commandParam[0]);
                 Line.replyMsg(event.replyToken, 'Christina 已經幫' + getName(event) + '記住待辦事項了');
+            } else {
+                Line.replyMsg(event.replyToken, getName(event) + '沒說要 Christina 提醒你做什麼');
             }
         } else {
             Line.replyMsg(event.replyToken, getName(event) + '肯定記得不用 Christina 幫你記');
@@ -151,7 +151,7 @@ var Christina = ((ct) => {
     // todolist
     var todoListScript = (event) => {
         if (event.isMaster) {
-            Line.replyMsg(event.replyToken, getName(event) + '還有\n' + Christina.todolist() + '沒有做');
+            Line.replyMsg(event.replyToken, getName(event) + Christina.todolist());
         } else {
             Line.replyMsg(event.replyToken, '將來的事');
         }
@@ -161,10 +161,10 @@ var Christina = ((ct) => {
     var doScript = (event) => {
         if (event.isMaster) {
             if(event.commandParam.length) {
-                Line.replyMsg(event.replyToken, getName(event) + '沒說要做完什麼了');
-            } else {
                 Christina.do(event.commandParam[0]);
                 Line.replyMsg(event.replyToken, getName(event) + '好棒！Christina 抱一個');
+            } else {
+                Line.replyMsg(event.replyToken, getName(event) + '沒說要做完什麼了');
             }
         } else {
             Line.replyMsg(event.replyToken, '好棒！可是 Christina 沒有獎勵給' + getName(event));
@@ -744,7 +744,7 @@ var Christina = ((ct) => {
      */
     ct.todolist = () => {
         try{
-            return GoogleSheet.todolist();
+            return '還有\n' + GoogleSheet.todolist() + '沒有做';
         } catch (ex) {
             GoogleSheet.logError('Christina.todolist, ex = ' + ex);
         }
@@ -813,12 +813,12 @@ var DB = (() => {
             if (columns.length) {
                 for (var i = 0; i < lastColumn; i++) {
                     if (columns.includes(allData[0][i])) {
-                        selectColumns[i] = allData[0][i];
+                        selectColumns[i] = allData[0][ i];
                     }
                 }
             } else {
-                for (var i = 0; i < lastColumn; i++) {
-                    selectColumns[i] = allData[0][i];
+                for (var j = 0; j < lastColumn; j++) {
+                    selectColumns[j] = allData[0][j];
                 }
             }
         } catch (ex) {
@@ -1266,7 +1266,7 @@ var KKBOX = ((kk) => {
  * @type {{}}
  * @description (單例) 一些自幹的 html tool
  */
-var HTMLTOOl = ((ht)=>{
+var HTMLTOOl = ((ht) =>{
 
     var  unentitize = (strEncoded) => {
         return strEncoded
@@ -1639,7 +1639,7 @@ var GoogleSheet = ((gsh) => {
     };
 
     /**
-     *  log info
+     * log info
      * @param msg
      */
     gsh.logInfo = (...msg) => {
@@ -1649,7 +1649,7 @@ var GoogleSheet = ((gsh) => {
     };
 
     /**
-     *  log info
+     * log send
      * @param msg
      */
     gsh.logSend = (...msg) => {
