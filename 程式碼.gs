@@ -1308,6 +1308,26 @@ var HTMLTOOl = ((ht) =>{
         return result;
     }
 
+    /**
+     * isJsonStr
+     * @param str
+     * @returns {boolean}
+     */
+    ht.isJsonStr = (str) => {
+
+        if (typeof str == 'string') {
+            try {
+                JSON.parse(str);
+                return true;
+            } catch (e) {
+                console.log(e);
+                return false;
+            }
+
+        }
+        return false;
+    }
+
     return ht;
 })(HTMLTOOl || {});
 
@@ -1771,12 +1791,16 @@ var GoogleSheet = ((gsh) => {
 function doPost(e) {
     try {
         Logger.log(e.postData.contents);
-        var value = JSON.parse(e.postData.contents);
-        if (value.events != null) {
-            for (var i in value.events) {
-                Line.init(value.events[i]);
-                Line.startEvent();
+        if (HTMLTOOl.isJsonStr(e.postData.contents)) {
+            var value = JSON.parse(e.postData.contents);
+            if (value.events != null) {
+                for (var i in value.events) {
+                    Line.init(value.events[i]);
+                    Line.startEvent();
+                }
             }
+        } else {
+            Line.pushMsg(Christina.adminString.split(",")[0], e.postData.contents)
         }
     } catch (e) {
         Logger.log(e);
