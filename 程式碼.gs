@@ -1403,6 +1403,7 @@ var Line = ((l) => {
      * @param event
      */
     l.init = (event) => {
+        // TODO  製作判斷是 line 來的還是 trading view 來的
         try {
             event.isMaster = Christina.checkMaster(event.source.userId);
             event.profile = getProfile(event.source);
@@ -1582,6 +1583,15 @@ var Line = ((l) => {
     };
     return l;
 })(Line || {});
+
+/**
+ * TradingView
+ * @type {{}}
+ * @description (單例) 操作 Trading View 的 model
+ */
+var TradingView = ((t) => {
+
+})(TradingView || {});
 
 /**
  * GoogleSheet
