@@ -1445,6 +1445,10 @@ var Line = ((l) => {
         }
     };
 
+    l.isLine = (string) => {
+        return HTMLTOOl.isJsonStr(string) && JSON.parse(string).hasOwnProperty("events");
+    };
+
     /**
      * 執行 command
      */
@@ -1611,6 +1615,15 @@ var Line = ((l) => {
  */
 var TradingView = ((t) => {
 
+    t.isTradingView = (string) => {
+        return !HTMLTOOl.isJsonStr(string);
+    };
+
+    t.tradingViewAlert = (string) => {
+        Line.pushMsg(Christina.adminString.split(",")[0], "主人股票有新消息了\n"+string);
+    }
+
+    return t;
 })(TradingView || {});
 
 /**
@@ -1790,20 +1803,22 @@ var GoogleSheet = ((gsh) => {
 // 主程序
 function doPost(e) {
     try {
-        Logger.log(e.postData.contents);
-        if (HTMLTOOl.isJsonStr(e.postData.contents)) {
-            var value = JSON.parse(e.postData.contents);
-            if (value.events != null) {
-                for (var i in value.events) {
-                    Line.init(value.events[i]);
+        // is line
+        if(Line.isLine(e.postData.contents)) {
+            var jsonData = JSON.parse(e.postData.contents);
+            if (jsonData.events != null) {
+                for (var i in jsonData.events) {
+                    Line.init(jsonData.events[i]);
                     Line.startEvent();
                 }
             }
-        } else {
-            Line.pushMsg(Christina.adminString.split(",")[0], e.postData.contents)
         }
-    } catch (e) {
-        Logger.log(e);
+        // is trading View
+        if(TradingView.isTradingView(e.postData.contents)) TradingView.tradingViewAlert(e.postData.contents);
+
+    } catch (error) {
+        Logger.log(e.postData.contents);
+        Logger.log(error);
     }
 }
 
