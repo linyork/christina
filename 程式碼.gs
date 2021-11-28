@@ -1308,6 +1308,26 @@ var HTMLTOOl = ((ht) =>{
         return result;
     }
 
+    /**
+     * isJsonStr
+     * @param str
+     * @returns {boolean}
+     */
+    ht.isJsonStr = (str) => {
+
+        if (typeof str == 'string') {
+            try {
+                JSON.parse(str);
+                return true;
+            } catch (e) {
+                console.log(e);
+                return false;
+            }
+
+        }
+        return false;
+    }
+
     return ht;
 })(HTMLTOOl || {});
 
@@ -1403,6 +1423,7 @@ var Line = ((l) => {
      * @param event
      */
     l.init = (event) => {
+        // TODO  製作判斷是 line 來的還是 trading view 來的
         try {
             event.isMaster = Christina.checkMaster(event.source.userId);
             event.profile = getProfile(event.source);
@@ -1422,6 +1443,10 @@ var Line = ((l) => {
         } catch (ex) {
             Logger.log('Line.eventInit, ex = ' + ex);
         }
+    };
+
+    l.isLine = (string) => {
+        return HTMLTOOl.isJsonStr(string) && JSON.parse(string).hasOwnProperty("events");
     };
 
     /**
@@ -1582,6 +1607,24 @@ var Line = ((l) => {
     };
     return l;
 })(Line || {});
+
+/**
+ * TradingView
+ * @type {{}}
+ * @description (單例) 操作 Trading View 的 model
+ */
+var TradingView = ((t) => {
+
+    t.isTradingView = (string) => {
+        return !HTMLTOOl.isJsonStr(string);
+    };
+
+    t.tradingViewAlert = (string) => {
+        Line.pushMsg(Christina.adminString.split(",")[0], "主人股票有新消息了\n"+string);
+    }
+
+    return t;
+})(TradingView || {});
 
 /**
  * GoogleSheet
@@ -1760,16 +1803,22 @@ var GoogleSheet = ((gsh) => {
 // 主程序
 function doPost(e) {
     try {
-        Logger.log(e.postData.contents);
-        var value = JSON.parse(e.postData.contents);
-        if (value.events != null) {
-            for (var i in value.events) {
-                Line.init(value.events[i]);
-                Line.startEvent();
+        // is line
+        if(Line.isLine(e.postData.contents)) {
+            var jsonData = JSON.parse(e.postData.contents);
+            if (jsonData.events != null) {
+                for (var i in jsonData.events) {
+                    Line.init(jsonData.events[i]);
+                    Line.startEvent();
+                }
             }
         }
-    } catch (e) {
-        Logger.log(e);
+        // is trading View
+        if(TradingView.isTradingView(e.postData.contents)) TradingView.tradingViewAlert(e.postData.contents);
+
+    } catch (error) {
+        Logger.log(e.postData.contents);
+        Logger.log(error);
     }
 }
 
