@@ -88,17 +88,19 @@ var Christina = ((ct) => {
 
     // meme
     var memeScript = (event) => {
-        var url = GoogleDrive.getImageUrl(event.commandParam[0]);
         if(event.commandParam.length) {
+            var url = GoogleDrive.getImageUrl(event.commandParam[0]+'.jpg');
+            if (url) {
+                Line.replyImageTemp(event.replyToken, url, url);
+            } else {
+                Line.replyMsg(event.replyToken, 'Christina 找不到這張圖片QQ');
+            }
+        }  else {
             if (event.isMaster) {
                 Line.replyMsg(event.replyToken, getName(event) + '忘了梗圖的指令是 meme [梗圖] 了嗎?');
             } else {
                 Line.replyMsg(event.replyToken, '梗圖的指令是 meme [梗圖]');
             }
-        } else if (url) {
-            Line.replyImageTemp(event.replyToken, url, url);
-        } else {
-            Line.replyMsg(event.replyToken, 'Christina 找不到這張圖片QQ');
         }
     }
 
@@ -337,7 +339,7 @@ var Christina = ((ct) => {
             }
             return commandString;
         } catch (ex) {
-            Logger.log('Christina.getCommandList, ex = ' + ex);
+            GoogleSheet.logError('Christina.getCommandList, ex = ' + ex);
         }
     };
 
@@ -492,7 +494,7 @@ var Christina = ((ct) => {
             template.columns = columns;
             return template;
         } catch (ex) {
-            Logger.log('Christina.getCommandTemp, ex = ' + ex);
+            GoogleSheet.logError('Christina.getCommandTemp, ex = ' + ex);
         }
     };
 
@@ -506,7 +508,7 @@ var Christina = ((ct) => {
             var adminArray = Christina.adminString.split(",");
             return adminArray.includes(userId);
         } catch (ex) {
-            Logger.log('Christina.checkMaster, ex = ' + ex);
+            GoogleSheet.logError('Christina.checkMaster, ex = ' + ex);
         }
     };
 
@@ -533,7 +535,7 @@ var Christina = ((ct) => {
             }
             return cmdObj;
         } catch (ex) {
-            Logger.log('Christina.checkCommand, ex = ' + ex);
+            GoogleSheet.logError('Christina.checkCommand, ex = ' + ex);
         }
     };
 
@@ -551,7 +553,7 @@ var Christina = ((ct) => {
             }
             return paras;
         } catch (ex) {
-            Logger.log('Christina.getCommandParam, ex = ' + ex);
+            GoogleSheet.logError('Christina.getCommandParam, ex = ' + ex);
         }
     };
 
@@ -572,7 +574,7 @@ var Christina = ((ct) => {
         try {
             return Math.floor(Math.random() * 6 + 1);
         } catch (ex) {
-            Logger.log('Christina.roll, ex = ' + ex);
+            GoogleSheet.logError('Christina.roll, ex = ' + ex);
         }
     };
 
@@ -610,7 +612,7 @@ var Christina = ((ct) => {
             template.columns = columns;
             return template;
         } catch (ex) {
-            Logger.log('Christina.kkboxsearchtrack, ex = ' + ex);
+            GoogleSheet.logError('Christina.kkboxsearchtrack, ex = ' + ex);
         }
     };
 
@@ -648,7 +650,7 @@ var Christina = ((ct) => {
             template.columns = columns;
             return template;
         } catch (ex) {
-            Logger.log('Christina.kkboxsearchartist, ex = ' + ex);
+            GoogleSheet.logError('Christina.kkboxsearchartist, ex = ' + ex);
         }
     };
 
@@ -686,7 +688,7 @@ var Christina = ((ct) => {
             template.columns = columns;
             return template;
         } catch (ex) {
-            Logger.log('Christina.kkboxsearchartist, ex = ' + ex);
+            GoogleSheet.logError('Christina.kkboxsearchartist, ex = ' + ex);
         }
     };
 
@@ -698,7 +700,7 @@ var Christina = ((ct) => {
         try {
             return GoogleSheet.eatWhat();
         } catch (ex) {
-            Logger.log('Christina.eatWhat, ex = ' + ex);
+            GoogleSheet.logError('Christina.eatWhat, ex = ' + ex);
         }
     };
 
@@ -710,7 +712,7 @@ var Christina = ((ct) => {
         try{
             return GoogleSheet.money();
         } catch (ex) {
-            Logger.log('Christina.money, ex = ' + ex);
+            GoogleSheet.logError('Christina.money, ex = ' + ex);
         }
     };
 
@@ -722,7 +724,7 @@ var Christina = ((ct) => {
         try{
             GoogleSheet.insertMoney(money);
         } catch (ex) {
-            Logger.log('Christina.insertMoney, ex = ' + ex);
+            GoogleSheet.logError('Christina.insertMoney, ex = ' + ex);
         }
     };
 
@@ -734,7 +736,7 @@ var Christina = ((ct) => {
         try{
             GoogleSheet.todo(something);
         } catch (ex) {
-            Logger.log('Christina.todo, ex = ' + ex);
+            GoogleSheet.logError('Christina.todo, ex = ' + ex);
         }
     };
 
@@ -746,7 +748,7 @@ var Christina = ((ct) => {
         try{
             return '還有\n' + GoogleSheet.todolist() + '沒有做';
         } catch (ex) {
-            Logger.log('Christina.todolist, ex = ' + ex);
+            GoogleSheet.logError('Christina.todolist, ex = ' + ex);
         }
     };
 
@@ -758,7 +760,7 @@ var Christina = ((ct) => {
         try{
             GoogleSheet.do(something);
         } catch (ex) {
-            Logger.log('Christina.do, ex = ' + ex);
+            GoogleSheet.logError('Christina.do, ex = ' + ex);
         }
     };
 
@@ -822,7 +824,7 @@ var DB = (() => {
                 }
             }
         } catch (ex) {
-            Logger.log('db.doSelectColumn, ex = ' + ex);
+            GoogleSheet.logError('db.doSelectColumn, ex = ' + ex);
         }
     }
 
@@ -863,7 +865,7 @@ var DB = (() => {
             });
             return bool;
         } catch (ex) {
-            Logger.log('db.doWhere, ex = ' + ex);
+            GoogleSheet.logError('db.doWhere, ex = ' + ex);
         }
     }
 
@@ -894,7 +896,7 @@ var DB = (() => {
                 }
             }
         } catch (ex) {
-            Logger.log('db.doResult, ex = ' + ex);
+            GoogleSheet.logError('db.doResult, ex = ' + ex);
         }
     }
 
@@ -920,7 +922,7 @@ var DB = (() => {
                 rowData = {};
             }
         } catch (ex) {
-            Logger.log('db.doUpdate, ex = ' + ex);
+            GoogleSheet.logError('db.doUpdate, ex = ' + ex);
         }
     }
 
@@ -938,7 +940,7 @@ var DB = (() => {
             });
             table.getRange(lastRow + 1, 1, 1, tmpArray.length).setValues([tmpArray]);
         } catch (ex) {
-            Logger.log('db.doInsert, ex = ' + ex);
+            GoogleSheet.logError('db.doInsert, ex = ' + ex);
         }
     }
 
@@ -957,7 +959,7 @@ var DB = (() => {
                 }
             });
         } catch (ex) {
-            Logger.log('db.select, ex = ' + ex);
+            GoogleSheet.logError('db.select, ex = ' + ex);
         }
         return db;
     };
@@ -978,7 +980,7 @@ var DB = (() => {
             allData = table.getDataRange().getValues();
 
         } catch (ex) {
-            Logger.log('db.table, ex = ' + ex);
+            GoogleSheet.logError('db.table, ex = ' + ex);
         }
         return db;
     };
@@ -993,7 +995,7 @@ var DB = (() => {
         try {
             whereCondition.push({columnName: columnName, condition: condition, value: value});
         } catch (ex) {
-            Logger.log('db.where, ex = ' + ex);
+            GoogleSheet.logError('db.where, ex = ' + ex);
         }
         return db;
     };
@@ -1019,7 +1021,7 @@ var DB = (() => {
 
             }
         } catch (ex) {
-            Logger.log('db.get, ex = ' + ex);
+            GoogleSheet.logError('db.get, ex = ' + ex);
         }
         return db;
     };
@@ -1032,7 +1034,7 @@ var DB = (() => {
         try {
             return (result.length === 0) ? {} : result;
         } catch (ex) {
-            Logger.log('db.get, ex = ' + ex);
+            GoogleSheet.logError('db.get, ex = ' + ex);
         }
     };
 
@@ -1045,7 +1047,7 @@ var DB = (() => {
         try {
             return (result.length === 0) ? {} : (column === undefined) ? result[0] : result[0][column];
         } catch (ex) {
-            Logger.log('db.first, ex = ' + ex);
+            GoogleSheet.logError('db.first, ex = ' + ex);
         }
     };
 
@@ -1058,7 +1060,7 @@ var DB = (() => {
         try {
             return (result.length === 0) ? {} : (column === undefined) ? result[result.length-1] : result[result.length-1][column];
         } catch (ex) {
-            Logger.log('db.last, ex = ' + ex);
+            GoogleSheet.logError('db.last, ex = ' + ex);
         }
     };
 
@@ -1075,7 +1077,7 @@ var DB = (() => {
             lastRow = table.getLastRow();
             allData = table.getDataRange().getValues();
         } catch (ex) {
-            Logger.log('db.update, ex = ' + ex);
+            GoogleSheet.logError('db.update, ex = ' + ex);
         }
         return db;
     };
@@ -1093,7 +1095,7 @@ var DB = (() => {
             lastRow = table.getLastRow();
             allData = table.getDataRange().getValues();
         } catch (ex) {
-            Logger.log('db.insert, ex = ' + ex);
+            GoogleSheet.logError('db.insert, ex = ' + ex);
         }
         return db;
     };
@@ -1118,7 +1120,7 @@ var DB = (() => {
                     break
             }
         } catch (ex) {
-            Logger.log('db.set, ex = ' + ex);
+            GoogleSheet.logError('db.set, ex = ' + ex);
         }
         return db;
     };
@@ -1141,11 +1143,14 @@ var GoogleDrive = ((gd) => {
      */
     gd.getImageUrl = (name) => {
         try {
-            var files = driveApp.getFilesByName(name + ".jpg");
-            return (files.hasNext()) ? 'https://lh3.googleusercontent.com/d/' + files.next().getId() : null;
-
+            var files = driveApp.getFilesByName(name);
+            if(files.hasNext()){
+                return 'https://lh3.googleusercontent.com/d/' + files.next().getId();
+            } else {
+                return null;
+            }
         } catch (ex) {
-            Logger.log('GoogleDrive.getImageUrl, ex = ' + ex);
+            GoogleSheet.logError('GoogleDrive.getImageUrl, ex = ' + ex);
         }
     };
 
@@ -1179,7 +1184,7 @@ var KKBOX = ((kk) => {
                 }
             }).getContentText())['access_token'];
         } catch (ex) {
-            Logger.log('KKBOX.accessToken, ex = ' + ex);
+            GoogleSheet.logError('KKBOX.accessToken, ex = ' + ex);
         }
     }
 
@@ -1204,7 +1209,7 @@ var KKBOX = ((kk) => {
                 }
             }).getContentText());
         } catch (ex) {
-            Logger.log('KKBOX.searchtrack, ex = ' + ex);
+            GoogleSheet.logError('KKBOX.searchtrack, ex = ' + ex);
         }
     };
 
@@ -1229,7 +1234,7 @@ var KKBOX = ((kk) => {
                 }
             }).getContentText());
         } catch (ex) {
-            Logger.log('KKBOX.searchartist, ex = ' + ex);
+            GoogleSheet.logError('KKBOX.searchartist, ex = ' + ex);
         }
     };
 
@@ -1254,7 +1259,7 @@ var KKBOX = ((kk) => {
                 }
             }).getContentText());
         } catch (ex) {
-            Logger.log('KKBOX.searchalbum, ex = ' + ex);
+            GoogleSheet.logError('KKBOX.searchalbum, ex = ' + ex);
         }
     };
 
@@ -1353,11 +1358,11 @@ var Line = ((l) => {
                 case 'room':
                     return source.roomId;
                 default:
-                    Logger.log('Line, getSourceId, invalid source type!');
+                    GoogleSheet.logError('Line, getSourceId, invalid source type!');
                     break;
             }
         } catch (ex) {
-            Logger.log('Line.getSourceId, ex = ' + ex);
+            GoogleSheet.logError('Line.getSourceId, ex = ' + ex);
         }
     };
 
@@ -1395,7 +1400,7 @@ var Line = ((l) => {
             }
             return profile;
         } catch (ex) {
-            Logger.log('Line.getProfile, ex = ' + ex);
+            GoogleSheet.logError('Line.getProfile, ex = ' + ex);
         }
     };
 
@@ -1412,7 +1417,7 @@ var Line = ((l) => {
                 'payload': payload
             });
         } catch (ex) {
-            Logger.log('Line.sendMsg, ex = ' + ex);
+            GoogleSheet.logError('Line.sendMsg, ex = ' + ex);
         }
     };
 
@@ -1441,7 +1446,7 @@ var Line = ((l) => {
             event.lineStatus = GoogleSheet.lineStatus;
             Line.event = event;
         } catch (ex) {
-            Logger.log('Line.eventInit, ex = ' + ex);
+            GoogleSheet.logError('Line.eventInit, ex = ' + ex);
         }
     };
 
@@ -1500,7 +1505,7 @@ var Line = ((l) => {
                     break;
             }
         } catch (ex) {
-            Logger.log('Line.startEvent, ex = ' + ex);
+            GoogleSheet.logError('Line.startEvent, ex = ' + ex);
         }
     };
 
@@ -1519,7 +1524,7 @@ var Line = ((l) => {
                 }]
             }));
         } catch (ex) {
-            Logger.log('Line.pushMsg, ex = ' + ex);
+            GoogleSheet.logError('Line.pushMsg, ex = ' + ex);
         }
     };
 
@@ -1539,7 +1544,7 @@ var Line = ((l) => {
                     }]
                 }));
         } catch (ex) {
-            Logger.log('Line.replyMsg, ex = ' + ex);
+            GoogleSheet.logError('Line.replyMsg, ex = ' + ex);
         }
     };
 
@@ -1561,7 +1566,7 @@ var Line = ((l) => {
                     }]
                 }));
         } catch (ex) {
-            Logger.log('Line.replyBtnTemp, ex = ' + ex);
+            GoogleSheet.logError('Line.replyBtnTemp, ex = ' + ex);
         }
     };
 
@@ -1583,7 +1588,7 @@ var Line = ((l) => {
                     }]
                 }));
         } catch (ex) {
-            Logger.log('Line.replyBtnTemp, ex = ' + ex);
+            GoogleSheet.logError('Line.replyBtnTemp, ex = ' + ex);
         }
     };
 
@@ -1602,7 +1607,7 @@ var Line = ((l) => {
                 'method': 'post',
             });
         } catch (ex) {
-            Logger.log('Line.leave, ex = ' + ex);
+            GoogleSheet.logError('Line.leave, ex = ' + ex);
         }
     };
     return l;
@@ -1666,7 +1671,7 @@ var GoogleSheet = ((gsh) => {
         try {
             DB().update('christina').set('status', data).execute();
         } catch (ex) {
-            Logger.log('GoogleSheet.setLineStatus, ex = ' + ex);
+            gsh.logError('GoogleSheet.setLineStatus, ex = ' + ex);
         }
     };
 
@@ -1817,8 +1822,8 @@ function doPost(e) {
         if(TradingView.isTradingView(e.postData.contents)) TradingView.tradingViewAlert(e.postData.contents);
 
     } catch (error) {
-        Logger.log(e.postData.contents);
-        Logger.log(error);
+        GoogleSheet.logError(e.postData.contents);
+        GoogleSheet.logError(error);
     }
 }
 
@@ -1827,7 +1832,7 @@ function takeBreak() {
     try {
         Line.pushMsg(Christina.adminString.split(",")[0], "請主人起來走一走~\n休息一下了~");
     } catch (ex) {
-        Logger.log('crontab, takeBreak, ex = ' + ex);
+        GoogleSheet.logError('crontab, takeBreak, ex = ' + ex);
     }
 }
 
@@ -1836,11 +1841,16 @@ function recordAssets() {
     try {
         Line.pushMsg(Christina.adminString.split(",")[0], "請主人記得紀錄資產價值喔~");
     } catch (ex) {
-        Logger.log('crontab, recordAssets, ex = ' + ex);
+        GoogleSheet.logError('crontab, recordAssets, ex = ' + ex);
     }
 }
 
 // 測試
 function test(){
-    Logger.log('test');
+    try {
+        var files = DriveApp.getFilesByName('christina');
+        GoogleSheet.logError(files.next().getUrl());
+    } catch (ex) {
+        GoogleSheet.logError('crontab, recordAssets, ex = ' + ex);
+    }
 }
