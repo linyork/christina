@@ -39,12 +39,12 @@ var Christina = ((ct) => {
 
     // myid
     var myidScript = (event) => {
-            Line.replyMsg(event.replyToken, getName(event) + '您的ID是：\n' + event.source.userId);
+        Line.replyMsg(event.replyToken, getName(event) + '您的ID是：\n' + event.source.userId);
     };
 
     // roll
     var rollScript = (event) => {
-            Line.replyMsg(event.replyToken, '好的 Christina 為' + getName(event) + '擲骰子\n擲出的點數是: ' + Christina.roll());
+        Line.replyMsg(event.replyToken, '好的 Christina 為' + getName(event) + '擲骰子\n擲出的點數是: ' + Christina.roll());
     };
 
     // kkboxSearchAlbumScript
@@ -357,10 +357,10 @@ var Christina = ((ct) => {
             var template = {"type": 'carousel'};
             var columns = [];
             var defaultAction = {
-                    "type": "message",
-                    "label": "點到圖片或標題",
-                    "text": "christina"
-                };
+                "type": "message",
+                "label": "點到圖片或標題",
+                "text": "christina"
+            };
             columns.push({
                 "thumbnailImageUrl": christinaImg,
                 "title": "Christina的基本服務",
@@ -1472,15 +1472,17 @@ var Line = ((l) => {
                             } else if (Line.event.commandParam.indexOf('alias') !== -1 || Line.event.commandParam.indexOf('其他指令') !== -1) {
                                 var commandName = Christina.allCommand[Line.event.command].name;
                                 var commandAlias = Christina.allCommand[Line.event.command].alias.toString();
-                                Line.replyMsg(Line.event.replyToken,  commandName + "的其他指令有: " + commandAlias);
+                                Line.replyMsg(Line.event.replyToken, commandName + "的其他指令有: " + commandAlias);
                             } else {
                                 Christina.allCommand[Line.event.command].fn(Line.event);
                             }
-                        } else if (!Line.event.lineStatus  && Line.event.command === 'start') {
+                        } else if (!Line.event.lineStatus && Line.event.command === 'start') {
                             Christina.allCommand[Line.event.command].fn(Line.event);
-                        } else{
+                        } else {
                             Line.replyMsg(Line.event.replyToken, "Christina 下班了喔");
                         }
+                    } else {
+                        Line.replyMsg(Line.event.replyToken, ChatBoot.replay(Line.event.message.text));
                     }
                     break;
                 case 'join':
@@ -1805,6 +1807,40 @@ var GoogleSheet = ((gsh) => {
     return gsh;
 })(GoogleSheet || {});
 
+var ChatBoot = ((cb) => {
+    var scriptProperties = PropertiesService.getScriptProperties();
+    // 取得 API KEY
+    var apiKey = scriptProperties.getProperty('CHATGPT_API_KEY');
+    cb.replay = (message) => {
+        try {
+            var apiEndpoint = 'https://api.openai.com/v1/completions';
+            var payload = {
+                "model": "text-davinci-003",
+                "prompt": "Human: 使用繁體中文進行對話\nAI: 你好！我是 AI。很高興認識你！\nHuman: 使用情境。你是Christina。我是主人。我說謝謝你或謝謝或3Q你會說不客氣主人。\nAI: 不客氣，主人。\nHuman: "+message+"\nAI: ",
+                "temperature": 0.9,
+                "max_tokens": 1024,
+                "top_p": 1,
+                "frequency_penalty": 0,
+                "presence_penalty": 0.6,
+                "stop": [" Human:", " AI:"],
+            };
+            var options = {
+                "method" : "post",
+                "headers": {"Authorization": "Bearer " + apiKey},
+                "contentType": "application/json",
+                "payload" : JSON.stringify(payload)
+            };
+            var response = UrlFetchApp.fetch(apiEndpoint, options);
+            var data = JSON.parse(response.getContentText());
+            return data.choices[0].text;
+        } catch (error) {
+            GoogleSheet.logError(error);
+            return '主人不好意思我有點混亂';
+        }
+    };
+    return cb;
+})(ChatBoot || {})
+
 // 主程序
 function doPost(e) {
     try {
@@ -1847,10 +1883,35 @@ function recordAssets() {
 
 // 測試
 function test(){
-    try {
-        var files = DriveApp.getFilesByName('christina');
-        GoogleSheet.logError(files.next().getUrl());
-    } catch (ex) {
-        GoogleSheet.logError('crontab, recordAssets, ex = ' + ex);
-    }
+    var settings = {
+        "url": "https://www.tdcc.com.tw/smWeb/QryStockAjax.do",
+        "method": "POST",
+        "timeout": 0,
+        "headers": {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Referer": "https://www.tdcc.com.tw/smWeb/QryStockAjax.do",
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+            "Host": "www.tdcc.com.tw",
+            "Connection": "keep-alive",
+            "Content-Length": "139",
+            "Cache-Control": "max-age=0",
+            "Cookie": "JSESSIONID=0000kAd6NZog8VVVhXI_CtYk2WN:19tmdfnom"
+        },
+        "data": {
+            "scaDates": "20220218",
+            "scaDate": "20220218",
+            "SqlMethod": "StockNo",
+            "StockNo": "3680",
+            "radioStockNo": "3680",
+            "StockName": "",
+            "REQ_OPR": "SELECT",
+            "clkStockNo": "3680",
+            "clkStockName": ""
+        }
+    };
+
+    $.ajax(settings).done(function (response) {
+        GoogleSheet.logError(response);
+    });
 }
