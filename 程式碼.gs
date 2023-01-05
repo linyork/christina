@@ -774,41 +774,29 @@ var Christina = ((ct) => {
  */
 var DB = (() => {
     var scriptProperties = PropertiesService.getScriptProperties();
-
     // google sheet 資訊
     var sheetId = scriptProperties.getProperty('SHEET_ID');
-
     // 取得 sheet
     var christinaSheet = SpreadsheetApp.openById(sheetId);
-
     // type
     var type;
-
     // columns
     var columns = [];
-
     var selectColumns = {};
-
     var whereCondition = [];
-
     var updateData = [];
-
     var insertData = [];
-
     // table
     var table;
-
     var allData;
-
     // last column
     var lastColumn;
-
     // last row
     var lastRow;
-
     // value
     var result = [];
-
+    // range;
+    var range;
     // 處理讀取的 columns
     var doSelectColumn = () => {
         try {
@@ -827,7 +815,6 @@ var DB = (() => {
             GoogleSheet.logError('db.doSelectColumn, ex = ' + ex);
         }
     }
-
     // 處理條件式
     var doWhere = (rowData) => {
         try {
@@ -868,7 +855,6 @@ var DB = (() => {
             GoogleSheet.logError('db.doWhere, ex = ' + ex);
         }
     }
-
     // 處理讀取的資料
     var doResult = () => {
         try {
@@ -899,7 +885,6 @@ var DB = (() => {
             GoogleSheet.logError('db.doResult, ex = ' + ex);
         }
     }
-
     // 處理更新資料
     var doUpdate = () => {
         try {
@@ -925,7 +910,6 @@ var DB = (() => {
             GoogleSheet.logError('db.doUpdate, ex = ' + ex);
         }
     }
-
     // 處理新增資料
     var doInsert = () => {
         try {
@@ -943,9 +927,16 @@ var DB = (() => {
             GoogleSheet.logError('db.doInsert, ex = ' + ex);
         }
     }
-
+    // 處理刪除資料
+    var doDelete = () => {
+        try {
+            var deleteRange = table.getRange(range);
+            deleteRange.clear();
+        } catch (ex) {
+            GoogleSheet.logError('db.doDelete, ex = ' + ex);
+        }
+    }
     var db = {};
-
     /**
      * 設定查詢欄位
      * @param column String...
@@ -1017,6 +1008,9 @@ var DB = (() => {
                     break;
                 case 'I':
                     doInsert();
+                    break;
+                case 'D':
+                    doDelete();
                     break
 
             }
@@ -1037,7 +1031,6 @@ var DB = (() => {
             GoogleSheet.logError('db.get, ex = ' + ex);
         }
     };
-
     /**
      * 取得 result 第一筆資料
      * @param column
@@ -1050,7 +1043,6 @@ var DB = (() => {
             GoogleSheet.logError('db.first, ex = ' + ex);
         }
     };
-
     /**
      * 取得 result 第最後一筆資料
      * @param column
@@ -1063,7 +1055,6 @@ var DB = (() => {
             GoogleSheet.logError('db.last, ex = ' + ex);
         }
     };
-
     /**
      * 設定更新table(sheet)
      * @param tableName String
@@ -1081,7 +1072,6 @@ var DB = (() => {
         }
         return db;
     };
-
     /**
      * 設定新增table(sheet)
      * @param tableName String
@@ -1099,7 +1089,22 @@ var DB = (() => {
         }
         return db;
     };
-
+    /**
+     * 設定刪除table(sheet)
+     * @param tableName String
+     * @param rangeString String
+     * @returns {{}}
+     */
+    db.delete = (tableName, rangeString) => {
+        type = 'D';
+        try {
+            table = christinaSheet.getSheetByName(tableName);
+            range = rangeString;
+        } catch (ex) {
+            GoogleSheet.logError('db.delete, ex = ' + ex);
+        }
+        return db;
+    };
     /**
      * 設定資料
      * @param columnName
@@ -1124,7 +1129,6 @@ var DB = (() => {
         }
         return db;
     };
-
     return db;
 });
 
@@ -1428,7 +1432,6 @@ var Line = ((l) => {
      * @param event
      */
     l.init = (event) => {
-        // TODO  製作判斷是 line 來的還是 trading view 來的
         try {
             event.isMaster = Christina.checkMaster(event.source.userId);
             event.profile = getProfile(event.source);
@@ -1616,24 +1619,6 @@ var Line = ((l) => {
 })(Line || {});
 
 /**
- * TradingView
- * @type {{}}
- * @description (單例) 操作 Trading View 的 model
- */
-var TradingView = ((t) => {
-
-    t.isTradingView = (string) => {
-        return !HTMLTOOl.isJsonStr(string);
-    };
-
-    t.tradingViewAlert = (string) => {
-        Line.pushMsg(Christina.adminString.split(",")[0], "主人股票有新消息了\n"+string);
-    }
-
-    return t;
-})(TradingView || {});
-
-/**
  * GoogleSheet
  * @type {{}}
  * @description (單例) 客製化操作 google sheet 的 model
@@ -1650,7 +1635,7 @@ var GoogleSheet = ((gsh) => {
     // 取得 console log table
     var sheetConsoleLog = christinaSheet.getSheetByName('consolelog');
 
-    // 取得 eat_what log table
+    // 取得 eat_what table
     var sheetEat = christinaSheet.getSheetByName('eat_what');
 
     /**
@@ -1813,14 +1798,17 @@ var ChatBoot = ((cb) => {
     var apiKey = scriptProperties.getProperty('CHATGPT_API_KEY');
     cb.replay = (message) => {
         try {
+            // 取得所有對話
+            var allTalk = DB().select('talk').from('chat').execute().get().map(({talk}) => talk);
+            // 打 api
             var apiEndpoint = 'https://api.openai.com/v1/completions';
             var payload = {
                 "model": "text-davinci-003",
-                "prompt": "Human: 使用繁體中文進行對話\nAI: 你好！我是 AI。很高興認識你！\nHuman: 使用情境。你是Christina。我是主人。我說謝謝你或謝謝或3Q你會說不客氣主人。\nAI: 不客氣，主人。\nHuman: "+message+"\nAI: ",
-                "temperature": 0.9,
-                "max_tokens": 1024,
-                "top_p": 1,
-                "frequency_penalty": 0,
+                "prompt": allTalk.join('\n')+"\nHuman: "+message+"\nAI: ",
+                "temperature": 1,
+                "max_tokens": 512,
+                "top_p": 0.85,
+                "frequency_penalty": 0.2,
                 "presence_penalty": 0.6,
                 "stop": [" Human:", " AI:"],
             };
@@ -1832,7 +1820,15 @@ var ChatBoot = ((cb) => {
             };
             var response = UrlFetchApp.fetch(apiEndpoint, options);
             var data = JSON.parse(response.getContentText());
-            return data.choices[0].text;
+            var aiMessage = data.choices[0].text;
+            // 記錄對話
+            var thisTalk = 'Human: '+message;
+            var aiTalk = 'AI: '+aiMessage;
+            allTalk.push(thisTalk);
+            allTalk.push(aiTalk);
+            DB().insert('chat').set('talk', thisTalk).execute();
+            DB().insert('chat').set('talk', aiTalk).execute();
+            return aiMessage;
         } catch (error) {
             GoogleSheet.logError(error);
             return '主人不好意思我有點混亂';
@@ -1854,8 +1850,6 @@ function doPost(e) {
                 }
             }
         }
-        // is trading View
-        if(TradingView.isTradingView(e.postData.contents)) TradingView.tradingViewAlert(e.postData.contents);
 
     } catch (error) {
         GoogleSheet.logError(e.postData.contents);
@@ -1881,37 +1875,12 @@ function recordAssets() {
     }
 }
 
+// 每天清空 AI 對話
+function removeChat() {
+    DB().delete('chat','A10:A999').execute();
+}
+
 // 測試
 function test(){
-    var settings = {
-        "url": "https://www.tdcc.com.tw/smWeb/QryStockAjax.do",
-        "method": "POST",
-        "timeout": 0,
-        "headers": {
-            "Content-Type": "application/x-www-form-urlencoded",
-            "Referer": "https://www.tdcc.com.tw/smWeb/QryStockAjax.do",
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36",
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
-            "Host": "www.tdcc.com.tw",
-            "Connection": "keep-alive",
-            "Content-Length": "139",
-            "Cache-Control": "max-age=0",
-            "Cookie": "JSESSIONID=0000kAd6NZog8VVVhXI_CtYk2WN:19tmdfnom"
-        },
-        "data": {
-            "scaDates": "20220218",
-            "scaDate": "20220218",
-            "SqlMethod": "StockNo",
-            "StockNo": "3680",
-            "radioStockNo": "3680",
-            "StockName": "",
-            "REQ_OPR": "SELECT",
-            "clkStockNo": "3680",
-            "clkStockName": ""
-        }
-    };
 
-    $.ajax(settings).done(function (response) {
-        GoogleSheet.logError(response);
-    });
 }
