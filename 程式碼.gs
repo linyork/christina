@@ -113,6 +113,16 @@ var Christina = ((ct) => {
         }
     };
 
+    // init chat bot
+    var initChatScript = (event) => {
+        if (event.isMaster) {
+            Christina.initChat();
+            Line.replyMsg(event.replyToken, 'Christina 回到原廠設定了');
+        } else {
+            Line.replyMsg(event.replyToken, '客倌不能重置 Christina喔');
+        }
+    }
+
     // money
     var moneyScript = (event) => {
         if (event.isMaster) {
@@ -200,8 +210,8 @@ var Christina = ((ct) => {
     // 指令集
     var gCommand = {
         'christina': {
-            'name': '基礎指令',
-            'alias': ['christina', '安安', '在嗎', '哈嘍', 'hi', '娜娜早安', '娜娜早', '娜娜安安'],
+            'name': '指令面板',
+            'alias': ['基礎指令', '指令面板', '安安'],
             'fn': christinaScript,
             'help': '提供@user可使用的指令面板'
         },
@@ -261,6 +271,12 @@ var Christina = ((ct) => {
             'alias': ['eat', '吃什麼', '吃啥', 'christina吃什麼', 'Christina吃什麼', '今天吃什麼'],
             'fn': eatScript,
             'help': '隨機決定吃什麼'
+        },
+        'initchat': {
+            'name': '初始化chat bot',
+            'alias': ['initchat', '重置', '清除聊天紀錄'],
+            'fn': initChatScript,
+            'help': '初始化 chat bot 的對話紀錄'
         },
         'money': {
             'name': '顯示資產',
@@ -422,15 +438,15 @@ var Christina = ((ct) => {
                             "text": "eat"
                         }, {
                             "type": "message",
-                            "label": Christina.allCommand['eat'].name,
-                            "text": "eat"
+                            "label": Christina.allCommand['initchat'].name,
+                            "text": "initchat"
                         }
                     ]
                 });
                 columns.push({
                     "thumbnailImageUrl": christinaMasterImg,
                     "title": "主人的專屬服務",
-                    "text": "錢錢",
+                    "text": "代辦事項",
                     "defaultAction": defaultAction,
                     "actions": [
                         {
@@ -703,6 +719,18 @@ var Christina = ((ct) => {
             GoogleSheet.logError('Christina.eatWhat, ex = ' + ex);
         }
     };
+
+    /**
+     * init chat 資料
+     */
+    ct.initChat = () => {
+        try {
+            removeChat();
+        } catch (ex) {
+            GoogleSheet.logError('Christina.initChatBot, ex = ' + ex);
+        }
+    }
+
 
     /**
      * 取得最新資產
@@ -1158,7 +1186,6 @@ var GoogleDrive = ((gd) => {
         }
     };
 
-
     return gd;
 })(GoogleDrive || {});
 
@@ -1485,6 +1512,8 @@ var Line = ((l) => {
                             Line.replyMsg(Line.event.replyToken, "Christina 下班了喔");
                         }
                     } else {
+                        // openAi Bot
+                        if (Line.event.message.text)
                         Line.replyMsg(Line.event.replyToken, ChatBoot.replay(Line.event.message.text));
                     }
                     break;
@@ -1802,21 +1831,20 @@ var ChatBoot = ((cb) => {
             var allTalk = DB().select('talk').from('chat').execute().get().map(({talk}) => talk);
             // 打 api
             var apiEndpoint = 'https://api.openai.com/v1/completions';
-            var payload = {
-                "model": "text-davinci-003",
-                "prompt": allTalk.join('\n')+"\nHuman: "+message+"\nAI: ",
-                "temperature": 1,
-                "max_tokens": 512,
-                "top_p": 0.85,
-                "frequency_penalty": 0.2,
-                "presence_penalty": 0.6,
-                "stop": [" Human:", " AI:"],
-            };
             var options = {
                 "method" : "post",
                 "headers": {"Authorization": "Bearer " + apiKey},
                 "contentType": "application/json",
-                "payload" : JSON.stringify(payload)
+                "payload" : JSON.stringify({
+                    "model": "text-davinci-003",
+                    "prompt": allTalk.join('\n')+"\nHuman: "+message+"\nAI: ",
+                    "temperature": 1,
+                    "max_tokens": 512,
+                    "top_p": 0.9,
+                    "frequency_penalty": 0.27,
+                    "presence_penalty": 0.63,
+                    "stop": [" Human:", " AI:"],
+                })
             };
             var response = UrlFetchApp.fetch(apiEndpoint, options);
             var data = JSON.parse(response.getContentText());
@@ -1860,7 +1888,7 @@ function doPost(e) {
 // 提醒休息
 function takeBreak() {
     try {
-        Line.pushMsg(Christina.adminString.split(",")[0], "請主人起來走一走~\n休息一下了~");
+        Line.pushMsg(Christina.adminString.split(",")[0], "主人，現在起身走一走吧！我陪你一起走～喵❤️");
     } catch (ex) {
         GoogleSheet.logError('crontab, takeBreak, ex = ' + ex);
     }
@@ -1869,7 +1897,7 @@ function takeBreak() {
 // 提醒理財
 function recordAssets() {
     try {
-        Line.pushMsg(Christina.adminString.split(",")[0], "請主人記得紀錄資產價值喔~");
+        Line.pushMsg(Christina.adminString.split(",")[0], "主人，現在是時候要登記資產了，我會陪你一起完成～喵❤️");
     } catch (ex) {
         GoogleSheet.logError('crontab, recordAssets, ex = ' + ex);
     }
@@ -1877,7 +1905,7 @@ function recordAssets() {
 
 // 每天清空 AI 對話
 function removeChat() {
-    DB().delete('chat','A10:A999').execute();
+    DB().delete('chat','A15:A999').execute();
 }
 
 // 測試
