@@ -19,7 +19,7 @@ var Christina = ((ct) => {
 
     // christina
     var christinaScript = (event) => {
-        Line.replyBtnTemp(event.replyToken, 'Christina 在這兒～', Christina.getCommandTemp(event.isMaster))
+        Line.replyBtnTemp(event.replyToken, 'Christina 在這兒～喵❤️', Christina.getCommandTemp(event.isMaster))
     };
 
     // cmd
@@ -30,7 +30,7 @@ var Christina = ((ct) => {
     // leave
     var leaveScript = (event) => {
         if (event.isMaster) {
-            Line.replyMsg(event.replyToken, getName(event) + '掰掰~\nChristina 先行告退了');
+            Line.replyMsg(event.replyToken, getName(event) + '掰掰~\nChristina 先行告退了～喵❤️');
         } else {
             Line.replyMsg(event.replyToken, 'Bye~\nChristina 先行告退了');
         }
@@ -44,13 +44,13 @@ var Christina = ((ct) => {
 
     // roll
     var rollScript = (event) => {
-        Line.replyMsg(event.replyToken, '好的 Christina 為' + getName(event) + '擲骰子\n擲出的點數是: ' + Christina.roll());
+        Line.replyMsg(event.replyToken, '好的 Christina 為' + getName(event) + '擲骰子\n擲出的點數是: ' + Christina.roll() + '～喵❤️');
     };
 
     // kkboxSearchAlbumScript
     var kkboxSearchAlbumScript = (event) => {
         if (event.commandParam.length) {
-            Line.replyBtnTemp(event.replyToken, 'Christina 在 KKBOX 找到最相近的專輯', Christina.kkboxsearchalbum(event.commandParam[0]));
+            Line.replyBtnTemp(event.replyToken, getName(event) + ' Christina 在 KKBOX 找到最相近的專輯', Christina.kkboxsearchalbum(event.commandParam[0]));
         } else {
             if (event.isMaster) {
                 Line.replyMsg(event.replyToken, getName(event) + '忘了找專輯的指令是 kksa [名稱] 了嗎?');
@@ -63,7 +63,7 @@ var Christina = ((ct) => {
     // kkboxSearchTrackScript
     var kkboxSearchTrackScript = (event) => {
         if (event.commandParam.length) {
-            Line.replyBtnTemp(event.replyToken, 'Christina 在 KKBOX 找到最相近的歌曲', Christina.kkboxsearchtrack(event.commandParam[0]));
+            Line.replyBtnTemp(event.replyToken, getName(event) + ' Christina 在 KKBOX 找到最相近的歌曲', Christina.kkboxsearchtrack(event.commandParam[0]));
         } else {
             if (event.isMaster) {
                 Line.replyMsg(event.replyToken, getName(event) + '忘了找音樂的指令是 kkst [名稱] 了嗎?');
@@ -76,7 +76,7 @@ var Christina = ((ct) => {
     // kkboxSearchArtistScript
     var kkboxSearchArtistScript = (event) => {
         if (event.commandParam.length) {
-            Line.replyBtnTemp(event.replyToken, 'Christina 在 KKBOX 找到最相近的歌手', Christina.kkboxsearchartist(event.commandParam[0]));
+            Line.replyBtnTemp(event.replyToken, getName(event) + ' Christina 在 KKBOX 找到最相近的歌手', Christina.kkboxsearchartist(event.commandParam[0]));
         } else {
             if (event.isMaster) {
                 Line.replyMsg(event.replyToken, getName(event) + '忘了找歌手的指令是 kkss [名稱] 了嗎?');
@@ -93,7 +93,7 @@ var Christina = ((ct) => {
             if (url) {
                 Line.replyImageTemp(event.replyToken, url, url);
             } else {
-                Line.replyMsg(event.replyToken, 'Christina 找不到這張圖片QQ');
+                Line.replyMsg(event.replyToken, getName(event) + '!!!!! Christina 找不到這張圖片QQ～喵嗚嗚💔');
             }
         }  else {
             if (event.isMaster) {
@@ -107,7 +107,7 @@ var Christina = ((ct) => {
     // eat
     var eatScript = (event) => {
         if (event.isMaster) {
-            Line.replyMsg(event.replyToken, 'Christina 覺得' + getName(event) + '應該吃\n' + Christina.eatWhat());
+            Line.replyMsg(event.replyToken, 'Christina 覺得' + getName(event) + '應該吃\n' + Christina.eatWhat() + '～喵❤️');
         } else {
             Line.replyMsg(event.replyToken, 'Christina 還沒獲得主人同意~\n來幫客倌決定要吃什麼');
         }
@@ -117,7 +117,7 @@ var Christina = ((ct) => {
     var initChatScript = (event) => {
         if (event.isMaster) {
             Christina.initChat();
-            Line.replyMsg(event.replyToken, 'Christina 回到原廠設定了');
+            Line.replyMsg(event.replyToken, getName(event) + ', Christina 回到原廠設定了喔～喵❤️');
         } else {
             Line.replyMsg(event.replyToken, '客倌不能重置 Christina喔');
         }
@@ -126,7 +126,7 @@ var Christina = ((ct) => {
     // money
     var moneyScript = (event) => {
         if (event.isMaster) {
-            Line.replyMsg(event.replyToken, '哇' + getName(event) + '已經累積了~\n' + Christina.money());
+            Line.replyMsg(event.replyToken, '哇' + getName(event) + '已經累積了~\n' + Christina.money() + '\n主人好棒～Christina要吃好多罐罐～喵❤️');
         } else {
             Line.replyMsg(event.replyToken, 'Christina 絕對不會告訴你主人真窮');
         }
@@ -137,9 +137,9 @@ var Christina = ((ct) => {
         if (event.isMaster) {
             if(event.commandParam.length) {
                 Christina.insertMoney(event.commandParam[0]);
-                Line.replyMsg(event.replyToken, 'Christina 已經幫' + getName(event) + '登錄錢錢嘍');
+                Line.replyMsg(event.replyToken, 'Christina 已經幫' + getName(event) + '登錄錢錢嘍～喵❤️');
             } else {
-                Line.replyMsg(event.replyToken, getName(event) + '忘記輸入金額了');
+                Line.replyMsg(event.replyToken, getName(event) + '忘記輸入金額了～喵❤️');
             }
         } else {
             Line.replyMsg(event.replyToken, getName(event) + '想給 Christina 錢錢嗎!');
@@ -151,9 +151,9 @@ var Christina = ((ct) => {
         if (event.isMaster) {
             if(event.commandParam.length) {
                 Christina.todo(event.commandParam[0]);
-                Line.replyMsg(event.replyToken, 'Christina 已經幫' + getName(event) + '記住待辦事項了');
+                Line.replyMsg(event.replyToken, 'Christina 已經幫' + getName(event) + '記住待辦事項了～喵❤️');
             } else {
-                Line.replyMsg(event.replyToken, getName(event) + '沒說要 Christina 提醒你做什麼');
+                Line.replyMsg(event.replyToken, getName(event) + '沒說要 Christina 提醒你做什麼～喵❤️');
             }
         } else {
             Line.replyMsg(event.replyToken, getName(event) + '肯定記得不用 Christina 幫你記');
@@ -174,9 +174,9 @@ var Christina = ((ct) => {
         if (event.isMaster) {
             if(event.commandParam.length) {
                 Christina.do(event.commandParam[0]);
-                Line.replyMsg(event.replyToken, getName(event) + '好棒！Christina 抱一個');
+                Line.replyMsg(event.replyToken, getName(event) + '好棒！Christina 抱一個～喵❤️');
             } else {
-                Line.replyMsg(event.replyToken, getName(event) + '沒說要做完什麼了');
+                Line.replyMsg(event.replyToken, getName(event) + '沒說要做完什麼了～喵❤️');
             }
         } else {
             Line.replyMsg(event.replyToken, '好棒！可是 Christina 沒有獎勵給' + getName(event));
@@ -187,10 +187,10 @@ var Christina = ((ct) => {
     var startScript = (event) => {
         if (event.isMaster) {
             if (event.lineStatus) {
-                Line.replyMsg(event.replyToken, getName(event) + '有什麼想讓 Christina 服務的嗎');
+                Line.replyMsg(event.replyToken, getName(event) + '有什麼想讓 Christina 服務的嗎～喵❤️');
             } else {
                 GoogleSheet.setLineStatus(true);
-                Line.replyMsg(event.replyToken, 'Christina 開始上班 \n' + getName(event) + '有什麼事請吩咐 \n要 Christina 下班請輸入 end');
+                Line.replyMsg(event.replyToken, getName(event) + ' Christina 開始上班 \n' + getName(event) + '有什麼事請吩咐 \n要 Christina 下班請輸入 end');
             }
         } else {
             Line.replyMsg(event.replyToken, '客倌不是 Christina 的主人\n不能叫我上班');
