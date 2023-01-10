@@ -1513,8 +1513,11 @@ var Line = ((l) => {
                         }
                     } else {
                         // openAi Bot
-                        if (Line.event.message.text)
-                        Line.replyMsg(Line.event.replyToken, ChatBoot.replay(Line.event.message.text));
+                        if (Line.event.isMaster) {
+                            Line.replyMsg(Line.event.replyToken, ChatBoot.replay(Line.event.message.text));
+                        } else {
+                            Line.replyMsg(Line.event.replyToken, "Christina 覺得困惑了");
+                        }
                     }
                     break;
                 case 'join':
@@ -1905,7 +1908,7 @@ function recordAssets() {
 
 // 每天清空 AI 對話
 function removeChat() {
-    DB().delete('chat','A15:A999').execute();
+    DB().delete('chat','A14:A999').execute();
 }
 
 // 測試
