@@ -1,134 +1,163 @@
 # Christina LINE Bot
 
-一個可愛的貓娘 LINE Bot，提供多種實用功能。
+一個可愛的貓娘 LINE Bot，支援多輪對話記憶和各種實用功能。
+
+## ✨ 特色功能
+
+- 🤖 **Gemini AI 對話** - 使用 Google Gemini 1.5 Flash，免費額度高
+- 💭 **持久化記憶** - 每個用戶獨立的對話歷史（最近 20 輪）
+- 🎯 **智能指令系統** - 豐富的指令功能
+- 📊 **資料管理** - 待辦事項、資產記錄等
 
 ## 📁 專案結構
 
 ```
 christina/
-├── Config.gs          # 設定檔模組
-├── Utils.gs           # 工具函數模組
-├── DB.gs              # 資料庫 ORM 模組
-├── GoogleDrive.gs     # Google Drive 操作模組
-├── GoogleSheet.gs     # Google Sheets 操作模組
-├── ChatBot.gs         # ChatGPT 整合模組
-├── Line.gs            # LINE Bot API 模組
+├── Config.gs          # 設定檔（環境變數、API 配置）
+├── Utils.gs           # 工具函數
+├── DB.gs              # Google Sheets ORM
+├── GoogleDrive.gs     # Drive 檔案操作（含快取）
+├── GoogleSheet.gs     # Sheets 資料操作
+├── ChatBot.gs         # Gemini AI 整合
+├── Line.gs            # LINE Bot API
 ├── Christina.gs       # 指令系統核心
-├── Main.gs            # 主程式入口點
-└── 程式碼.gs          # (舊版，可刪除)
+└── Main.gs            # 主程式入口
 ```
 
-## 🚀 部署步驟
+## 🚀 快速開始
 
-### 1. 建立 Google Apps Script 專案
+### 方案 A：使用 clasp（推薦）
+
+```powershell
+# 1. 安裝 nvm 和 Node.js
+nvm install lts
+nvm use
+
+# 2. 安裝 clasp
+npm install -g @google/clasp
+
+# 3. 登入並推送
+clasp login
+clasp create --title "Christina Bot" --type standalone
+clasp push
+clasp open
+```
+
+### 方案 B：手動部署
 
 1. 前往 [Google Apps Script](https://script.google.com/)
 2. 建立新專案
-3. 將所有 `.gs` 檔案內容複製到專案中（除了 `程式碼.gs`）
+3. 複製所有 `.gs` 檔案內容
 
-### 2. 設定環境變數
+## ⚙️ 環境變數設定
 
-在 Google Apps Script 專案中：
-1. 點選「專案設定」
-2. 在「指令碼屬性」中新增以下屬性：
+在 Google Apps Script 專案設定中新增：
 
-| 屬性名稱 | 說明 |
-|---------|------|
-| `LINE_API_KEY` | LINE Channel Access Token |
-| `LINE_CHANNEL_SECRET` | LINE Channel Secret |
-| `SHEET_ID` | Google Sheets ID |
-| `CHATGPT_API_KEY` | OpenAI API Key |
-| `ADMIN_SATRING` | 管理員 LINE User ID（多個用逗號分隔）|
+| 變數名稱 | 說明 | 取得方式 |
+|---------|------|---------|
+| `LINE_API_KEY` | LINE Channel Token | [LINE Developers](https://developers.line.biz/) |
+| `LINE_CHANNEL_SECRET` | LINE Channel Secret | 同上 |
+| `SHEET_ID` | Google Sheets ID | 從 Sheets URL 複製 |
+| `GEMINI_API_KEY` | Gemini API Key | [AI Studio](https://aistudio.google.com/app/apikey) |
+| `ADMIN_SATRING` | 管理員 LINE User ID | 用 `myid` 指令取得 |
 
-### 3. 準備 Google Sheets
+### 取得 Gemini API Key
+
+1. 訪問 https://aistudio.google.com/app/apikey
+2. 點選「Create API key」
+3. 選擇專案或建立新專案
+4. 複製 API Key
+
+## 📊 Google Sheets 設定
 
 建立一個 Google Sheets，包含以下工作表：
-- `christina` - 設定表（需要 `status` 欄位）
-- `consolelog` - 日誌記錄
-- `eat_what` - 吃什麼選項
-- `money` - 資產記錄
-- `todo` - 待辦事項
-- `chat` - ChatGPT 對話歷史
 
-### 4. 部署為 Web App
+| 工作表名稱 | 欄位 | 說明 |
+|-----------|------|------|
+| `christina` | status | Bot 開關狀態 |
+| `consolelog` | (自動) | 日誌記錄 |
+| `eat_what` | (自訂) | 吃什麼選項 |
+| `money` | money, date | 資產記錄 |
+| `todo` | content, do | 待辦事項 |
+| `chat` | userId, role, content, timestamp | 對話歷史 |
 
-1. 點選「部署」→「新增部署作業」
-2. 類型選擇「網路應用程式」
-3. 執行身分：選擇你的帳號
-4. 存取權：「所有人」
-5. 複製 Web App URL
+**重要：** `chat` 表必須包含 4 個欄位：
+```
+| userId | role | content | timestamp |
+```
 
-### 5. 設定 LINE Webhook
+## 🎯 指令列表
 
-1. 前往 [LINE Developers Console](https://developers.line.biz/)
-2. 選擇你的 Channel
-3. 在 Messaging API 設定中，將 Webhook URL 設為上一步的 Web App URL
-4. 啟用「Use webhook」
-
-## 📝 主要功能
-
-### 基本指令（所有人可用）
-- `christina` / `安安` - 顯示指令面板
-- `command` / `cmd` - 顯示指令列表
+### 基本指令（所有人）
+- `christina` / `安安` - 指令面板
+- `command` - 指令列表
 - `myid` - 顯示你的 LINE ID
 - `roll` - 擲骰子
-- `leave` - 讓 Christina 離開群組
 
-### 主人專屬指令
-- `meme [名稱]` - 顯示梗圖
+### 主人專屬
+- `meme [名稱]` - 梗圖
 - `eat` - 隨機決定吃什麼
 - `money` - 顯示資產
 - `insertmoney [金額]` - 登錄資產
-- `todo [事項]` - 新增待辦事項
-- `todolist` - 顯示待辦列表
+- `todo [事項]` - 新增待辦
+- `todolist` - 待辦列表
 - `do [事項]` - 完成事項
-- `start` - 讓 Christina 上班
-- `end` - 讓 Christina 下班
-- `initchat` - 重置 ChatGPT 對話
+- `initchat` - 清除對話記憶
+- `start` / `end` - 上班/下班
 
-### ChatGPT 對話
-主人可以直接與 Christina 聊天，她會用可愛的語氣回應～喵❤️
+### AI 對話
+直接發送訊息即可與 Christina 聊天（僅主人）
 
-## 🔧 優化項目
+## 🔧 進階設定
 
-相較於舊版 `程式碼.gs`，新版本包含以下優化：
+### 調整對話記憶
 
-### 1. 模組化架構
-- 將 1600+ 行的單一檔案拆分為 9 個模組
-- 每個模組職責清晰，易於維護
+在 `Config.gs` 中：
 
-### 2. API 升級
-- ✅ ChatGPT API 從 `text-davinci-003` 升級到 `gpt-3.5-turbo`
-- ✅ 使用 Chat Completions API
+```javascript
+CHAT_MAX_TURNS: 20,        // 保留最近幾輪對話
+CHAT_CLEANUP_DAYS: 30,     // 自動清理幾天前的對話
+GEMINI_MODEL: 'gemini-1.5-flash',  // 或 'gemini-1.5-pro'
+```
 
-### 3. 效能優化
-- ✅ 指令查找使用 Map（O(1) 時間複雜度）
-- ✅ Google Drive 檔案 URL 快取（6 小時）
-- ✅ 統一使用 Config 模組管理環境變數
+### 定時任務
 
-### 4. 安全性改善
-- ✅ 加入 LINE Webhook 簽章驗證（需設定 `LINE_CHANNEL_SECRET`）
-- ✅ 改善錯誤處理和日誌記錄
+在 GAS 觸發條件中設定：
 
-### 5. 程式碼品質
-- ✅ 一致的變數命名
-- ✅ 完整的 JSDoc 註解
-- ✅ 統一的錯誤處理模式
-
-## 📅 定時任務
-
-可在 Google Apps Script 中設定觸發條件：
-
-- `takeBreak()` - 提醒主人休息
-- `recordAssets()` - 提醒主人記帳
-- `removeChat()` - 每天清空 AI 對話歷史
+- `takeBreak()` - 提醒休息
+- `recordAssets()` - 提醒記帳
+- `removeChat()` - 清理舊對話
 
 ## 🐛 除錯
 
-查看 Google Sheets 的 `consolelog` 工作表可以看到所有日誌。
+查看 Google Sheets 的 `consolelog` 工作表。
 
-## 📄 授權
+## 📝 開發工作流
 
-此專案為個人專案。
+```powershell
+# 本地編輯
+code .
+
+# 推送到 GAS
+clasp push
+
+# 監看變更（自動推送）
+clasp push --watch
+
+# 開啟 GAS 編輯器
+clasp open
+```
+
+## 🎉 優化亮點
+
+- ✅ 模組化架構（9 個獨立模組）
+- ✅ Gemini AI（免費額度高）
+- ✅ 持久化對話記憶（按用戶分離）
+- ✅ 指令查找優化（O(1) 複雜度）
+- ✅ Drive 檔案快取（6 小時）
+- ✅ Webhook 簽章驗證
+- ✅ 完整錯誤處理
 
 ---
+
+Made with ❤️ by Christina～喵❤️
