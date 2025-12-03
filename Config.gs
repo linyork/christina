@@ -24,7 +24,7 @@ var Config = (() => {
 
         // Gemini API URLs
         GEMINI_API_BASE: 'https://generativelanguage.googleapis.com/v1',
-        GEMINI_MODEL: 'gemini-1.5-flash',  // 或使用 gemini-1.5-pro
+        GEMINI_MODEL: 'gemini-2.0-flash',  // 最新的 Gemini 2.0 Flash 模型
 
         // 對話歷史設定
         CHAT_MAX_TURNS: 20,              // 保留最近 N 輪對話（1 輪 = 1 問 + 1 答）

@@ -69,6 +69,8 @@ var ChatBot = (() => {
     var saveMessage = (userId, role, content) => {
         try {
             var timestamp = new Date().toISOString();
+            GoogleSheet.logInfo('ChatBot.saveMessage', 'Saving: userId=' + userId + ', role=' + role);
+
             DB()
                 .insert('chat')
                 .set('userId', userId)
@@ -76,8 +78,10 @@ var ChatBot = (() => {
                 .set('content', content)
                 .set('timestamp', timestamp)
                 .execute();
+
+            GoogleSheet.logInfo('ChatBot.saveMessage', 'Saved successfully');
         } catch (ex) {
-            GoogleSheet.logError('ChatBot.saveMessage', ex);
+            GoogleSheet.logError('ChatBot.saveMessage', 'Error details:', ex.toString(), 'userId=' + userId, 'role=' + role);
         }
     };
 
