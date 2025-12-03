@@ -33,19 +33,19 @@ var Christina = (() => {
 
     var leaveScript = (event) => {
         if (event.isMaster) {
-            Line.replyMsg(event.replyToken, getName(event) + '掰掰~\\nChristina 先行告退了～喵❤️');
+            Line.replyMsg(event.replyToken, getName(event) + '掰掰~\nChristina 先行告退了～喵❤️');
         } else {
-            Line.replyMsg(event.replyToken, 'Bye~\\nChristina 先行告退了');
+            Line.replyMsg(event.replyToken, 'Bye~\nChristina 先行告退了');
         }
         Line.leave(event.source.type, event.sourceId);
     };
 
     var myidScript = (event) => {
-        Line.replyMsg(event.replyToken, getName(event) + '您的ID是：\\n' + event.source.userId);
+        Line.replyMsg(event.replyToken, getName(event) + '您的ID是：\n' + event.source.userId);
     };
 
     var rollScript = (event) => {
-        Line.replyMsg(event.replyToken, '好的 Christina 為' + getName(event) + '擲骰子\\n擲出的點數是: ' + christina.roll() + '～喵❤️');
+        Line.replyMsg(event.replyToken, '好的 Christina 為' + getName(event) + '擲骰子\n擲出的點數是: ' + christina.roll() + '～喵❤️');
     };
 
     var memeScript = (event) => {
@@ -67,9 +67,9 @@ var Christina = (() => {
 
     var eatScript = (event) => {
         if (event.isMaster) {
-            Line.replyMsg(event.replyToken, 'Christina 覺得' + getName(event) + '應該吃\\n' + christina.eatWhat() + '～喵❤️');
+            Line.replyMsg(event.replyToken, 'Christina 覺得' + getName(event) + '應該吃\n' + christina.eatWhat() + '～喵❤️');
         } else {
-            Line.replyMsg(event.replyToken, 'Christina 還沒獲得主人同意~\\n來幫客倌決定要吃什麼');
+            Line.replyMsg(event.replyToken, 'Christina 還沒獲得主人同意~\n來幫客倌決定要吃什麼');
         }
     };
 
@@ -84,7 +84,7 @@ var Christina = (() => {
 
     var moneyScript = (event) => {
         if (event.isMaster) {
-            Line.replyMsg(event.replyToken, '哇' + getName(event) + '已經累積了~\\n' + christina.money() + '\\n主人好棒～Christina要吃好多罐罐～喵❤️');
+            Line.replyMsg(event.replyToken, '哇' + getName(event) + '已經累積了~\n' + christina.money() + '\n主人好棒～Christina要吃好多罐罐～喵❤️');
         } else {
             Line.replyMsg(event.replyToken, 'Christina 絕對不會告訴你主人真窮');
         }
@@ -143,19 +143,19 @@ var Christina = (() => {
                 Line.replyMsg(event.replyToken, getName(event) + '有什麼想讓 Christina 服務的嗎～喵❤️');
             } else {
                 GoogleSheet.setLineStatus(true);
-                Line.replyMsg(event.replyToken, getName(event) + ' Christina 開始上班 \\n' + getName(event) + '有什麼事請吩咐 \\n要 Christina 下班請輸入 end');
+                Line.replyMsg(event.replyToken, getName(event) + ' Christina 開始上班 \n' + getName(event) + '有什麼事請吩咐 \n要 Christina 下班請輸入 end');
             }
         } else {
-            Line.replyMsg(event.replyToken, '客倌不是 Christina 的主人\\n不能叫我上班');
+            Line.replyMsg(event.replyToken, '客倌不是 Christina 的主人\n不能叫我上班');
         }
     };
 
     var endScript = (event) => {
         if (event.isMaster) {
             GoogleSheet.setLineStatus(false);
-            Line.replyMsg(event.replyToken, 'Christina 暫時下班～ \\n勿掛念 \\n要 Christina 上班請輸入 start');
+            Line.replyMsg(event.replyToken, 'Christina 暫時下班～ \n勿掛念 \n要 Christina 上班請輸入 start');
         } else {
-            Line.replyMsg(event.replyToken, '客倌不是 Christina 的主人\\n不能叫我下班');
+            Line.replyMsg(event.replyToken, '客倌不是 Christina 的主人\n不能叫我下班');
         }
     };
 
@@ -281,14 +281,14 @@ var Christina = (() => {
             var commandString = '';
             var commandList = {};
             if (isMaster) {
-                commandString = '主人可以吩咐的事：\\n';
+                commandString = '主人可以吩咐的事：\n';
                 commandList = christina.allCommand;
             } else {
-                commandString = '主人授權你的事：\\n';
+                commandString = '主人授權你的事：\n';
                 commandList = christina.guestCommand;
             }
             for (var command in commandList) {
-                commandString += command + '：' + commandList[command]['name'] + '\\n';
+                commandString += command + '：' + commandList[command]['name'] + '\n';
             }
             return commandString;
         } catch (ex) {
@@ -441,7 +441,7 @@ var Christina = (() => {
     christina.money = () => GoogleSheet.money();
     christina.insertMoney = (money) => GoogleSheet.insertMoney(money);
     christina.todo = (something) => GoogleSheet.todo(something);
-    christina.todolist = () => '還有\\n' + GoogleSheet.todolist() + '沒有做';
+    christina.todolist = () => '還有\n' + GoogleSheet.todolist() + '沒有做';
     christina.do = (something) => GoogleSheet.do(something);
 
     return christina;
