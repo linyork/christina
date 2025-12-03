@@ -4,21 +4,25 @@
  */
 var GoogleSheet = (() => {
     var googleSheet = {};
-    var christinaSheet = SpreadsheetApp.openById(Config.SHEET_ID);
-    var sheetConsoleLog = christinaSheet.getSheetByName('consolelog');
-    var sheetEat = christinaSheet.getSheetByName('eat_what');
+
+    // Lazy loading helpers
+    var getChristinaSheet = () => SpreadsheetApp.openById(Config.SHEET_ID);
+    var getConsoleLogSheet = () => getChristinaSheet().getSheetByName('consolelog');
+    var getEatSheet = () => getChristinaSheet().getSheetByName('eat_what');
 
     /**
-     * 取得 LINE 狀態
+     * 取得 LINE 狀態 (lazy loading)
      */
-    googleSheet.lineStatus = (() => {
-        try {
-            return DB().from('christina').execute().first('status');
-        } catch (ex) {
-            googleSheet.logError('GoogleSheet.lineStatus', ex);
-            return false;
+    Object.defineProperty(googleSheet, 'lineStatus', {
+        get: function () {
+            try {
+                return DB().from('christina').execute().first('status');
+            } catch (ex) {
+                googleSheet.logError('GoogleSheet.lineStatus', ex);
+                return false;
+            }
         }
-    })();
+    });
 
     /**
      * 設定 LINE 狀態
@@ -37,9 +41,10 @@ var GoogleSheet = (() => {
      * @param {array} values - log 資料
      */
     googleSheet.setLog = (values) => {
-        if (sheetConsoleLog != null) {
-            var newRow = sheetConsoleLog.getLastRow() + 1;
-            sheetConsoleLog.getRange(newRow, 1, 1, values.length).setValues([values]);
+        var sheet = getConsoleLogSheet();
+        if (sheet != null) {
+            var newRow = sheet.getLastRow() + 1;
+            sheet.getRange(newRow, 1, 1, values.length).setValues([values]);
         }
     };
 
@@ -80,9 +85,10 @@ var GoogleSheet = (() => {
     googleSheet.eatWhat = () => {
         try {
             var dataExport = {};
-            var lastRow = sheetEat.getLastRow();
-            var lastColumn = sheetEat.getLastColumn();
-            var data = sheetEat.getRange(1, 1, lastRow, lastColumn).getValues();
+            var sheet = getEatSheet();
+            var lastRow = sheet.getLastRow();
+            var lastColumn = sheet.getLastColumn();
+            var data = sheet.getRange(1, 1, lastRow, lastColumn).getValues();
             for (var i = 0; i <= data.length; i++) {
                 dataExport[i] = data[i];
             }
@@ -141,7 +147,7 @@ var GoogleSheet = (() => {
             var returnString = "";
             var todoList = DB().from('todo').where('do', '=', 0).execute().get();
             for (let i = 0; i < todoList.length; i++) {
-                returnString = returnString + "[ ]" + todoList[i].content + "\\n";
+                returnString = returnString + "[ ]" + todoList[i].content + "\n";
             }
             return returnString;
         } catch (ex) {
@@ -168,7 +174,7 @@ var GoogleSheet = (() => {
      */
     googleSheet.clearChatHistory = (userId) => {
         try {
-            var sheetChat = christinaSheet.getSheetByName('chat');
+            var sheetChat = getChristinaSheet().getSheetByName('chat');
             if (!sheetChat) {
                 googleSheet.logError('GoogleSheet.clearChatHistory', 'chat sheet not found');
                 return;

@@ -3,7 +3,6 @@
  * @description 資料庫 ORM 模組 - 操作 Google Sheets 的資料庫介面
  */
 var DB = (() => {
-    var christinaSheet = SpreadsheetApp.openById(Config.SHEET_ID);
 
     // 內部變數
     var type;
@@ -205,7 +204,7 @@ var DB = (() => {
     db.from = (tableName) => {
         type = 'S';
         try {
-            table = christinaSheet.getSheetByName(tableName);
+            table = SpreadsheetApp.openById(Config.SHEET_ID).getSheetByName(tableName);
             lastColumn = table.getLastColumn();
             lastRow = table.getLastRow();
             allData = table.getDataRange().getValues();
@@ -307,7 +306,7 @@ var DB = (() => {
     db.update = (tableName) => {
         type = 'U';
         try {
-            table = christinaSheet.getSheetByName(tableName);
+            table = SpreadsheetApp.openById(Config.SHEET_ID).getSheetByName(tableName);
             lastColumn = table.getLastColumn();
             lastRow = table.getLastRow();
             allData = table.getDataRange().getValues();
@@ -325,7 +324,7 @@ var DB = (() => {
     db.insert = (tableName) => {
         type = 'I';
         try {
-            table = christinaSheet.getSheetByName(tableName);
+            table = SpreadsheetApp.openById(Config.SHEET_ID).getSheetByName(tableName);
             lastColumn = table.getLastColumn();
             lastRow = table.getLastRow();
             allData = table.getDataRange().getValues();
@@ -344,7 +343,7 @@ var DB = (() => {
     db.delete = (tableName, rangeString) => {
         type = 'D';
         try {
-            table = christinaSheet.getSheetByName(tableName);
+            table = SpreadsheetApp.openById(Config.SHEET_ID).getSheetByName(tableName);
             range = rangeString;
         } catch (ex) {
             GoogleSheet.logError('DB.delete', ex);
