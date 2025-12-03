@@ -23,7 +23,7 @@ var Config = (() => {
         LINE_API_BASE: 'https://api.line.me/v2/bot',
 
         // Gemini API URLs
-        GEMINI_API_BASE: 'https://generativelanguage.googleapis.com/v1beta',
+        GEMINI_API_BASE: 'https://generativelanguage.googleapis.com/v1',
         GEMINI_MODEL: 'gemini-1.5-flash',  // 或使用 gemini-1.5-pro
 
         // 對話歷史設定
