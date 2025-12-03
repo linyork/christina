@@ -4,11 +4,6 @@
  */
 var ChatBot = (() => {
     var chatBot = {};
-    var apiKey = Config.GEMINI_API_KEY;
-    var apiBase = Config.GEMINI_API_BASE;
-    var model = Config.GEMINI_MODEL;
-    var maxTurns = Config.CHAT_MAX_TURNS;
-    var systemPrompt = Config.CHAT_SYSTEM_PROMPT;
 
     /**
      * 取得用戶的對話歷史
@@ -18,7 +13,7 @@ var ChatBot = (() => {
      */
     var getUserHistory = (userId, limit) => {
         try {
-            limit = limit || maxTurns;
+            limit = limit || Config.CHAT_MAX_TURNS;
             var maxRecords = limit * 2; // 1 輪 = user + assistant 兩條記錄
 
             // 從 Sheet 讀取該用戶的歷史（按時間倒序）
@@ -93,7 +88,7 @@ var ChatBot = (() => {
      */
     var cleanOldHistory = (userId, keepTurns) => {
         try {
-            keepTurns = keepTurns || maxTurns;
+            keepTurns = keepTurns || Config.CHAT_MAX_TURNS;
             var keepRecords = keepTurns * 2;
 
             // 取得該用戶的所有對話
@@ -147,7 +142,7 @@ var ChatBot = (() => {
     chatBot.reply = (userId, message) => {
         try {
             // 取得該用戶的對話歷史
-            var userHistory = getUserHistory(userId, maxTurns);
+            var userHistory = getUserHistory(userId, Config.CHAT_MAX_TURNS);
 
             // 建立完整的對話內容
             var contents = [];
@@ -155,7 +150,7 @@ var ChatBot = (() => {
             // 加入系統提示（作為第一條 user 訊息）
             contents.push({
                 "role": "user",
-                "parts": [{ "text": systemPrompt }]
+                "parts": [{ "text": Config.CHAT_SYSTEM_PROMPT }]
             });
             contents.push({
                 "role": "model",
@@ -172,7 +167,7 @@ var ChatBot = (() => {
             });
 
             // 呼叫 Gemini API
-            var url = apiBase + '/models/' + model + ':generateContent?key=' + apiKey;
+            var url = Config.GEMINI_API_BASE + '/models/' + Config.GEMINI_MODEL + ':generateContent?key=' + Config.GEMINI_API_KEY;
             var payload = {
                 "contents": contents,
                 "generationConfig": {
@@ -212,7 +207,7 @@ var ChatBot = (() => {
             saveMessage(userId, 'assistant', aiMessage);
 
             // 清理舊對話（保持在限制內）
-            cleanOldHistory(userId, maxTurns);
+            cleanOldHistory(userId, Config.CHAT_MAX_TURNS);
 
             return aiMessage;
         } catch (error) {

@@ -4,9 +4,6 @@
  */
 var Line = (() => {
     var line = {};
-    var channelToken = Config.LINE_CHANNEL_TOKEN;
-    var channelSecret = Config.LINE_CHANNEL_SECRET;
-    var apiBase = Config.LINE_API_BASE;
 
     line.event = {};
 
@@ -17,7 +14,7 @@ var Line = (() => {
      */
     var verifySignature = (e) => {
         try {
-            if (!channelSecret) return true; // 如果沒設定 secret 就跳過驗證
+            if (!Config.LINE_CHANNEL_SECRET) return true; // 如果沒設定 secret 就跳過驗證
 
             var signature = e.parameter['X-Line-Signature'] || e.parameter['x-line-signature'];
             if (!signature) return false;
@@ -25,7 +22,7 @@ var Line = (() => {
             var body = e.postData.contents;
             var hash = Utilities.computeHmacSha256Signature(
                 Utilities.newBlob(body).getBytes(),
-                channelSecret
+                Config.LINE_CHANNEL_SECRET
             );
             var expectedSignature = Utilities.base64Encode(hash);
 
@@ -72,20 +69,20 @@ var Line = (() => {
 
             switch (source.type) {
                 case 'user':
-                    url = apiBase + '/profile/' + source.userId;
+                    url = Config.LINE_API_BASE + '/profile/' + source.userId;
                     break;
                 case 'group':
-                    url = apiBase + '/group/' + source.groupId + '/member/' + source.userId;
+                    url = Config.LINE_API_BASE + '/group/' + source.groupId + '/member/' + source.userId;
                     break;
                 case 'room':
-                    url = apiBase + '/room/' + source.roomId + '/member/' + source.userId;
+                    url = Config.LINE_API_BASE + '/room/' + source.roomId + '/member/' + source.userId;
                     break;
                 default:
                     return { userId: null, displayName: null, pictureUrl: null };
             }
 
             profile = JSON.parse(UrlFetchApp.fetch(url, {
-                'headers': { 'Authorization': 'Bearer ' + channelToken }
+                'headers': { 'Authorization': 'Bearer ' + Config.LINE_CHANNEL_TOKEN }
             }).getContentText());
 
             return profile;
@@ -106,7 +103,7 @@ var Line = (() => {
             UrlFetchApp.fetch(url, {
                 'headers': {
                     'Content-Type': 'application/json; charset=UTF-8',
-                    'Authorization': 'Bearer ' + channelToken
+                    'Authorization': 'Bearer ' + Config.LINE_CHANNEL_TOKEN
                 },
                 'method': 'post',
                 'payload': payload
@@ -222,7 +219,7 @@ var Line = (() => {
      */
     line.pushMsg = (userId, message) => {
         try {
-            sendMsg(apiBase + '/message/push', JSON.stringify({
+            sendMsg(Config.LINE_API_BASE + '/message/push', JSON.stringify({
                 'to': userId,
                 'messages': [{ 'type': 'text', 'text': message }]
             }));
@@ -238,7 +235,7 @@ var Line = (() => {
      */
     line.replyMsg = (replyToken, message) => {
         try {
-            sendMsg(apiBase + '/message/reply', JSON.stringify({
+            sendMsg(Config.LINE_API_BASE + '/message/reply', JSON.stringify({
                 'replyToken': replyToken,
                 'messages': [{ 'type': 'text', 'text': message }]
             }));
@@ -296,10 +293,10 @@ var Line = (() => {
      */
     line.leave = (sourceType, sourceId) => {
         try {
-            UrlFetchApp.fetch(apiBase + '/' + sourceType + '/' + sourceId + '/leave', {
+            UrlFetchApp.fetch(Config.LINE_API_BASE + '/' + sourceType + '/' + sourceId + '/leave', {
                 'headers': {
                     'Content-Type': 'application/json; charset=UTF-8',
-                    'Authorization': 'Bearer ' + channelToken
+                    'Authorization': 'Bearer ' + Config.LINE_CHANNEL_TOKEN
                 },
                 'method': 'post'
             });

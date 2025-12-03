@@ -3,8 +3,7 @@
  * @description 資料庫 ORM 模組 - 操作 Google Sheets 的資料庫介面
  */
 var DB = (() => {
-    var sheetId = Config.SHEET_ID;
-    var christinaSheet = SpreadsheetApp.openById(sheetId);
+    var christinaSheet = SpreadsheetApp.openById(Config.SHEET_ID);
 
     // 內部變數
     var type;

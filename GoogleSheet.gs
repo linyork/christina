@@ -4,8 +4,7 @@
  */
 var GoogleSheet = (() => {
     var googleSheet = {};
-    var sheetId = Config.SHEET_ID;
-    var christinaSheet = SpreadsheetApp.openById(sheetId);
+    var christinaSheet = SpreadsheetApp.openById(Config.SHEET_ID);
     var sheetConsoleLog = christinaSheet.getSheetByName('consolelog');
     var sheetEat = christinaSheet.getSheetByName('eat_what');
 

@@ -5,19 +5,19 @@
 var Config = (() => {
     var scriptProperties = PropertiesService.getScriptProperties();
 
-    var config = {
-        // LINE API
-        LINE_CHANNEL_TOKEN: scriptProperties.getProperty('LINE_API_KEY'),
-        LINE_CHANNEL_SECRET: scriptProperties.getProperty('LINE_CHANNEL_SECRET'),
+    return {
+        // LINE API - 使用 getter 延遲載入
+        get LINE_CHANNEL_TOKEN() { return scriptProperties.getProperty('LINE_API_KEY'); },
+        get LINE_CHANNEL_SECRET() { return scriptProperties.getProperty('LINE_CHANNEL_SECRET'); },
 
         // Google Sheets
-        SHEET_ID: scriptProperties.getProperty('SHEET_ID'),
+        get SHEET_ID() { return scriptProperties.getProperty('SHEET_ID'); },
 
         // Gemini API
-        GEMINI_API_KEY: scriptProperties.getProperty('GEMINI_API_KEY'),
+        get GEMINI_API_KEY() { return scriptProperties.getProperty('GEMINI_API_KEY'); },
 
         // Admin
-        ADMIN_STRING: scriptProperties.getProperty('ADMIN_SATRING'),
+        get ADMIN_STRING() { return scriptProperties.getProperty('ADMIN_SATRING'); },
 
         // LINE API URLs
         LINE_API_BASE: 'https://api.line.me/v2/bot',
@@ -31,6 +31,4 @@ var Config = (() => {
         CHAT_CLEANUP_DAYS: 30,           // 自動清理 N 天前的對話
         CHAT_SYSTEM_PROMPT: '你是 Christina，一個可愛的貓娘助手。你會用親切、可愛的語氣回答主人的問題，並在句尾加上「～喵❤️」。你會記住之前的對話內容，並在回答時參考上下文。'
     };
-
-    return config;
 })();

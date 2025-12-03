@@ -5,8 +5,6 @@
 var Christina = (() => {
     var christina = {};
 
-    // 管理員 ID
-    christina.adminString = Config.ADMIN_STRING;
 
     /**
      * 取得使用者稱呼
@@ -390,7 +388,7 @@ var Christina = (() => {
      */
     christina.checkMaster = (userId) => {
         try {
-            var adminArray = christina.adminString.split(",");
+            var adminArray = Config.ADMIN_STRING.split(",");
             return adminArray.includes(userId);
         } catch (ex) {
             GoogleSheet.logError('Christina.checkMaster', ex);

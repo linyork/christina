@@ -29,7 +29,7 @@ function doPost(e) {
  */
 function takeBreak() {
     try {
-        var adminId = Christina.adminString.split(",")[0];
+        var adminId = Config.ADMIN_STRING.split(",")[0];
         Line.pushMsg(adminId, "主人，現在起身走一走吧！我陪你一起走～喵❤️");
     } catch (ex) {
         GoogleSheet.logError('takeBreak', ex);
@@ -41,7 +41,7 @@ function takeBreak() {
  */
 function recordAssets() {
     try {
-        var adminId = Christina.adminString.split(",")[0];
+        var adminId = Config.ADMIN_STRING.split(",")[0];
         Line.pushMsg(adminId, "主人，現在是時候要登記資產了，我會陪你一起完成～喵❤️");
     } catch (ex) {
         GoogleSheet.logError('recordAssets', ex);
@@ -53,8 +53,7 @@ function recordAssets() {
  */
 function removeChat() {
     try {
-        var sheetId = Config.SHEET_ID;
-        var christinaSheet = SpreadsheetApp.openById(sheetId);
+        var christinaSheet = SpreadsheetApp.openById(Config.SHEET_ID);
         var sheetChat = christinaSheet.getSheetByName('chat');
 
         if (!sheetChat) {
