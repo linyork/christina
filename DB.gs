@@ -151,14 +151,31 @@ var DB = (() => {
         try {
             var tmpArray = [];
             var columnNameList = allData[0];
+
+            GoogleSheet.logInfo('DB.doInsert', 'Column names:', JSON.stringify(columnNameList));
+            GoogleSheet.logInfo('DB.doInsert', 'Insert data:', JSON.stringify(insertData));
+
             columnNameList.forEach((columnName) => {
+                var found = false;
                 Object.keys(insertData).forEach((key) => {
                     var insertColumnName = Object.keys(insertData[key])[0];
                     var insertValue = Object.values(insertData[key])[0];
-                    if (columnName === insertColumnName) tmpArray.push(insertValue);
+                    if (columnName === insertColumnName) {
+                        tmpArray.push(insertValue);
+                        found = true;
+                    }
                 });
+                if (!found) {
+                    tmpArray.push(''); // 如果沒有對應的值，填入空字串
+                }
             });
+
+            GoogleSheet.logInfo('DB.doInsert', 'Final array:', JSON.stringify(tmpArray));
+            GoogleSheet.logInfo('DB.doInsert', 'Writing to row:', lastRow + 1);
+
             table.getRange(lastRow + 1, 1, 1, tmpArray.length).setValues([tmpArray]);
+
+            GoogleSheet.logInfo('DB.doInsert', 'Write completed');
         } catch (ex) {
             GoogleSheet.logError('DB.doInsert', ex);
         }
@@ -329,7 +346,7 @@ var DB = (() => {
             lastRow = table.getLastRow();
             allData = table.getDataRange().getValues();
         } catch (ex) {
-            GoogleSheet.logError('DB.insert', ex);
+            GoogleSheet.logError('DB.insert', 'Error: ' + ex.message + '\nStack: ' + ex.stack);
         }
         return db;
     };

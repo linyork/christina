@@ -36,17 +36,7 @@ function takeBreak() {
     }
 }
 
-/**
- * 定時任務 - 提醒記帳
- */
-function recordAssets() {
-    try {
-        var adminId = Config.ADMIN_STRING.split(",")[0];
-        Line.pushMsg(adminId, "主人，現在是時候要登記資產了，我會陪你一起完成～喵❤️");
-    } catch (ex) {
-        GoogleSheet.logError('recordAssets', ex);
-    }
-}
+
 
 /**
  * 定時任務 - 清空舊的 AI 對話

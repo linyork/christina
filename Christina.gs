@@ -82,26 +82,7 @@ var Christina = (() => {
         }
     };
 
-    var moneyScript = (event) => {
-        if (event.isMaster) {
-            Line.replyMsg(event.replyToken, '哇' + getName(event) + '已經累積了~\n' + christina.money() + '\n主人好棒～Christina要吃好多罐罐～喵❤️');
-        } else {
-            Line.replyMsg(event.replyToken, 'Christina 絕對不會告訴你主人真窮');
-        }
-    };
 
-    var insertMoneyScript = (event) => {
-        if (event.isMaster) {
-            if (event.commandParam.length) {
-                christina.insertMoney(event.commandParam[0]);
-                Line.replyMsg(event.replyToken, 'Christina 已經幫' + getName(event) + '登錄錢錢嘍～喵❤️');
-            } else {
-                Line.replyMsg(event.replyToken, getName(event) + '忘記輸入金額了～喵❤️');
-            }
-        } else {
-            Line.replyMsg(event.replyToken, getName(event) + '想給 Christina 錢錢嗎!');
-        }
-    };
 
     var todoScript = (event) => {
         if (event.isMaster) {
@@ -213,18 +194,7 @@ var Christina = (() => {
             'fn': initChatScript,
             'help': '初始化 chat bot 的對話紀錄'
         },
-        'money': {
-            'name': '顯示資產',
-            'alias': ['money', '顯示資產', '資產'],
-            'fn': moneyScript,
-            'help': '顯示主人現有資產'
-        },
-        'insertmoney': {
-            'name': '登錄資產',
-            'alias': ['insertmoney', '登錄資產', '登錄', 'insertm'],
-            'fn': insertMoneyScript,
-            'help': '讓主人登錄資產 (指令: insertmoney 100'
-        },
+
         'todo': {
             'name': '待辦事項',
             'alias': ['todo', '待辦', '記得', '記得做', '要做', '幫我記'],
@@ -349,17 +319,7 @@ var Christina = (() => {
                         { "type": "message", "label": christina.allCommand['do'].name, "text": "do" }
                     ]
                 });
-                columns.push({
-                    "thumbnailImageUrl": christinaMasterImg,
-                    "title": "主人的專屬服務",
-                    "text": "錢錢",
-                    "defaultAction": defaultAction,
-                    "actions": [
-                        { "type": "message", "label": christina.allCommand['money'].name, "text": "money" },
-                        { "type": "message", "label": christina.allCommand['insertmoney'].name, "text": "insertmoney" },
-                        { "type": "message", "label": "敬請期待主人教我提供圖表", "text": "moneychart" }
-                    ]
-                });
+
                 columns.push({
                     "thumbnailImageUrl": christinaMasterImg,
                     "title": "主人的專屬服務",
@@ -438,8 +398,7 @@ var Christina = (() => {
     christina.roll = () => Math.floor(Math.random() * 6 + 1);
     christina.eatWhat = () => GoogleSheet.eatWhat();
     christina.initChat = () => removeChat();
-    christina.money = () => GoogleSheet.money();
-    christina.insertMoney = (money) => GoogleSheet.insertMoney(money);
+
     christina.todo = (something) => GoogleSheet.todo(something);
     christina.todolist = () => '還有\n' + GoogleSheet.todolist() + '沒有做';
     christina.do = (something) => GoogleSheet.do(something);

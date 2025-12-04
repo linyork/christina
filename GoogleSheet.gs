@@ -53,6 +53,9 @@ var GoogleSheet = (() => {
      * @param {...*} msg - 訊息
      */
     googleSheet.logInfo = (...msg) => {
+        // 檢查 Debug Mode，如果沒開啟則不記錄 info
+        if (!Config.DEBUG_MODE) return;
+
         var args = [...msg].map((v) => JSON.stringify(v));
         args.unshift('info');
         googleSheet.setLog(args);
@@ -63,6 +66,9 @@ var GoogleSheet = (() => {
      * @param {...*} msg - 訊息
      */
     googleSheet.logSend = (...msg) => {
+        // 檢查 Debug Mode，如果沒開啟則不記錄 send
+        if (!Config.DEBUG_MODE) return;
+
         var args = [...msg].map((v) => JSON.stringify(v));
         args.unshift('send');
         googleSheet.setLog(args);
@@ -99,32 +105,7 @@ var GoogleSheet = (() => {
         }
     };
 
-    /**
-     * 取得最新資產
-     * @returns {*}
-     */
-    googleSheet.money = () => {
-        try {
-            return DB().from('money').execute().last('money');
-        } catch (ex) {
-            googleSheet.logError('GoogleSheet.money', ex);
-            return 0;
-        }
-    };
 
-    /**
-     * 登錄資產
-     * @param {number} money - 金額
-     */
-    googleSheet.insertMoney = (money) => {
-        try {
-            var today = new Date();
-            var date = today.getFullYear() + "/" + (today.getMonth() + 1) + "/" + today.getDate();
-            DB().insert('money').set('money', money).set('date', date).execute();
-        } catch (ex) {
-            googleSheet.logError('GoogleSheet.insertMoney', ex);
-        }
-    };
 
     /**
      * 加入待辦事項
@@ -202,6 +183,67 @@ var GoogleSheet = (() => {
             googleSheet.logInfo('GoogleSheet.clearChatHistory', 'Cleared ' + rowsToDelete.length + ' messages for user ' + userId);
         } catch (ex) {
             googleSheet.logError('GoogleSheet.clearChatHistory', ex);
+        }
+    };
+
+    /**
+     * 新增知識點
+     * @param {string} topic - 主題/關鍵字
+     * @param {string} content - 內容
+     * @returns {string} 執行結果訊息
+     */
+    googleSheet.addKnowledge = (topic, content) => {
+        try {
+            // 轉換為台灣時間格式 (YYYY/MM/DD HH:mm:ss)
+            var now = new Date();
+            var timestamp = Utilities.formatDate(now, "GMT+8", "yyyy/MM/dd HH:mm:ss");
+
+            DB().insert('knowledge')
+                .set('topic', topic)
+                .set('content', content)
+                .set('timestamp', timestamp)
+                .execute();
+            googleSheet.logInfo('GoogleSheet.addKnowledge', 'Added knowledge: ' + topic);
+            return '已將知識點「' + topic + '」記錄下來了～喵❤️';
+        } catch (ex) {
+            googleSheet.logError('GoogleSheet.addKnowledge', ex);
+            return '記錄知識點時發生錯誤～喵💔';
+        }
+    };
+
+    /**
+     * 搜尋知識點
+     * @param {string} query - 搜尋關鍵字
+     * @returns {string} 搜尋結果字串
+     */
+    googleSheet.searchKnowledge = (query) => {
+        try {
+            // 取得所有知識
+            var allKnowledge = DB().from('knowledge').execute().get();
+
+            if (!allKnowledge || allKnowledge.length === 0) {
+                return '知識庫目前是空的～喵';
+            }
+
+            var results = [];
+            var knowledgeArray = Array.isArray(allKnowledge) ? allKnowledge : [allKnowledge];
+
+            // 簡單的關鍵字過濾
+            knowledgeArray.forEach(k => {
+                if ((k.topic && k.topic.includes(query)) || (k.content && k.content.includes(query))) {
+                    results.push('[' + k.topic + ']: ' + k.content);
+                }
+            });
+
+            if (results.length === 0) {
+                return '沒有找到關於「' + query + '」的知識點～喵';
+            }
+
+            // 最多回傳 5 筆，避免 Token 爆炸
+            return results.slice(0, 5).join('\n');
+        } catch (ex) {
+            googleSheet.logError('GoogleSheet.searchKnowledge', ex);
+            return '搜尋知識庫時發生錯誤～喵💔';
         }
     };
 

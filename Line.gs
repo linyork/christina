@@ -160,30 +160,14 @@ var Line = (() => {
                     // 暫不動作
                     break;
                 case 'message':
-                    if (line.event.isCommand) {
-                        if (line.event.lineStatus) {
-                            if (line.event.commandParam.indexOf('help') !== -1 || line.event.commandParam.indexOf('h') !== -1) {
-                                var commandHelp = Christina.allCommand[line.event.command].help;
-                                line.replyMsg(line.event.replyToken, commandHelp.replace(/@user/, Christina.getName(line.event)));
-                            } else if (line.event.commandParam.indexOf('alias') !== -1 || line.event.commandParam.indexOf('其他指令') !== -1) {
-                                var commandName = Christina.allCommand[line.event.command].name;
-                                var commandAlias = Christina.allCommand[line.event.command].alias.toString();
-                                line.replyMsg(line.event.replyToken, commandName + "的其他指令有: " + commandAlias);
-                            } else {
-                                Christina.allCommand[line.event.command].fn(line.event);
-                            }
-                        } else if (!line.event.lineStatus && line.event.command === 'start') {
-                            Christina.allCommand[line.event.command].fn(line.event);
-                        } else {
-                            line.replyMsg(line.event.replyToken, "Christina 下班了喔");
-                        }
+                    // AI-First 架構：所有訊息都交給 ChatBot 處理
+                    if (line.event.isMaster) {
+                        // 只有 Master 可以使用 AI 功能
+                        var aiResponse = ChatBot.reply(line.event.source.userId, line.event.message.text);
+                        line.replyMsg(line.event.replyToken, aiResponse);
                     } else {
-                        // ChatGPT Bot
-                        if (line.event.isMaster) {
-                            line.replyMsg(line.event.replyToken, ChatBot.reply(line.event.source.userId, line.event.message.text));
-                        } else {
-                            line.replyMsg(line.event.replyToken, "Christina 覺得困惑了");
-                        }
+                        // 非 Master 的簡單回應
+                        line.replyMsg(line.event.replyToken, "Christina 只聽主人的話～喵");
                     }
                     break;
                 case 'join':
@@ -193,13 +177,13 @@ var Line = (() => {
                     // 暫不動作
                     break;
                 case 'memberLeft':
-                    line.pushMsg(line.event.sourceId, Christina.getName(line.event) + '離開了！我們緬懷他');
+                    line.pushMsg(line.event.sourceId, '有人離開了！我們緬懷他');
                     break;
                 case 'memberJoined':
-                    line.pushMsg(line.event.sourceId, Christina.getName(line.event) + '你好！我是 Christina');
+                    line.pushMsg(line.event.sourceId, '歡迎新朋友！我是 Christina');
                     break;
                 case 'follow':
-                    line.pushMsg(line.event.sourceId, Christina.getName(line.event) + '你好！我是 Christina');
+                    line.pushMsg(line.event.sourceId, '你好！我是 Christina～喵❤️');
                     break;
                 case 'unfollow':
                     line.pushMsg(line.event.sourceId, '好可惜以後 Christina 會提供更多服務的');
