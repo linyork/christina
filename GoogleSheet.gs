@@ -8,33 +8,7 @@ var GoogleSheet = (() => {
     // Lazy loading helpers
     var getChristinaSheet = () => SpreadsheetApp.openById(Config.SHEET_ID);
     var getConsoleLogSheet = () => getChristinaSheet().getSheetByName('consolelog');
-    var getEatSheet = () => getChristinaSheet().getSheetByName('eat_what');
 
-    /**
-     * 取得 LINE 狀態 (lazy loading)
-     */
-    Object.defineProperty(googleSheet, 'lineStatus', {
-        get: function () {
-            try {
-                return DB().from('christina').execute().first('status');
-            } catch (ex) {
-                googleSheet.logError('GoogleSheet.lineStatus', ex);
-                return false;
-            }
-        }
-    });
-
-    /**
-     * 設定 LINE 狀態
-     * @param {boolean} data - 狀態
-     */
-    googleSheet.setLineStatus = (data) => {
-        try {
-            DB().update('christina').set('status', data).execute();
-        } catch (ex) {
-            googleSheet.logError('GoogleSheet.setLineStatus', ex);
-        }
-    };
 
     /**
      * 寫入 log
@@ -84,26 +58,7 @@ var GoogleSheet = (() => {
         googleSheet.setLog(args);
     };
 
-    /**
-     * 隨機取得吃什麼
-     * @returns {string}
-     */
-    googleSheet.eatWhat = () => {
-        try {
-            var dataExport = {};
-            var sheet = getEatSheet();
-            var lastRow = sheet.getLastRow();
-            var lastColumn = sheet.getLastColumn();
-            var data = sheet.getRange(1, 1, lastRow, lastColumn).getValues();
-            for (var i = 0; i <= data.length; i++) {
-                dataExport[i] = data[i];
-            }
-            return dataExport[Math.floor(Math.random() * data.length)];
-        } catch (ex) {
-            googleSheet.logError('GoogleSheet.eatWhat', ex);
-            return '不知道吃什麼';
-        }
-    };
+
 
 
 

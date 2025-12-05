@@ -106,22 +106,6 @@ var Tools = (() => {
                 }
             },
             {
-                "name": "decide_food",
-                "description": "隨機決定要吃什麼。",
-                "parameters": {
-                    "type": "object",
-                    "properties": {}
-                }
-            },
-            {
-                "name": "roll_dice",
-                "description": "擲骰子，回傳 1 到 6 的隨機數字。",
-                "parameters": {
-                    "type": "object",
-                    "properties": {}
-                }
-            },
-            {
                 "name": "get_meme",
                 "description": "取得梗圖圖片連結，當使用者要求看梗圖或特定圖片時使用。",
                 "parameters": {
@@ -149,20 +133,6 @@ var Tools = (() => {
                 "parameters": {
                     "type": "object",
                     "properties": {}
-                }
-            },
-            {
-                "name": "set_bot_status",
-                "description": "設定機器人的上班/下班狀態。上班時會主動回應，下班時會暫停服務。",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "status": {
-                            "type": "boolean",
-                            "description": "true=上班/啟動, false=下班/結束"
-                        }
-                    },
-                    "required": ["status"]
                 }
             },
             {
@@ -215,14 +185,6 @@ var Tools = (() => {
                     GoogleSheet.do(args.task);
                     return '已完成：' + args.task + '！主人好棒～喵❤️';
 
-                case 'decide_food':
-                    var food = GoogleSheet.eatWhat();
-                    return '建議吃：' + food + '～喵❤️';
-
-                case 'roll_dice':
-                    var roll = Math.floor(Math.random() * 6 + 1);
-                    return '擲出的點數是：' + roll + '～喵❤️';
-
                 case 'get_meme':
                     var url = GoogleDrive.getImageUrl(args.keyword + '.jpg');
                     if (url) {
@@ -246,10 +208,6 @@ var Tools = (() => {
 
                 case 'get_user_id':
                     return '您的 User ID 是：' + (event.source ? event.source.userId : '未知');
-
-                case 'set_bot_status':
-                    GoogleSheet.setLineStatus(args.status);
-                    return args.status ? 'Christina 開始上班囉～喵❤️' : 'Christina 暫時下班休息～勿掛念～喵';
 
                 case 'clear_history':
                     if (event.source && event.source.userId) {

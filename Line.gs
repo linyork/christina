@@ -131,7 +131,7 @@ var Line = (() => {
             event.isMaster = Utils.checkMaster(event.source.userId);
             event.profile = getProfile(event.source);
             event.sourceId = getSourceId(event.source);
-            event.lineStatus = GoogleSheet.lineStatus;
+
             line.event = event;
         } catch (ex) {
             GoogleSheet.logError('Line.init', ex);
