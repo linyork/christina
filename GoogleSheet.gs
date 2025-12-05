@@ -58,10 +58,6 @@ var GoogleSheet = (() => {
         googleSheet.setLog(args);
     };
 
-
-
-
-
     /**
      * 加入待辦事項
      * @param {string} something - 待辦事項

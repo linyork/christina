@@ -125,8 +125,8 @@ GEMINI_MODEL: 'gemini-1.5-flash',  // 或 'gemini-1.5-pro'
 在 GAS 觸發條件中設定：
 
 - `takeBreak()` - 提醒休息
-- `recordAssets()` - 提醒記帳
 - `removeChat()` - 清理舊對話
+- `dailyMemoryCleanUp()` - 每日記憶整理
 
 ## 🐛 除錯
 
