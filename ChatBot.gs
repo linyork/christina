@@ -194,26 +194,40 @@ var ChatBot = (() => {
 
     /**
      * 回覆訊息（支援 Function Calling 與 RAG）
-     * @param {string} userId - 用戶 ID
-     * @param {string} message - 使用者訊息
+     * @param {object} event - Line 事件物件
      * @returns {string} AI 回覆
      */
-    chatBot.reply = (userId, message) => {
+    chatBot.reply = (event) => {
         try {
+            var userId = event.source.userId;
+            var message = event.message.text;
+
             // 取得該用戶的對話歷史
             var userHistory = getUserHistory(userId, Config.CHAT_MAX_TURNS);
 
             // 建立完整的對話內容
             var contents = [];
 
+            // 判斷使用者身分並設定對應的系統指令
+            var userIdentity = event.isMaster ? "主人 (Master)" : "訪客 (Guest)";
+            var roleInstruction = event.isMaster ? "現在是主人的請求，請盡力協助。" : "現在是訪客 (Guest) 的請求。請禮貌地拒絕提供任何服務或功能，並說明您只專屬於主人。不要執行任何 Function Call。";
+
+            // 取得短期記憶 context
+            var shortTermMemories = GoogleSheet.getValidShortTermMemories();
+            var contextInfo = "\n\n[System Info]\nCurrent User: " + userIdentity + "\nInstruction: " + roleInstruction;
+
+            if (shortTermMemories) {
+                contextInfo += "\n\n[Current Context / Short Term Memories]:\n" + shortTermMemories;
+            }
+
             // 加入系統提示（作為第一條 user 訊息）
             contents.push({
                 "role": "user",
-                "parts": [{ "text": Config.CHAT_SYSTEM_PROMPT }]
+                "parts": [{ "text": Config.CHAT_SYSTEM_PROMPT + contextInfo }]
             });
             contents.push({
                 "role": "model",
-                "parts": [{ "text": "好的，我是 Christina～喵❤️ 我會盡量使用工具來協助主人！" }]
+                "parts": [{ "text": "好的，我是 Christina～喵❤️ 我了解了！" }]
             });
 
             // 加入歷史對話
@@ -259,8 +273,8 @@ var ChatBot = (() => {
 
                     GoogleSheet.logInfo('ChatBot.reply', 'Function call: ' + functionName);
 
-                    // 執行工具
-                    var functionResult = Tools.execute(functionName, functionArgs);
+                    // 執行工具 (傳入 event 作為 context)
+                    var functionResult = Tools.execute(functionName, functionArgs, event);
 
                     // 將工具執行結果加入對話
                     contents.push({
@@ -309,6 +323,104 @@ var ChatBot = (() => {
         } catch (error) {
             GoogleSheet.logError('ChatBot.reply', error);
             return '主人不好意思我有點混亂～喵💔';
+        }
+    };
+
+    /**
+     * 將對話紀錄總結為短期記憶
+     * @param {string} chatText - 對話紀錄文字
+     * @returns {object|null} {key, content} 或 null
+     */
+    chatBot.summarizeChatsToMemory = (chatText) => {
+        try {
+            var prompt = `你是 Christina，主人的貼心女僕。
+這裡有一些超過 7 天的舊對話紀錄。請幫我閱讀並判斷：
+是否有任何「暫時性重要」的資訊值得轉存為短期記憶？（例如：主人最近在煩惱的事、正在進行的計畫、或是這幾天的狀態）。
+如果是普通的閒聊，請直接忽略。
+
+對話紀錄：
+${chatText}
+
+如果值得保留，請回傳 JSON 格式：{"key": "主題", "content": "詳細內容"}
+如果不值得保留，請回傳 null (JSON)。
+請只回傳 JSON，不要有其他廢話。`;
+
+            var promptContents = [{ "role": "user", "parts": [{ "text": prompt }] }];
+            var response = callGemini(promptContents);
+
+            if (response && response.candidates && response.candidates[0].content) {
+                var text = response.candidates[0].content.parts[0].text;
+                // 清理 markdown code block
+                text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+                if (text === 'null') return null;
+                return JSON.parse(text);
+            }
+            return null;
+        } catch (ex) {
+            GoogleSheet.logError('ChatBot.summarizeChatsToMemory', ex);
+            return null;
+        }
+    };
+
+    /**
+     * 評估短期記憶是否轉為長期記憶
+     * @param {object} memory - 短期記憶物件 {key, content}
+     * @returns {object} {keep: boolean, tags: [], content: string}
+     */
+    chatBot.evaluateMemoryForLongTerm = (memory) => {
+        try {
+            var prompt = `你是 Christina，主人的專屬女僕。
+這條短期記憶即將過期（或需要整理）：
+主題：${memory.key}
+內容：${memory.content}
+
+請以女僕的角度思考：這條資訊是否包含「主人永久性的喜好、習慣、重要事實」？
+如果是（例如：主人不吃香菜、主人的生日），請將其轉化為長期知識。
+如果否（例如：上週的晚餐、已過期的提醒），請讓它自然遺忘。
+
+請回傳 JSON 格式：
+{
+  "keep": boolean, // true = 轉存長期, false = 遺忘
+  "tags": ["tag1", "tag2"], // 如果 keep=true，請提供標籤
+  "content": "轉存的內容" // 如果 keep=true，請提供轉存內容
+}
+請只回傳 JSON，不要有其他廢話。`;
+
+            var promptContents = [{ "role": "user", "parts": [{ "text": prompt }] }];
+            var response = callGemini(promptContents);
+
+            if (response && response.candidates && response.candidates[0].content) {
+                var text = response.candidates[0].content.parts[0].text;
+                text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+                return JSON.parse(text);
+            }
+            return { keep: false };
+        } catch (ex) {
+            GoogleSheet.logError('ChatBot.evaluateMemoryForLongTerm', ex);
+            return { keep: false };
+        }
+    };
+
+    /**
+     * 生成主動問候語
+     * @param {string} instruction - 給 AI 的指示 (例如：提醒主人休息)
+     * @returns {string} AI 生成的問候語
+     */
+    chatBot.generateGreeting = (instruction) => {
+        try {
+            var prompt = Config.CHAT_SYSTEM_PROMPT + "\n\n[System Instruction]\n" + instruction;
+            var promptContents = [{ "role": "user", "parts": [{ "text": prompt }] }];
+
+            // 使用 callGemini 生成回應
+            var data = callGemini(promptContents);
+
+            if (data && data.candidates && data.candidates[0].content) {
+                return data.candidates[0].content.parts[0].text;
+            }
+            return "主人～休息時間到了喔！起來走走吧～喵❤️"; // Fallback
+        } catch (ex) {
+            GoogleSheet.logError('ChatBot.generateGreeting', ex);
+            return "主人～休息時間到了喔！起來走走吧～喵❤️";
         }
     };
 

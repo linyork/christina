@@ -128,20 +128,8 @@ var Line = (() => {
      */
     line.init = (event) => {
         try {
-            event.isMaster = Christina.checkMaster(event.source.userId);
+            event.isMaster = Utils.checkMaster(event.source.userId);
             event.profile = getProfile(event.source);
-
-            if (event.message === null || event.message === undefined) {
-                event.isCommand = false;
-                event.command = "";
-                event.commandParam = [];
-            } else {
-                var cmdObj = Christina.checkCommand(event.message.text);
-                event.isCommand = cmdObj.isCommand;
-                event.command = cmdObj.command;
-                event.commandParam = Christina.getCommandParam(event.message.text);
-            }
-
             event.sourceId = getSourceId(event.source);
             event.lineStatus = GoogleSheet.lineStatus;
             line.event = event;
@@ -160,15 +148,9 @@ var Line = (() => {
                     // 暫不動作
                     break;
                 case 'message':
-                    // AI-First 架構：所有訊息都交給 ChatBot 處理
-                    if (line.event.isMaster) {
-                        // 只有 Master 可以使用 AI 功能
-                        var aiResponse = ChatBot.reply(line.event.source.userId, line.event.message.text);
-                        line.replyMsg(line.event.replyToken, aiResponse);
-                    } else {
-                        // 非 Master 的簡單回應
-                        line.replyMsg(line.event.replyToken, "Christina 只聽主人的話～喵");
-                    }
+                    // 交給 ChatBot 處理 (權限控制由 AI 內部處理)
+                    var aiResponse = ChatBot.reply(line.event);
+                    line.replyMsg(line.event.replyToken, aiResponse);
                     break;
                 case 'join':
                     line.pushMsg(line.event.sourceId, '大家好！我是 Christina！');

@@ -72,5 +72,20 @@ var Utils = (() => {
         return false;
     };
 
+    /**
+     * 檢查是否為主人
+     * @param {string} userId - 使用者 ID
+     * @returns {boolean}
+     */
+    utils.checkMaster = (userId) => {
+        try {
+            var adminArray = Config.ADMIN_STRING.split(",");
+            return adminArray.includes(userId);
+        } catch (ex) {
+            GoogleSheet.logError('Utils.checkMaster', ex);
+            return false;
+        }
+    };
+
     return utils;
 })();

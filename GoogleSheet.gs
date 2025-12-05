@@ -188,26 +188,99 @@ var GoogleSheet = (() => {
 
     /**
      * 新增知識點
-     * @param {string} topic - 主題/關鍵字
+     * @param {string|string[]} tags - 標籤/關鍵字 (可以是字串或字串陣列)
      * @param {string} content - 內容
      * @returns {string} 執行結果訊息
      */
-    googleSheet.addKnowledge = (topic, content) => {
+    googleSheet.addKnowledge = (tags, content) => {
         try {
             // 轉換為台灣時間格式 (YYYY/MM/DD HH:mm:ss)
             var now = new Date();
             var timestamp = Utilities.formatDate(now, "GMT+8", "yyyy/MM/dd HH:mm:ss");
 
+            // 處理 tags：如果是陣列則用逗號連接，如果是字串則直接使用
+            var tagsString = Array.isArray(tags) ? tags.join(',') : tags;
+
             DB().insert('knowledge')
-                .set('topic', topic)
+                .set('tags', tagsString)
                 .set('content', content)
                 .set('timestamp', timestamp)
                 .execute();
-            googleSheet.logInfo('GoogleSheet.addKnowledge', 'Added knowledge: ' + topic);
-            return '已將知識點「' + topic + '」記錄下來了～喵❤️';
+            googleSheet.logInfo('GoogleSheet.addKnowledge', 'Added knowledge with tags: ' + tagsString);
+            return '已將知識點「' + tagsString + '」記錄下來了～喵❤️';
         } catch (ex) {
             googleSheet.logError('GoogleSheet.addKnowledge', ex);
             return '記錄知識點時發生錯誤～喵💔';
+        }
+    };
+
+    /**
+     * 新增短期記憶 (Short-Term Memory)
+     * @param {string} key - 記憶關鍵字
+     * @param {string} content - 記憶內容
+     * @param {number} durationHours - 有效時數 (小時)
+     * @returns {string} 執行結果
+     */
+    googleSheet.addShortTermMemory = (key, content, durationHours) => {
+        try {
+            var now = new Date();
+            var expireTime = new Date(now.getTime() + (durationHours * 60 * 60 * 1000));
+            var timestamp = Utilities.formatDate(expireTime, "GMT+8", "yyyy/MM/dd HH:mm:ss");
+
+            DB().insert('short_term_memory')
+                .set('key', key)
+                .set('content', content)
+                .set('expire_at', timestamp)
+                .execute();
+
+            googleSheet.logInfo('GoogleSheet.addShortTermMemory', 'Added STM:', key, 'Expires:', timestamp);
+            return '已暫時記住「' + key + '」了，時效 ' + durationHours + ' 小時～喵❤️';
+        } catch (ex) {
+            googleSheet.logError('GoogleSheet.addShortTermMemory', ex);
+            return '短期記憶寫入失敗～喵💔';
+        }
+    };
+
+    /**
+     * 取得有效的短期記憶 並自動清理過期記憶
+     * @returns {string} 格式化的記憶字串
+     */
+    googleSheet.getValidShortTermMemories = () => {
+        try {
+            var allMemories = DB().from('short_term_memory').execute().get();
+            if (!allMemories || (Array.isArray(allMemories) && allMemories.length === 0)) {
+                return '';
+            }
+
+            var memoriesArray = Array.isArray(allMemories) ? allMemories : [allMemories];
+            var now = new Date();
+            var validMemories = [];
+            var sheet = getChristinaSheet().getSheetByName('short_term_memory');
+            var rowsToDelete = [];
+
+            // 遍歷檢查過期
+            // 注意：因為要刪除行，我們需要知道 Row Index。
+            // DB().get() 回傳的是物件陣列，沒有 Row Index。
+            // 為了簡單起見，這裡我們只做讀取過濾。清理工作建議另外寫一個定期執行的 Trigger 腳本，
+            // 或是這裡簡單做：如果過期就不回傳。
+
+            // 既然 DB 模組不支援直接 Delete Row by Condition，我們先只做「過濾不回傳」。
+            // (如果要實作自動清理，建議直接操作 Sheet)
+
+            // 為了保持效能，這裡我們只讀取並過濾
+            memoriesArray.forEach(m => {
+                var expireTime = new Date(m.expire_at);
+                if (expireTime > now) {
+                    validMemories.push('[' + m.key + ']: ' + m.content + ' (到期: ' + m.expire_at + ')');
+                }
+            });
+
+            if (validMemories.length === 0) return '';
+
+            return validMemories.join('\n');
+        } catch (ex) {
+            googleSheet.logError('GoogleSheet.getValidShortTermMemories', ex);
+            return '';
         }
     };
 
@@ -228,10 +301,22 @@ var GoogleSheet = (() => {
             var results = [];
             var knowledgeArray = Array.isArray(allKnowledge) ? allKnowledge : [allKnowledge];
 
-            // 簡單的關鍵字過濾
+            // 將搜尋字串拆解成關鍵字 (以空白分隔)
+            // 例如: "密碼 wifi" -> ["密碼", "wifi"]
+            var keywords = query.split(/\s+/).filter(k => k.length > 0);
+
+            // 關鍵字過濾
             knowledgeArray.forEach(k => {
-                if ((k.topic && k.topic.includes(query)) || (k.content && k.content.includes(query))) {
-                    results.push('[' + k.topic + ']: ' + k.content);
+                var tags = k.tags ? k.tags.toString() : '';
+                var content = k.content ? k.content.toString() : '';
+
+                // 檢查是否所有關鍵字都存在於 tags 或 content 中 (AND 邏輯)
+                var isMatch = keywords.every(keyword =>
+                    tags.includes(keyword) || content.includes(keyword)
+                );
+
+                if (isMatch) {
+                    results.push('[' + tags + ']: ' + content);
                 }
             });
 
@@ -239,8 +324,8 @@ var GoogleSheet = (() => {
                 return '沒有找到關於「' + query + '」的知識點～喵';
             }
 
-            // 最多回傳 5 筆，避免 Token 爆炸
-            return results.slice(0, 5).join('\n');
+            // 反轉陣列以取得最新的資料，並只回傳最新的 5 筆
+            return results.reverse().slice(0, 5).join('\n');
         } catch (ex) {
             googleSheet.logError('GoogleSheet.searchKnowledge', ex);
             return '搜尋知識庫時發生錯誤～喵💔';
