@@ -71,8 +71,7 @@ var ChatBot = (() => {
                 HistoryManager.saveMessage(userId, 'user', memoryContent);
                 HistoryManager.saveMessage(userId, 'assistant', reply);
 
-                // 清理舊對話
-                HistoryManager.cleanOldHistory(userId, Config.CHAT_MAX_TURNS);
+
 
                 return reply;
             }
@@ -250,8 +249,7 @@ Busyness: ${userState.busyness}`;
             HistoryManager.saveMessage(userId, 'user', message);
             HistoryManager.saveMessage(userId, 'assistant', finalResponse);
 
-            // 清理舊對話
-            HistoryManager.cleanOldHistory(userId, Config.CHAT_MAX_TURNS);
+
 
             // [Affection System]
             GoogleSheet.updateAffection(userId, 1);

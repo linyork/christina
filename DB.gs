@@ -50,39 +50,56 @@ var DB = (() => {
         try {
             var bool = true;
             whereCondition.forEach((condition) => {
-                switch (condition['condition']) {
+                var rowVal = rowData[condition['columnName']];
+                var condVal = condition['value'];
+                var condType = condition['condition'];
+
+                // 統一型別處理 (避免 parseInt(Date) 造成 NaN)
+                var valA = rowVal;
+                var valB = condVal;
+
+                // 若都是 Date 物件，轉為 timestamp 數字比較
+                if (valA instanceof Date && valB instanceof Date) {
+                    valA = valA.getTime();
+                    valB = valB.getTime();
+                }
+                // 若都是可轉為數字的字串或數字，則轉為數字比較 (但排除空字串)
+                else if (!isNaN(valA) && !isNaN(valB) && valA !== '' && valB !== '' && !(valA instanceof Date) && !(valB instanceof Date)) {
+                    valA = parseFloat(valA);
+                    valB = parseFloat(valB);
+                }
+
+                switch (condType) {
                     case '=':
                     case 'is':
                     case 'IS':
-                        if (rowData[condition['columnName']] != condition['value']) {
-                            bool = false;
+                        if (rowVal != condVal) { // 保持寬鬆相等，以相容 string/number
+                            // Date 需特殊檢查，因為 object != object 恆為 true
+                            if (rowVal instanceof Date && condVal instanceof Date) {
+                                if (rowVal.getTime() !== condVal.getTime()) bool = false;
+                            } else {
+                                bool = false;
+                            }
                         }
                         break;
                     case '>':
-                        if (parseInt(rowData[condition['columnName']]) <= parseInt(condition['value'])) {
-                            bool = false;
-                        }
+                        if (!(valA > valB)) bool = false;
                         break;
                     case '>=':
-                        if (parseInt(rowData[condition['columnName']]) < parseInt(condition['value'])) {
-                            bool = false;
-                        }
+                        if (!(valA >= valB)) bool = false;
                         break;
                     case '<':
-                        if (parseInt(rowData[condition['columnName']]) >= parseInt(condition['value'])) {
-                            bool = false;
-                        }
+                        if (!(valA < valB)) bool = false;
                         break;
                     case '<=':
-                        if (parseInt(rowData[condition['columnName']]) > parseInt(condition['value'])) {
-                            bool = false;
-                        }
+                        if (!(valA <= valB)) bool = false;
                         break;
                 }
             });
             return bool;
         } catch (ex) {
             GoogleSheet.logError('DB.doWhere', ex);
+            return false; // 安全起見，若報錯則視為不匹配
         }
     };
 
