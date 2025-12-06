@@ -452,5 +452,75 @@ ${chatText}
         }
     };
 
+    /**
+     * 決定是否主動發送訊息
+     * @param {string} userId - 用戶 ID
+     * @param {number} hoursSinceLastChat - 距離上次對話的小時數
+     * @returns {string|null} 回傳生成的訊息，如果不發送則回傳 null
+     */
+    chatBot.decideProactiveMessage = (userId, hoursSinceLastChat) => {
+        try {
+            // 1. 取得相關知識 (作息、習慣、狀態)
+            var knowledge = GoogleSheet.searchKnowledge(Config.PROACTIVE_SEARCH_QUERY);
+
+            // 2. 取得短期記憶
+            var shortTermMemories = GoogleSheet.getValidShortTermMemories();
+
+            // 3. 準備 Context
+            var nowStr = Utilities.formatDate(new Date(), "GMT+8", "yyyy/MM/dd HH:mm:ss");
+            var contextPrompt = `
+[System Context for Proactive Check]
+現在時間：${nowStr}
+距離上次對話：約 ${hoursSinceLastChat.toFixed(1)} 小時
+
+[關於主人的知識 (Knowledge)]:
+${knowledge}
+
+[短期記憶 (Short-term Memories)]:
+${shortTermMemories || "無"}
+
+[你的任務]
+你是 Christina，主人的貼心女僕。現在雖然主人沒有叫你，但請你根據以上資訊判斷：
+「現在是否適合主動找主人說話？」
+
+判斷準則：
+1. **作息優先**：如果現在是主人睡覺、忙碌的時間（參考知識庫），請絕對不要打擾，回傳 "SILENT"。
+2. **適度關心**：如果隔了很久沒說話，且現在是空檔（如下班、休息），可以主動問候。
+3. **短期事件**：如果短期記憶提到今天有重要事情（如看醫生、約會），請根據時間給予適當的關心或是詢問結果。
+4. **不要太頻繁**：如果才剛聊過不久，除非有緊急提醒，否則保持安靜。
+
+[回傳格式]
+- 如果決定保持安靜，請只回傳單字： "SILENT"
+- 如果決定說話，請直接回傳你要說的內容（不需要 JSON，直接給文字即可），語氣要符合女僕人設。`;
+
+            // 4. 呼叫 Gemini
+            // 這裡我們不需要用正規的 Chat History，因為這是一個獨立的判斷請求
+            // 但我們需要 System Prompt 來保持人設
+            var contents = [
+                { "role": "user", "parts": [{ "text": Config.CHAT_SYSTEM_PROMPT + "\n\n" + contextPrompt }] }
+            ];
+
+            var data = callGemini(contents); // 不使用 Tools，純文字生成
+
+            if (data && data.candidates && data.candidates[0].content) {
+                var responseText = data.candidates[0].content.parts[0].text.trim();
+
+                // 檢查是否為 SILENT (忽略大小寫和空白)
+                if (responseText.toUpperCase().includes("SILENT")) {
+                    GoogleSheet.logInfo('ChatBot.decideProactiveMessage', 'AI decided to be SILENT');
+                    return null;
+                }
+
+                return responseText;
+            }
+
+            return null;
+
+        } catch (ex) {
+            GoogleSheet.logError('ChatBot.decideProactiveMessage', ex);
+            return null;
+        }
+    };
+
     return chatBot;
 })();

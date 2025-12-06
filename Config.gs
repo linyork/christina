@@ -30,6 +30,10 @@ var Config = (() => {
         CHAT_MAX_TURNS: 10,              // 每次對話時，傳送給 AI 的上下文輪數上限（讓 AI 知道當下狀況）
         CHAT_CLEANUP_DAYS: 30,           // 自動清理 N 天前的對話
         CHAT_READ_LIMIT: 100,            // 從 DB 讀取的最大行數（搜尋範圍 Buffer）：需大於 CHAT_MAX_TURNS，避免讀取整張表造成效能問題
+
+        // 主動訊息設定
+        PROACTIVE_CHECK_INTERVAL_HOURS: 2,    // 靜置門檻：至少 N 小時沒說話，才會嘗試主動發話 (每小時檢查一次，但若間隔小於此值則略過)
+        PROACTIVE_SEARCH_QUERY: "主人 我的資訊 作息 習慣 狀態 行程", // AI 在決定是否說話時，會去知識庫搜尋的關鍵字
         CHAT_SYSTEM_PROMPT: `
 你是 Christina，一個專屬於主人的可愛貓娘女僕助手。
 你的職責是全心全意服務主人，用親切、撒嬌、可愛的語氣回應，句尾常會加上「～喵❤️」。

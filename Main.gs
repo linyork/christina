@@ -141,6 +141,90 @@ function dailyMemoryCleanUp() {
 }
 
 /**
+ * 定時任務 - 主動訊息檢查
+ * 建議頻率：每 1 小時 (需手動設定 Time-driven trigger)
+ */
+function proactiveMessageCheck() {
+    try {
+        var adminId = Config.ADMIN_STRING.split(",")[0];
+        if (!adminId) return;
+
+        // 1. 取得最後一次對話時間
+        // 注意：這裡假設 chat 表有 timestamp 且最後一筆就是最新的
+        var lastChat = DB().from('chat').limitLoad(1).execute().last();
+
+        var hoursSinceLastChat = 999; // 預設很久
+        if (lastChat && lastChat.timestamp) {
+            var lastTime = new Date(lastChat.timestamp).getTime();
+            var nowTime = new Date().getTime();
+            hoursSinceLastChat = (nowTime - lastTime) / (1000 * 60 * 60);
+        }
+
+        GoogleSheet.logInfo('proactiveMessageCheck', 'Hours since last chat: ' + hoursSinceLastChat.toFixed(1));
+
+        // 2. 第一階段過濾 (Tier 1 Filter)：純邏輯判斷
+        // 如果距離上次對話太近，直接結束，省流量
+        if (hoursSinceLastChat < Config.PROACTIVE_CHECK_INTERVAL_HOURS) {
+            GoogleSheet.logInfo('proactiveMessageCheck', 'Too soon to chat (Tier 1 Filter). Skip.');
+            return;
+        }
+
+        // 3. 第二階段 (Tier 2)：AI 判斷
+        // 只有真的很久沒講話了，才去問 AI 要不要說話
+        var proactiveMsg = ChatBot.decideProactiveMessage(adminId, hoursSinceLastChat);
+
+        if (proactiveMsg) {
+            Line.pushMsg(adminId, proactiveMsg);
+            GoogleSheet.logInfo('proactiveMessageCheck', 'Sent proactive message:', proactiveMsg);
+
+            // 紀錄這筆主動發送的訊息到歷史，避免下次檢查誤判時間 (視為對話重置)
+            // 同時也讓 AI 知道自己剛剛說了這句話
+            // Format: userId, role, content
+            // 我們可以使用 saveMessage 嗎？ ChatBot 內部沒有 expose saveMessage，
+            // 但 reply 裡面有用到。我們可以考慮在 ChatBot 增加一個 logAssistantMessage
+            // 或者直接在此處手動 insert DB?
+            // 為了保持乾淨，我們假設 ChatBot.decideProactiveMessage 如果回傳了，代表它希望這句話被送出。
+            // 我們應該也要把這句話寫入 chat history。
+            // 由於 saveMessage 是 private，我們直接操作 DB。
+            var nowStr = Utilities.formatDate(new Date(), "GMT+8", "yyyy/MM/dd HH:mm:ss");
+            DB().insert('chat')
+                .set('userId', adminId)
+                .set('role', 'assistant')
+                .set('content', proactiveMsg)
+                .set('timestamp', nowStr)
+                .execute();
+        } else {
+            GoogleSheet.logInfo('proactiveMessageCheck', 'AI decided NOT to chat (Tier 2).');
+        }
+
+    } catch (ex) {
+        GoogleSheet.logError('proactiveMessageCheck', ex);
+    }
+}
+
+/**
+ * 輔助函數：設定主動訊息的觸發器
+ * 請在部署後手動執行一次此函數
+ */
+function setupTrigger() {
+    // 先刪除舊的同名觸發器，避免重複
+    var triggers = ScriptApp.getProjectTriggers();
+    for (var i = 0; i < triggers.length; i++) {
+        if (triggers[i].getHandlerFunction() === 'proactiveMessageCheck') {
+            ScriptApp.deleteTrigger(triggers[i]);
+        }
+    }
+
+    // 建立新的每小時觸發器
+    ScriptApp.newTrigger('proactiveMessageCheck')
+        .timeBased()
+        .everyHours(1)
+        .create();
+
+    Logger.log("主動訊息檢查觸發器已設定：每 1 小時執行一次。");
+}
+
+/**
  * 測試函數
  */
 function test() {
