@@ -54,8 +54,7 @@ function runAllTests() {
 
         // 2.3 刪除 Todo (Cleanup)
         var deletedTask = GoogleSheet.deleteTodo(testTaskName);
-        // 因為剛剛已經完成了 (do=1)，deleteTodo 預設邏輯可能有些微不同，我們這裡測試刪除功能本身
-        // 如果 deleteTodo 找不到 (因為已完成)，我們手動清理 DB 確保測試不殘留
+
         // 為了測試 deleteTodo，我們再新增一個來刪
         var testTaskToDelete = "測試要刪除的任務_" + new Date().getTime();
         GoogleSheet.todo(testTaskToDelete);
@@ -64,7 +63,7 @@ function runAllTests() {
         if (delResult === testTaskToDelete) Logger.log("  - 刪除 Todo: OK");
         else throw new Error("刪除 Todo 失敗");
 
-        // 清理剛剛已完成的那個任務 (使用 DB 直接刪除以保險)
+        // 清理殘留資料
         DB().deleteRows('todo').where('content', '=', testTaskName).execute();
 
 
@@ -100,7 +99,6 @@ function runAllTests() {
         // 4. 測試 User Identity (身份控管)
         // ==========================================
         Logger.log("\n[4] 測試身份控管 (Unit Test Logic)...");
-        // 這裡我們直接測試 Utils.checkMaster
         var isMaster = Utils.checkMaster(Config.ADMIN_STRING.split(',')[0]); // 應該為 true
         var isGuest = Utils.checkMaster("unknown_user"); // 應該為 false
 
@@ -114,7 +112,6 @@ function runAllTests() {
         Logger.log("\n[5] 測試 Mind 模組...");
 
         // 5.1 User State Matrix
-        // 讀取 -> 更新 -> 再次讀取驗證
         var originalState = Mind.getUserState(testUserId);
         Mind.updateUserState(testUserId, { mood: 'excited', energy: 8 });
         var newState = Mind.getUserState(testUserId);
@@ -124,7 +121,6 @@ function runAllTests() {
         } else {
             throw new Error("User State 更新失敗");
         }
-        // 還原與清理 (State Matrix 通常保留最新狀態即可，但為了乾淨我們刪除測試 user)
         DB().deleteRows('user_matrix').where('userId', '=', testUserId).execute();
 
         // 5.2 行為日誌 (Behavior Log)
@@ -137,14 +133,7 @@ function runAllTests() {
             throw new Error("行為日誌記錄失敗");
         }
 
-        // 5.3 行為模式分析 (Pattern Analysis) - 模擬
-        // 因為 analyzePatterns 依賴大量數據與 Config.ADMIN_STRING
-        // 這裡我們僅呼叫與驗證不會報錯，且能處理空數據或測試數據
-        // 若要測試真正分析，通常需要 Mock 數據。這裡我們先做基本呼叫測試。
-        // 為避免影響正式 ADMIN，我們暫時不測試 analyzePatterns 的完整流程，僅測試 helper
         Logger.log("  - Mind 基礎功能驗證完成");
-
-        // 清理行為日誌
         DB().deleteRows('behavior_log').where('userId', '=', testUserId).execute();
 
 
@@ -178,5 +167,58 @@ function runAllTests() {
     } catch (ex) {
         Logger.log("\n[FAILED] 測試失敗: " + ex.toString());
         Logger.log(ex.stack);
+    }
+}
+
+/**
+ * 測試：列出目前 API Key 可用的所有 Gemini 模型
+ * 執行此函式後，請查看「執行紀錄 (Execution Log)」
+ */
+function testAvailableModels() {
+    var apiKey = Config.GEMINI_API_KEY;
+    if (!apiKey) {
+        Logger.log("❌ 錯誤：未設定 Config.GEMINI_API_KEY");
+        return;
+    }
+
+    var url = "https://generativelanguage.googleapis.com/v1beta/models?key=" + apiKey;
+
+    try {
+        var options = {
+            "method": "get",
+            "muteHttpExceptions": true
+        };
+
+        var response = UrlFetchApp.fetch(url, options);
+        var statusCode = response.getResponseCode();
+        var content = response.getContentText();
+
+        if (statusCode !== 200) {
+            Logger.log("❌ 請求失敗 (Status: " + statusCode + ")");
+            Logger.log("回應內容: " + content);
+            return;
+        }
+
+        var data = JSON.parse(content);
+        if (data.models) {
+            Logger.log("🔍 找到 " + data.models.length + " 個可用模型：");
+            Logger.log("--------------------------------------------------");
+
+            data.models.forEach(function (model) {
+                // 過濾掉舊的 PaLM 模型，專注於 Gemini
+                if (model.name.indexOf("gemini") !== -1) {
+                    Logger.log("ID: " + model.name);
+                    Logger.log("名稱: " + model.displayName);
+                    Logger.log("版本: " + model.version);
+                    Logger.log("描述: " + (model.description || "無"));
+                    Logger.log("--------------------------------------------------");
+                }
+            });
+        } else {
+            Logger.log("⚠️ 未找到任何模型資料。");
+        }
+
+    } catch (e) {
+        Logger.log("❌ 發生例外錯誤: " + e.toString());
     }
 }

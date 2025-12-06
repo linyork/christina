@@ -39,44 +39,35 @@ function takeBreak() {
         GoogleSheet.logError('takeBreak', ex);
     }
 }
+
 /**
  * 定時任務 - 每日記憶整理 (Daily Memory Consolidation)
- * 1. 清理舊對話 -> 轉為短期記憶
- * 2. 整理短期記憶 -> 轉為長期記憶 (或遺忘)
+ * 1. Stage 1: 清理舊對話 (單純刪除過期紀錄)
+ * 2. Stage 2: 整理短期記憶 (轉存長期或遺忘)
+ * 3. Stage 3: 清理舊行為日誌
  */
 function dailyMemoryCleanUp() {
     try {
         var christinaSheet = SpreadsheetApp.openById(Config.SHEET_ID);
         var today = new Date();
 
-        // ========== Stage 1: 清理舊對話 (超過 7 天) ==========
+        // ========== Stage 1: 清理舊對話 (Chat) ==========
         var sheetChat = christinaSheet.getSheetByName('chat');
         if (sheetChat) {
+            var chatCleanupDays = Config.CHAT_CLEANUP_DAYS || 30; // 預設保留 30 天
             var cutoffDate = new Date();
-            cutoffDate.setDate(cutoffDate.getDate() - 7); // 7 天前的對話
+            cutoffDate.setDate(cutoffDate.getDate() - chatCleanupDays);
 
             var lastRow = sheetChat.getLastRow();
             if (lastRow > 1) {
                 var data = sheetChat.getRange(2, 1, lastRow - 1, sheetChat.getLastColumn()).getValues();
                 var rowsToDelete = [];
-                var chatContentToSummarize = "";
 
                 // 從後往前遍歷
                 for (var i = data.length - 1; i >= 0; i--) {
-                    var timestamp = new Date(data[i][3]); // 假設 timestamp 在第 4 欄
+                    var timestamp = new Date(data[i][3]); // 假設 timestamp 在第 4 欄 (Col D)
                     if (timestamp < cutoffDate) {
                         rowsToDelete.push(i + 2);
-                        // 收集對話內容 (Role: Content)
-                        chatContentToSummarize += (data[i][1] + ": " + data[i][2] + "\n"); // 假設 Role=Col2, Content=Col3
-                    }
-                }
-
-                // 如果有舊對話，嘗試總結
-                if (chatContentToSummarize) {
-                    var summary = Mind.summarizeChatsToMemory(chatContentToSummarize);
-                    if (summary) {
-                        GoogleSheet.addShortTermMemory(summary.key, summary.content, 7 * 24); // 存入短期記憶，預設 7 天
-                        GoogleSheet.logInfo('dailyMemoryCleanUp', 'Summarized chats to STM:', summary.key);
                     }
                 }
 
@@ -84,11 +75,13 @@ function dailyMemoryCleanUp() {
                 rowsToDelete.forEach(row => {
                     sheetChat.deleteRow(row);
                 });
-                GoogleSheet.logInfo('dailyMemoryCleanUp', 'Cleaned ' + rowsToDelete.length + ' old chat rows');
+                if (rowsToDelete.length > 0) {
+                    GoogleSheet.logInfo('dailyMemoryCleanUp', 'Cleaned ' + rowsToDelete.length + ' old chat rows (older than ' + chatCleanupDays + ' days)');
+                }
             }
         }
 
-        // ========== Stage 2: 整理短期記憶 ==========
+        // ========== Stage 2: 整理短期記憶 (Short Term Memory) ==========
         var sheetSTM = christinaSheet.getSheetByName('short_term_memory');
         if (sheetSTM) {
             var lastRowSTM = sheetSTM.getLastRow();
@@ -99,27 +92,30 @@ function dailyMemoryCleanUp() {
                 // 從後往前遍歷
                 for (var i = dataSTM.length - 1; i >= 0; i--) {
                     var rowData = {
-                        key: dataSTM[i][0],      // Col 1
-                        content: dataSTM[i][1],  // Col 2
-                        expire_at: new Date(dataSTM[i][2]) // Col 3
+                        key: dataSTM[i][0],      // Col A
+                        content: dataSTM[i][1],  // Col B
+                        expire_at: new Date(dataSTM[i][2]) // Col C
                     };
 
                     // 判斷是否需要刪除 (過期 或 被轉存)
                     var shouldDelete = false;
 
                     // 交給 AI 判斷是否轉存長期記憶
+                    // 注意：只評估那些還沒過期太久，或是內容豐富的條目
+                    // 為避免浪費 Token，對於顯然是自動生成的 context summary 或過期很久的，可以考慮直接清掉
+                    // 但目前維持原邏輯：全部評估一次，確保智慧沉澱
                     var decision = Mind.evaluateMemoryForLongTerm(rowData);
                     if (decision.keep) {
                         // 轉存長期
                         GoogleSheet.addKnowledge(decision.tags, decision.content);
                         GoogleSheet.logInfo('dailyMemoryCleanUp', 'Promoted STM to LTM:', decision.content);
-                        shouldDelete = true; // 已經轉存，短期記憶任務完成，可以刪除
+                        shouldDelete = true; // 已經轉存，短期記憶任務完成
                     }
 
-                    // 如果過期了，也標記刪除 (遺忘)
-                    if (rowData.expire_at < today) {
+                    // 如果沒被轉存，但過期了 -> 遺忘
+                    if (!shouldDelete && rowData.expire_at < today) {
                         shouldDelete = true;
-                        GoogleSheet.logInfo('dailyMemoryCleanUp', 'STM expired:', rowData.key);
+                        GoogleSheet.logInfo('dailyMemoryCleanUp', 'STM expired (Forgotten):', rowData.key);
                     }
 
                     if (shouldDelete) {
@@ -131,7 +127,39 @@ function dailyMemoryCleanUp() {
                 rowsToDeleteSTM.forEach(row => {
                     sheetSTM.deleteRow(row);
                 });
-                GoogleSheet.logInfo('dailyMemoryCleanUp', 'Cleaned ' + rowsToDeleteSTM.length + ' STM rows');
+                if (rowsToDeleteSTM.length > 0) {
+                    GoogleSheet.logInfo('dailyMemoryCleanUp', 'Processed ' + rowsToDeleteSTM.length + ' STM rows');
+                }
+            }
+        }
+
+        // ========== Stage 3: 清理舊行為日誌 (Behavior Log) ==========
+        var sheetLog = christinaSheet.getSheetByName('behavior_log');
+        if (sheetLog) {
+            var logCleanupDays = 60; // 行為日誌保留 60 天
+            var logCutoffDate = new Date();
+            logCutoffDate.setDate(logCutoffDate.getDate() - logCleanupDays);
+
+            var lastRowLog = sheetLog.getLastRow();
+            if (lastRowLog > 1) {
+                // 假設 timestamp 在第 3 欄 (Col C: userId, action, timestamp...)
+                // 需確認 GoogleSheet.logBehavior 的寫入順序，通常是 [userId, action, timestamp, context]
+                var dataLog = sheetLog.getRange(2, 1, lastRowLog - 1, 3).getValues();
+                var rowsToDeleteLog = [];
+
+                for (var i = dataLog.length - 1; i >= 0; i--) {
+                    var timestamp = new Date(dataLog[i][2]); // Col C
+                    if (timestamp < logCutoffDate) {
+                        rowsToDeleteLog.push(i + 2);
+                    }
+                }
+
+                rowsToDeleteLog.forEach(row => {
+                    sheetLog.deleteRow(row);
+                });
+                if (rowsToDeleteLog.length > 0) {
+                    GoogleSheet.logInfo('dailyMemoryCleanUp', 'Cleaned ' + rowsToDeleteLog.length + ' behavior logs');
+                }
             }
         }
 
@@ -139,6 +167,7 @@ function dailyMemoryCleanUp() {
         GoogleSheet.logError('dailyMemoryCleanUp', ex);
     }
 }
+
 
 /**
  * 定時任務 - 主動訊息檢查
@@ -189,32 +218,6 @@ function proactiveMessageCheck() {
 }
 
 /**
- * 輔助函數：設定主動訊息的觸發器
- * 請在部署後手動執行一次此函數
- */
-function setupTrigger() {
-    // 先刪除舊的同名觸發器，避免重複
-    var triggers = ScriptApp.getProjectTriggers();
-    for (var i = 0; i < triggers.length; i++) {
-        if (triggers[i].getHandlerFunction() === 'proactiveMessageCheck') {
-            ScriptApp.deleteTrigger(triggers[i]);
-        }
-    }
-
-    // 建立新的每小時觸發器
-    ScriptApp.newTrigger('proactiveMessageCheck')
-        .timeBased()
-        .everyHours(1)
-        .create();
-
-    Logger.log("主動訊息檢查觸發器已設定：每 1 小時執行一次。");
-}
-
-/**
- * 定時任務 - 行為模式分析
- * 建議頻率：每日深夜 (e.g. 03:00)
- */
-/**
  * 定時任務 - 系統維護 (行為分析 + 記憶整理)
  * 建議頻率：每 6 小時
  */
@@ -227,29 +230,43 @@ function performMaintenanceTasks() {
 }
 
 /**
- * 輔助函數：設定系統維護的觸發器
+ * 一鍵設定所有定時任務觸發器 (Master Setup)
+ * 注意：執行此函數會先刪除專案中「所有」的 Trigger，然後重新建立。
  */
-function setupMaintenanceTrigger() {
-    // 先刪除舊的
-    var triggers = ScriptApp.getProjectTriggers();
-    for (var i = 0; i < triggers.length; i++) {
-        if (triggers[i].getHandlerFunction() === 'performMaintenanceTasks' || triggers[i].getHandlerFunction() === 'analyzeBehaviorPatterns') {
+function setupAllTriggers() {
+    try {
+        // 1. 刪除所有現有觸發器
+        var triggers = ScriptApp.getProjectTriggers();
+        for (var i = 0; i < triggers.length; i++) {
             ScriptApp.deleteTrigger(triggers[i]);
         }
+        Logger.log("已清除 " + triggers.length + " 個舊觸發器。");
+
+        // 2. 建立 [主動訊息檢查] - 每 1 小時
+        ScriptApp.newTrigger('proactiveMessageCheck')
+            .timeBased()
+            .everyHours(1)
+            .create();
+        Logger.log("✅ 設定完成: proactiveMessageCheck (每 1 小時)");
+
+        // 3. 建立 [系統維護] (短期記憶總結 + 行為分析) - 每 6 小時
+        ScriptApp.newTrigger('performMaintenanceTasks')
+            .timeBased()
+            .everyHours(6)
+            .create();
+        Logger.log("✅ 設定完成: performMaintenanceTasks (每 6 小時)");
+
+        // 4. 建立 [每日清理] (刪除舊資料 + 記憶沉澱) - 每日 04:00
+        ScriptApp.newTrigger('dailyMemoryCleanUp')
+            .timeBased()
+            .everyDays(1)
+            .atHour(4)
+            .create();
+        Logger.log("✅ 設定完成: dailyMemoryCleanUp (每日 04:00)");
+
+        Logger.log("🎉 所有觸發器設定完畢！");
+
+    } catch (ex) {
+        Logger.log("❌ 設定觸發器時發生錯誤: " + ex.toString());
     }
-
-    // 建立新的每 6 小時觸發器
-    ScriptApp.newTrigger('performMaintenanceTasks')
-        .timeBased()
-        .everyHours(6)
-        .create();
-
-    Logger.log("系統維護觸發器已設定：每 6 小時執行一次。");
-}
-
-/**
- * 測試函數
- */
-function test() {
-    // 測試用
 }
