@@ -70,6 +70,54 @@ var Tools = (() => {
                 }
             },
             {
+                "name": "add_calendar_event",
+                "description": "新增行事曆活動。當使用者說「提醒我明天開會」、「幫我排行程」等明確有時間點的事件時使用。注意：如果是模糊的未來計畫（沒有具體時間），請改用 add_todo 或 context。",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "title": {
+                            "type": "string",
+                            "description": "活動標題"
+                        },
+                        "start_time": {
+                            "type": "string",
+                            "description": "開始時間，格式必須為：YYYY/MM/DD HH:mm:ss。請根據對話上下文推算正確的日期與時間。"
+                        },
+                        "duration_hours": {
+                            "type": "number",
+                            "description": "持續時間（小時），預設為 1"
+                        }
+                    },
+                    "required": ["title", "start_time"]
+                }
+            },
+            {
+                "name": "check_calendar",
+                "description": "查詢接下來日曆上的行程。當使用者問「我有什麼行程」、「明天要幹嘛」時使用。",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "days": {
+                            "type": "number",
+                            "description": "查詢未來幾天，預設 3"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "get_weather",
+                "description": "取得目前天氣資訊。當使用者問「天氣如何」、「會下雨嗎」時使用。重要：如果使用者沒有指定地點，請直接將 location 參數設為 '台北' 並執行，不要反問使用者，也不要因為不知道使用者的位置而不執行。",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "location": {
+                            "type": "string",
+                            "description": "城市名稱，預設為 '台北'。"
+                        }
+                    }
+                }
+            },
+            {
                 "name": "add_todo",
                 "description": "新增待辦事項。",
                 "parameters": {
@@ -173,6 +221,58 @@ var Tools = (() => {
                 case 'search_knowledge':
                     return GoogleSheet.searchKnowledge(args.query);
 
+                case 'add_calendar_event':
+                    return GoogleCalendar.createEvent(args.title, args.start_time, args.duration_hours);
+
+                case 'check_calendar':
+                    return GoogleCalendar.getUpcomingEvents(args.days);
+
+                case 'get_weather':
+                    var location = args.location || '台北';
+                    var coords = {
+                        "台北": { lat: 25.0330, lon: 121.5654 },
+                        "新北": { lat: 25.0169, lon: 121.4627 },
+                        "桃園": { lat: 24.9936, lon: 121.3009 },
+                        "新竹": { lat: 24.8138, lon: 120.9674 },
+                        "台中": { lat: 24.1477, lon: 120.6736 },
+                        "嘉義": { lat: 23.4800, lon: 120.4491 },
+                        "台南": { lat: 22.9997, lon: 120.2270 },
+                        "高雄": { lat: 22.6272, lon: 120.3014 },
+                        "基隆": { lat: 25.1276, lon: 121.7391 },
+                        "宜蘭": { lat: 24.7517, lon: 121.7483 },
+                        "花蓮": { lat: 23.9770, lon: 121.6022 },
+                        "台東": { lat: 22.7662, lon: 121.1441 }
+                    }[location];
+
+                    if (!coords) {
+                        // 預設台北
+                        coords = { lat: 25.0330, lon: 121.5654 };
+                        location += " (幫您查台北喔)";
+                    }
+
+                    var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + coords.lat + '&longitude=' + coords.lon + '&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code&timezone=Asia%2FTaipei';
+
+                    var response = UrlFetchApp.fetch(url);
+                    var data = JSON.parse(response.getContentText());
+
+                    if (!data.current) return '讀取天氣資料失敗～喵💔';
+
+                    var current = data.current;
+                    var weatherCode = current.weather_code;
+                    var weatherText = "晴朗";
+
+                    // 簡易 WMO Code 轉換
+                    if (weatherCode === 0) weatherText = "晴天 ☀️";
+                    else if (weatherCode <= 3) weatherText = "多雲 ☁️";
+                    else if (weatherCode <= 48) weatherText = "有霧 🌫️";
+                    else if (weatherCode <= 55) weatherText = "毛毛雨 🌧️";
+                    else if (weatherCode <= 67) weatherText = "下雨 ☔";
+                    else if (weatherCode <= 77) weatherText = "下雪 ❄️";
+                    else if (weatherCode <= 82) weatherText = "陣雨 🌦️";
+                    else if (weatherCode <= 99) weatherText = "雷雨 ⛈️";
+
+                    return `【${location} 目前天氣】\n狀況：${weatherText}\n溫度：${current.temperature_2m}°C (體感 ${current.apparent_temperature}°C)\n濕度：${current.relative_humidity_2m}%\n降雨：${current.precipitation} mm`;
+
                 case 'add_todo':
                     GoogleSheet.todo(args.task);
                     return '已新增待辦事項：' + args.task + '～喵❤️';
@@ -195,12 +295,6 @@ var Tools = (() => {
 
                 case 'leave_current_group':
                     if (event.source && event.source.type && event.sourceId) {
-                        // 因為這是同步回應，我們先回傳訊息，然後再執行離開 (可能會失敗如果已經離開)
-                        // 更好的做法是回傳「好的，我走了」，然後 AI 回應完後，Line.gs 根據 AI 回應再執行？
-                        // 但這裡是 Tool，我們直接執行離開比較乾脆。
-                        // 不過 AI 還要回傳訊息，如果我們直接離開，最後的 replyMsg 可能會失敗。
-                        // 所以我們回傳文字，讓 AI 說再見，然後由使用者再次確認或我們延遲離開?
-                        // 或許直接呼叫 Line.leave 即可，API 應該會允許在離開前發出最後一個請求
                         Line.leave(event.source.type, event.sourceId);
                         return 'Christina 已離開群組～喵';
                     }

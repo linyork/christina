@@ -139,6 +139,25 @@ var Line = (() => {
     };
 
     /**
+     * 取得訊息內容 (圖片/影片/音訊)
+     * @param {string} messageId - 訊息 ID
+     * @returns {Blob} 檔案 Blob
+     */
+    line.getContent = (messageId) => {
+        try {
+            // 注意：取得內容 (Content) 必須使用 api-data.line.me
+            var url = 'https://api-data.line.me/v2/bot/message/' + messageId + '/content';
+            var response = UrlFetchApp.fetch(url, {
+                'headers': { 'Authorization': 'Bearer ' + Config.LINE_CHANNEL_TOKEN }
+            });
+            return response.getBlob();
+        } catch (ex) {
+            GoogleSheet.logError('Line.getContent', ex);
+            return null;
+        }
+    };
+
+    /**
      * 執行事件處理
      */
     line.startEvent = () => {
@@ -148,9 +167,29 @@ var Line = (() => {
                     // 暫不動作
                     break;
                 case 'message':
-                    // 交給 ChatBot 處理 (權限控制由 AI 內部處理)
-                    var aiResponse = ChatBot.reply(line.event);
-                    line.replyMsg(line.event.replyToken, aiResponse);
+                    // 根據訊息類型分流
+                    var msgType = line.event.message.type;
+                    var aiResponse = '';
+
+                    if (msgType === 'text') {
+                        // 文字訊息
+                        aiResponse = ChatBot.reply(line.event);
+                    } else if (msgType === 'image') {
+                        // 圖片訊息
+                        var imageBlob = line.getContent(line.event.message.id);
+                        if (imageBlob) {
+                            aiResponse = ChatBot.processImage(line.event, imageBlob);
+                        } else {
+                            aiResponse = '圖片讀取失敗了～喵💔';
+                        }
+                    } else {
+                        // 其他類型暫不處理 (或可加一個預設回應)
+                        aiResponse = '這個格式我還看不懂呢～喵❤️';
+                    }
+
+                    if (aiResponse) {
+                        line.replyMsg(line.event.replyToken, aiResponse);
+                    }
                     break;
                 case 'join':
                     line.pushMsg(line.event.sourceId, '大家好！我是 Christina！');

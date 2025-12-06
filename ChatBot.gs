@@ -165,6 +165,12 @@ var ChatBot = (() => {
      * @param {array} tools - 工具定義（可選）
      * @returns {object} API 回應
      */
+    /**
+     * 呼叫 Gemini API（支援 Function Calling 與 Multimodal）
+     * @param {array} contents - 對話內容，支援文字與圖片
+     * @param {array} tools - 工具定義（可選）
+     * @returns {object} API 回應
+     */
     var callGemini = (contents, tools) => {
         try {
             var url = Config.GEMINI_API_BASE + '/models/' + Config.GEMINI_MODEL + ':generateContent?key=' + Config.GEMINI_API_KEY;
@@ -183,7 +189,8 @@ var ChatBot = (() => {
                 payload.tools = [{
                     "functionDeclarations": tools
                 }];
-                GoogleSheet.logInfo('ChatBot.callGemini', 'Tools attached count:', tools.length);
+                // 注意：Function Calling 暫時不支援與圖片同時發送，若有圖片通常作為純分析用
+                // 這裡我們保持工具與圖片共存的邏輯，Gemini 1.5 Pro/Flash 應該支援
             }
 
             var options = {
@@ -202,12 +209,101 @@ var ChatBot = (() => {
             }
 
             var responseText = response.getContentText();
-            // GoogleSheet.logInfo('ChatBot.callGemini', 'Raw Response:', responseText); // 除錯用，確認回應結構
-
             return JSON.parse(responseText);
         } catch (error) {
             GoogleSheet.logError('ChatBot.callGemini', error);
             return null;
+        }
+    };
+
+    /**
+     * 回覆訊息（支援 Function Calling 與 RAG）
+     * @param {object} event - Line 事件物件
+     * @returns {string} AI 回覆
+     */
+    /**
+     * 處理圖片訊息
+     * @param {object} event - Line 事件物件
+     * @param {Blob} imageBlob - 圖片 Blob
+     * @returns {string} AI 回覆
+     */
+    chatBot.processImage = (event, imageBlob) => {
+        try {
+            var userId = event.source.userId;
+
+            // 1. 圖片前處理
+            var base64Image = Utilities.base64Encode(imageBlob.getBytes());
+            var mimeType = imageBlob.getContentType();
+
+            // 2. 建構 Gemini Request - Visual Analysis & Response
+            // 我們希望 AI 做兩件事：
+            // (1) 產生圖片描述 (Description) -> 用於存檔記憶 (Visual to Text)
+            // (2) 產生對使用者的回應 (Reply) -> 符合人設
+
+            var systemPrompt = Config.CHAT_SYSTEM_PROMPT + `
+            
+【特殊任務：視覺處理】
+主人剛剛傳送了一張圖片給你。請依序完成以下任務：
+1. **[DESC]**: 以第三方客觀旁白的角度，詳細描述這張圖片的內容 (包含人事物、場景、文字)。這段文字將作為這張圖片的「記憶存檔」。
+2. **[REPLY]**: 回到 Christina 的女僕人設，針對這張圖片給予主人親切、可愛的回應。
+
+請務必依照以下格式回傳，不要有其他廢話：
+[DESC] 詳細的圖片描述...
+[REPLY] Christina 的回應內容...`;
+
+            var contents = [
+                {
+                    "role": "user",
+                    "parts": [
+                        { "text": systemPrompt },
+                        {
+                            "inlineData": {
+                                "mimeType": mimeType,
+                                "data": base64Image
+                            }
+                        }
+                    ]
+                }
+            ];
+
+            // 呼叫 Gemini (不帶工具，專注於視覺分析)
+            var data = callGemini(contents);
+
+            if (data && data.candidates && data.candidates[0].content) {
+                var rawText = data.candidates[0].content.parts[0].text;
+
+                // 3. 解析回應
+                var desc = "";
+                var reply = "";
+
+                // 簡單解析器
+                var parts = rawText.split("[REPLY]");
+                if (parts.length === 2) {
+                    desc = parts[0].replace("[DESC]", "").trim();
+                    reply = parts[1].trim();
+                } else {
+                    // Fallback: 如果格式跑掉，整個當作 reply，描述用預設
+                    reply = rawText.replace("[DESC]", "").replace("[REPLY]", "").trim();
+                    desc = "一張圖片 (AI 解析失敗)";
+                }
+
+                // 4. 存入記憶 (關鍵步驟：Visual Persistence)
+                // 我們將圖片描述存為 User 的發言，這樣就像 User 用文字描述了這張圖一樣
+                var memoryContent = `[傳送了一張圖片] 內容：${desc}`;
+                saveMessage(userId, 'user', memoryContent);
+                saveMessage(userId, 'assistant', reply);
+
+                // 清理舊對話
+                cleanOldHistory(userId, Config.CHAT_MAX_TURNS);
+
+                return reply;
+            }
+
+            return '嗚嗚...我看不太清楚這張照片～喵💔';
+
+        } catch (ex) {
+            GoogleSheet.logError('ChatBot.processImage', ex);
+            return '讀取圖片時發生錯誤惹～喵💔';
         }
     };
 
