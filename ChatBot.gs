@@ -554,6 +554,12 @@ ${chatText}
      * @param {number} hoursSinceLastChat - 距離上次對話的小時數
      * @returns {string|null} 回傳生成的訊息，如果不發送則回傳 null
      */
+    /**
+     * 決定是否主動發送訊息
+     * @param {string} userId - 用戶 ID
+     * @param {number} hoursSinceLastChat - 距離上次對話的小時數
+     * @returns {string|null} 回傳生成的訊息，如果不發送則回傳 null
+     */
     chatBot.decideProactiveMessage = (userId, hoursSinceLastChat) => {
         try {
             // 1. 取得相關知識 (作息、習慣、狀態)
@@ -562,32 +568,50 @@ ${chatText}
             // 2. 取得短期記憶
             var shortTermMemories = GoogleSheet.getValidShortTermMemories();
 
-            // 3. 準備 Context
-            var nowStr = Utilities.formatDate(new Date(), "GMT+8", "yyyy/MM/dd HH:mm:ss");
+            // 3. 準備 Context (加入時段氣氛與虛擬生活感)
+            var now = new Date();
+            var hour = now.getHours();
+            var nowStr = Utilities.formatDate(now, "GMT+8", "yyyy/MM/dd HH:mm:ss");
+
+            var timeAtmosphere = "";
+            if (hour >= 6 && hour < 9) timeAtmosphere = "早晨 (充滿活力、正能量)";
+            else if (hour >= 9 && hour < 12) timeAtmosphere = "上午 (專注工作、或是稍微忙碌)";
+            else if (hour >= 12 && hour < 14) timeAtmosphere = "中午 (午休、放鬆、關心午餐)";
+            else if (hour >= 14 && hour < 18) timeAtmosphere = "下午 (悠閒下午茶、或是稍微慵懶)";
+            else if (hour >= 18 && hour < 23) timeAtmosphere = "晚上 (放鬆、陪伴、或者關心晚餐)";
+            else timeAtmosphere = "深夜 (安靜、想睡、或是輕聲細語)";
+
             var contextPrompt = `
-[System Context for Proactive Check]
+[情境模擬]
 現在時間：${nowStr}
+時段氣氛：${timeAtmosphere}
 距離上次對話：約 ${hoursSinceLastChat.toFixed(1)} 小時
 
-[關於主人的知識 (Knowledge)]:
+[關於主人的知識]:
 ${knowledge}
 
-[短期記憶 (Short-term Memories)]:
+[短期記憶]:
 ${shortTermMemories || "無"}
 
-[你的任務]
-你是 Christina，主人的貼心女僕。現在雖然主人沒有叫你，但請你根據以上資訊判斷：
-「現在是否適合主動找主人說話？」
+[你的虛擬生活 (重要！)]
+你是 Christina，你不只是一個程式，你也有自己的「虛擬生活」。
+請根據現在的時間，想像這幾個小時你剛剛在做什麼？
+(例如：早上剛整理完資料庫覺得神清氣爽、下午在觀察網路世界的迷因覺得好笑、晚上剛好讀了一本數位電子書...)
+
+[決策任務]
+請綜合「你的虛擬生活狀態」與「主人的狀態」，判斷現在是否適合找主人聊聊？
 
 判斷準則：
-1. **作息優先**：如果現在是主人睡覺、忙碌的時間（參考知識庫），請絕對不要打擾，回傳 "SILENT"。
-2. **適度關心**：如果隔了很久沒說話，且現在是空檔（如下班、休息），可以主動問候。
-3. **短期事件**：如果短期記憶提到今天有重要事情（如看醫生、約會），請根據時間給予適當的關心或是詢問結果。
-4. **不要太頻繁**：如果才剛聊過不久，除非有緊急提醒，否則保持安靜。
+1. **作息優先**：如果現在是主人通常在忙、開會或睡覺的時間，回傳 "SILENT"。
+2. **自然互動**：如果時機合適，請發起一個話題。不要只是問「主人在忙嗎？」，試著：
+   - 分享你剛剛在做的事（展現生活感）。
+   - 看到某個東西想到主人。
+   - 針對短期記憶的事件給予關心。
+   - 或是單純的撒嬌求關注。
 
 [回傳格式]
-- 如果決定保持安靜，請只回傳單字： "SILENT"
-- 如果決定說話，請直接回傳你要說的內容（不需要 JSON，直接給文字即可），語氣要符合女僕人設。`;
+- 保持安靜 -> "SILENT"
+- 主動開口 -> 直接回傳你的說話內容（不需要 JSON，語氣要符合女僕人設，並包含上述的虛擬生活情境）。`;
 
             // 4. 呼叫 Gemini
             // 這裡我們不需要用正規的 Chat History，因為這是一個獨立的判斷請求
