@@ -184,7 +184,40 @@ var DB = (() => {
     };
 
     /**
-     * 處理刪除資料
+     * 處理刪除符合條件的 Row (由後往前刪)
+     */
+    var doDeleteRows = () => {
+        try {
+            var rowsToDelete = [];
+            var rowData = {};
+
+            // 遍歷尋找符合的 row (從 1 開始，因為 0 是 header)
+            for (var i = 1; i < lastRow; i++) {
+                for (var j = 0; j < lastColumn; j++) {
+                    rowData[selectColumns[j]] = allData[i][j];
+                }
+                if (doWhere(rowData)) {
+                    // 記錄 row index (Sheet 視角：i + 1)
+                    rowsToDelete.push(i + 1);
+                }
+                rowData = {};
+            }
+
+            // 從後往前刪除
+            rowsToDelete.sort((a, b) => b - a);
+            rowsToDelete.forEach(row => {
+                table.deleteRow(row);
+            });
+
+            GoogleSheet.logInfo('DB.doDeleteRows', 'Deleted ' + rowsToDelete.length + ' rows.');
+
+        } catch (ex) {
+            GoogleSheet.logError('DB.doDeleteRows', ex);
+        }
+    };
+
+    /**
+     * 處理刪除資料 (Clear Range)
      */
     var doDelete = () => {
         try {
@@ -334,6 +367,15 @@ var DB = (() => {
                 case 'D':
                     doDelete();
                     break;
+                case 'DR':
+                    // Delete Rows (Conditional)
+                    if (!allData) {
+                        allData = table.getDataRange().getValues();
+                        lastRow = allData.length;
+                    }
+                    doSelectColumn();
+                    doDeleteRows();
+                    break;
             }
         } catch (ex) {
             GoogleSheet.logError('DB.execute', ex);
@@ -411,6 +453,22 @@ var DB = (() => {
             allData = table.getDataRange().getValues();
         } catch (ex) {
             GoogleSheet.logError('DB.insert', 'Error: ' + ex.message + '\nStack: ' + ex.stack);
+        }
+        return db;
+    };
+
+    /**
+     * 設定刪除符合條件的 Row
+     * @param {string} tableName - 表格名稱
+     * @returns {object} DB 實例
+     */
+    db.deleteRows = (tableName) => {
+        type = 'DR';
+        try {
+            table = SpreadsheetApp.openById(Config.SHEET_ID).getSheetByName(tableName);
+            // We need to load data in execute to check conditions
+        } catch (ex) {
+            GoogleSheet.logError('DB.deleteRows', ex);
         }
         return db;
     };

@@ -116,21 +116,153 @@ var Mind = (() => {
     };
 
     /**
-     * (未來功能) 分析行為模式並產生洞察
-     * 預計由 Cron Job 每日執行
+     * 分析行為模式並產生洞察
+     * 建議由 Cron Job 每日執行 (e.g. 凌晨 4 點)
      */
     mind.analyzePatterns = () => {
         try {
             GoogleSheet.logInfo('Mind.analyzePatterns', 'Starting daily behavior analysis...');
 
-            // TODO: 在這裡實作分析邏輯
-            // 1. 讀取 behavior_log
-            // 2. 統計高頻行為 (e.g. 每天 8 點出門)
-            // 3. 產生主動提醒 (Proactive Suggestion)
+            var userId = Config.ADMIN_STRING;
+            if (!userId) {
+                GoogleSheet.logInfo('Mind.analyzePatterns', 'No ADMIN_STRING defined. Skipping analysis.');
+                return;
+            }
 
-            GoogleSheet.logInfo('Mind.analyzePatterns', 'Analysis complete. (Placeholder)');
+            // 1. 讀取最近 14 天的行為紀錄
+            var logs = GoogleSheet.getRecentBehaviors(userId, 14);
+            if (!logs || logs.length === 0) {
+                GoogleSheet.logInfo('Mind.analyzePatterns', 'No recent behaviors found.');
+                return;
+            }
+
+            // 2. 統計行為頻率
+            // Map: Action -> { Count, Hours: [h1, h2...] }
+            var stats = {};
+            logs.forEach(log => {
+                var action = log.action;
+                if (!action) return;
+
+                if (!stats[action]) {
+                    stats[action] = { count: 0, hours: [] };
+                }
+                stats[action].count++;
+                if (log.hour !== undefined) {
+                    stats[action].hours.push(log.hour);
+                }
+            });
+
+            // 3. 識別模式 (簡單規則：14天內出現超過 3 次的行為)
+            var patterns = [];
+            for (var action in stats) {
+                var data = stats[action];
+                if (data.count >= 3) {
+                    // 計算平均時段 (Mode approach or Avereage)
+                    // 這裡用簡單的平均
+                    var avgHour = 0;
+                    if (data.hours.length > 0) {
+                        var sum = data.hours.reduce((a, b) => a + b, 0);
+                        avgHour = Math.round(sum / data.hours.length);
+                    }
+                    patterns.push({
+                        action: action,
+                        count: data.count,
+                        avgHour: avgHour
+                    });
+                }
+            }
+
+            // 4. 產生洞察並存入知識庫
+            if (patterns.length > 0) {
+                var insightTexts = patterns.map(p => {
+                    return `主人經常在 ${p.avgHour} 點左右進行「${p.action}」(近兩週 ${p.count} 次)`;
+                });
+
+                var summary = "【行為分析報告】\n" + insightTexts.join('\n');
+
+                // 存入 Knowledge (Tag: pattern_insight)
+                GoogleSheet.addKnowledge(['pattern_insight', 'auto_analysis'], summary);
+                GoogleSheet.logInfo('Mind.analyzePatterns', 'Analysis complete. Insights saved:', summary);
+            } else {
+                GoogleSheet.logInfo('Mind.analyzePatterns', 'Analysis complete. No strong patterns found.');
+            }
+
         } catch (ex) {
             GoogleSheet.logError('Mind.analyzePatterns', ex);
+        }
+    };
+
+    /**
+     * 將對話紀錄總結為短期記憶
+     * @param {string} chatText
+     * @returns {object|null}
+     */
+    mind.summarizeChatsToMemory = (chatText) => {
+        try {
+            var prompt = `你是 Christina，主人的貼心女僕。
+這裡有一些超過 7 天的舊對話紀錄。請幫我閱讀並判斷：
+是否有任何「暫時性重要」的資訊值得轉存為短期記憶？（例如：主人最近在煩惱的事、正在進行的計畫、或是這幾天的狀態）。
+如果是普通的閒聊，請直接忽略。
+
+對話紀錄：
+${chatText}
+
+如果值得保留，請回傳 JSON 格式：{"key": "主題", "content": "詳細內容"}
+如果不值得保留，請回傳 null (JSON)。
+請只回傳 JSON，不要有其他廢話。`;
+
+            var promptContents = [{ "role": "user", "parts": [{ "text": prompt }] }];
+            var response = GeminiService.callAPI(promptContents);
+
+            if (response && response.candidates && response.candidates[0].content) {
+                var text = response.candidates[0].content.parts[0].text;
+                text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+                if (text === 'null') return null;
+                return JSON.parse(text);
+            }
+            return null;
+        } catch (ex) {
+            GoogleSheet.logError('Mind.summarizeChatsToMemory', ex);
+            return null;
+        }
+    };
+
+    /**
+     * 評估短期記憶是否轉為長期記憶
+     * @param {object} memory
+     * @returns {object}
+     */
+    mind.evaluateMemoryForLongTerm = (memory) => {
+        try {
+            var prompt = `你是 Christina，主人的專屬女僕。
+這條短期記憶即將過期（或需要整理）：
+主題：${memory.key}
+內容：${memory.content}
+
+請以女僕的角度思考：這條資訊是否包含「主人永久性的喜好、習慣、重要事實」？
+如果是（例如：主人不吃香菜、主人的生日），請將其轉化為長期知識。
+如果否（例如：上週的晚餐、已過期的提醒），請讓它自然遺忘。
+
+請回傳 JSON 格式：
+{
+  "keep": boolean, // true = 轉存長期, false = 遺忘
+  "tags": ["tag1", "tag2"], // 如果 keep=true，請提供標籤
+  "content": "轉存的內容" // 如果 keep=true，請提供轉存內容
+}
+請只回傳 JSON，不要有其他廢話。`;
+
+            var promptContents = [{ "role": "user", "parts": [{ "text": prompt }] }];
+            var response = GeminiService.callAPI(promptContents);
+
+            if (response && response.candidates && response.candidates[0].content) {
+                var text = response.candidates[0].content.parts[0].text;
+                text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+                return JSON.parse(text);
+            }
+            return { keep: false };
+        } catch (ex) {
+            GoogleSheet.logError('Mind.evaluateMemoryForLongTerm', ex);
+            return { keep: false };
         }
     };
 

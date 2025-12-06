@@ -6,7 +6,13 @@ var GoogleSheet = (() => {
     var googleSheet = {};
 
     // Lazy loading helpers
-    var getChristinaSheet = () => SpreadsheetApp.openById(Config.SHEET_ID);
+    // Caching helper
+    var _spreadsheetCache = null;
+    var getChristinaSheet = () => {
+        if (_spreadsheetCache) return _spreadsheetCache;
+        _spreadsheetCache = SpreadsheetApp.openById(Config.SHEET_ID);
+        return _spreadsheetCache;
+    };
     var getConsoleLogSheet = () => getChristinaSheet().getSheetByName('consolelog');
 
 
@@ -149,10 +155,14 @@ var GoogleSheet = (() => {
      * @param {string} something - 刪除的事項
      * @returns {string|null} 刪除的事項名稱，若找不到則回傳 null
      */
+    /**
+     * 刪除事項 (支援模糊搜尋與 DB Row Deletion)
+     * @param {string} something - 刪除的事項
+     * @returns {string|null} 刪除的事項名稱，若找不到則回傳 null
+     */
     googleSheet.deleteTodo = (something) => {
         try {
-            // 1. 取得所有事項 (包含已完成? 通常刪除是針對待辦，但也可能想刪除已完成的。這裡我們搜尋全部)
-            // 為了安全起見，我們先只搜尋 'todo' 表中所有的，不分完成狀態
+            // 1. 取得所有事項
             var tasks = DB().from('todo').execute().get();
             var tasksArray = Array.isArray(tasks) ? tasks : (tasks.content ? [tasks] : []);
             if (Object.keys(tasks).length === 0 && !Array.isArray(tasks)) tasksArray = [];
@@ -170,30 +180,10 @@ var GoogleSheet = (() => {
             }
 
             if (targetTask) {
-                // 4. 刪除該事項
-                // DB.gs 支援 delete 嗎？ DB.delete(tableName, rangeString) 看起來是針對 range 清除。
-                // 這裡我們需要的是 row deletion。DB.gs 的 doDelete 是 clear content，可能留下空行。
-                // 我們直接操作 Sheet 比較保險。
-                var sheet = getChristinaSheet().getSheetByName('todo');
-                var data = sheet.getDataRange().getValues();
-
-                // Find row index (data is 0-indexed, row 1 is header)
-                // data[i][0] should be content if col 1 is content. Let's check DB structure implications.
-                // Based on insert('todo').set('content', ...), 'content' implies column name.
-                // Assuming content is in a column. Let's iterate.
-
-                // Re-find in raw data to be sure of row index
-                for (var i = 1; i < data.length; i++) {
-                    // 假設第一欄或第二欄是 content，需要確認 schema。
-                    // 從 DB.gs 來看，它會讀 header。
-                    // 為了兼容性，我們用最笨的方法：遍歷所有欄位找這個值
-                    var rowString = data[i].join(" ");
-                    if (rowString.includes(targetTask.content)) {
-                        sheet.deleteRow(i + 1); // deleteRow takes 1-based index
-                        return targetTask.content;
-                    }
-                }
-                return null; // Should have found it if tasksArray found it, but just in case
+                // 4. 刪除該事項 (使用 DB.deleteRows)
+                // 注意：這裡使用 content 作為條件，若有重複內容，可能會一起刪除，但在 TODO 情境下通常可接受
+                DB().deleteRows('todo').where('content', '=', targetTask.content).execute();
+                return targetTask.content;
             } else {
                 return null;
             }
@@ -602,6 +592,34 @@ var GoogleSheet = (() => {
 
         } catch (ex) {
             googleSheet.logError('GoogleSheet.logBehavior', ex);
+        }
+    };
+
+    /**
+     * 取得最近的行為紀錄
+     * @param {string} userId
+     * @param {number} days - 取得幾天內的紀錄
+     * @returns {array}
+     */
+    googleSheet.getRecentBehaviors = (userId, days) => {
+        try {
+            var allLogs = DB().from('behavior_log').where('userId', '=', userId).execute().get();
+            if (!allLogs) return [];
+
+            var logsArray = Array.isArray(allLogs) ? allLogs : [allLogs];
+            if (logsArray.length === 0) return [];
+
+            var now = new Date();
+            var cutoff = new Date(now.getTime() - (days * 24 * 60 * 60 * 1000));
+
+            return logsArray.filter(log => {
+                // DB timestamp format: YYYY/MM/DD HH:mm:ss
+                var logTime = new Date(log.timestamp);
+                return logTime >= cutoff;
+            });
+        } catch (ex) {
+            googleSheet.logError('GoogleSheet.getRecentBehaviors', ex);
+            return [];
         }
     };
 

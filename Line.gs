@@ -162,6 +162,16 @@ var Line = (() => {
      */
     line.startEvent = () => {
         try {
+            // [Strict Identify] 嚴格身分控管：非 Master 直接拒絕服務，節省 Token
+            if (!line.event.isMaster) {
+                // 只對 Message 事件做回覆，避免對 Join/Follow 等事件做過多反應 (或可選擇完全沉默)
+                if (line.event.type === 'message') {
+                    line.replyMsg(line.event.replyToken, '抱歉，我是專屬於主人的私人助理，無法為您提供服務。');
+                }
+                GoogleSheet.logInfo('Line.startEvent', 'Blocked non-master user:', line.event.source.userId);
+                return;
+            }
+
             switch (line.event.type) {
                 case 'postback':
                     // 暫不動作
@@ -192,22 +202,24 @@ var Line = (() => {
                     }
                     break;
                 case 'join':
-                    line.pushMsg(line.event.sourceId, '大家好！我是 Christina！');
+                    // Master 加入群組 (理論上 Master 不會加入群組，或是只有 Master 在的群組？)
+                    // 這裡保持沉默或簡單招呼
+                    line.pushMsg(line.event.sourceId, '主人好～我是 Christina！');
                     break;
                 case 'leave':
                     // 暫不動作
                     break;
                 case 'memberLeft':
-                    line.pushMsg(line.event.sourceId, '有人離開了！我們緬懷他');
+                    // line.pushMsg(line.event.sourceId, '有人離開了！我們緬懷他');
                     break;
                 case 'memberJoined':
-                    line.pushMsg(line.event.sourceId, '歡迎新朋友！我是 Christina');
+                    // line.pushMsg(line.event.sourceId, '歡迎新朋友！我是 Christina');
                     break;
                 case 'follow':
-                    line.pushMsg(line.event.sourceId, '你好！我是 Christina～喵❤️');
+                    line.pushMsg(line.event.sourceId, '主人您好！我是您的專屬女僕 Christina～喵❤️');
                     break;
                 case 'unfollow':
-                    line.pushMsg(line.event.sourceId, '好可惜以後 Christina 會提供更多服務的');
+                    // line.pushMsg(line.event.sourceId, '好可惜以後 Christina 會提供更多服務的');
                     break;
                 default:
                     break;

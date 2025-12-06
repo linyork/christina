@@ -73,7 +73,7 @@ function dailyMemoryCleanUp() {
 
                 // 如果有舊對話，嘗試總結
                 if (chatContentToSummarize) {
-                    var summary = ChatBot.summarizeChatsToMemory(chatContentToSummarize);
+                    var summary = Mind.summarizeChatsToMemory(chatContentToSummarize);
                     if (summary) {
                         GoogleSheet.addShortTermMemory(summary.key, summary.content, 7 * 24); // 存入短期記憶，預設 7 天
                         GoogleSheet.logInfo('dailyMemoryCleanUp', 'Summarized chats to STM:', summary.key);
@@ -108,7 +108,7 @@ function dailyMemoryCleanUp() {
                     var shouldDelete = false;
 
                     // 交給 AI 判斷是否轉存長期記憶
-                    var decision = ChatBot.evaluateMemoryForLongTerm(rowData);
+                    var decision = Mind.evaluateMemoryForLongTerm(rowData);
                     if (decision.keep) {
                         // 轉存長期
                         GoogleSheet.addKnowledge(decision.tags, decision.content);
@@ -178,21 +178,7 @@ function proactiveMessageCheck() {
             GoogleSheet.logInfo('proactiveMessageCheck', 'Sent proactive message:', proactiveMsg);
 
             // 紀錄這筆主動發送的訊息到歷史，避免下次檢查誤判時間 (視為對話重置)
-            // 同時也讓 AI 知道自己剛剛說了這句話
-            // Format: userId, role, content
-            // 我們可以使用 saveMessage 嗎？ ChatBot 內部沒有 expose saveMessage，
-            // 但 reply 裡面有用到。我們可以考慮在 ChatBot 增加一個 logAssistantMessage
-            // 或者直接在此處手動 insert DB?
-            // 為了保持乾淨，我們假設 ChatBot.decideProactiveMessage 如果回傳了，代表它希望這句話被送出。
-            // 我們應該也要把這句話寫入 chat history。
-            // 由於 saveMessage 是 private，我們直接操作 DB。
-            var nowStr = Utilities.formatDate(new Date(), "GMT+8", "yyyy/MM/dd HH:mm:ss");
-            DB().insert('chat')
-                .set('userId', adminId)
-                .set('role', 'assistant')
-                .set('content', proactiveMsg)
-                .set('timestamp', nowStr)
-                .execute();
+            HistoryManager.saveMessage(adminId, 'assistant', proactiveMsg);
         } else {
             GoogleSheet.logInfo('proactiveMessageCheck', 'AI decided NOT to chat (Tier 2).');
         }

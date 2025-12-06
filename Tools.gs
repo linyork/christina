@@ -425,7 +425,7 @@ var Tools = (() => {
 
                 case 'clear_history':
                     if (event.source && event.source.userId) {
-                        ChatBot.clearUserHistory(event.source.userId);
+                        HistoryManager.clearUserHistory(event.source.userId);
                         return '已清除所有對話紀錄，回到原廠設定～喵❤️';
                     }
                     return '無法清除，找不到 User ID';
