@@ -106,14 +106,40 @@ var GoogleSheet = (() => {
     };
 
     /**
-     * 完成事項
+     * 完成事項 (支援模糊搜尋)
      * @param {string} something - 完成的事項
+     * @returns {string|null} 完成的事項名稱，若找不到則回傳 null
      */
     googleSheet.do = (something) => {
         try {
-            DB().update('todo').where('content', '=', something).set('do', 1).execute();
+            // 1. 取得所有未完成事項
+            var tasks = DB().from('todo').where('do', '=', 0).execute().get();
+            var tasksArray = Array.isArray(tasks) ? tasks : (tasks.content ? [tasks] : []); // Handle DB.gs return quirks where single object might be returned or empty object
+            if (Object.keys(tasks).length === 0 && !Array.isArray(tasks)) tasksArray = [];
+
+            if (tasksArray.length === 0) return null;
+
+            var targetTask = null;
+
+            // 2. 嘗試搜尋 (Exact Match)
+            targetTask = tasksArray.find(t => t.content === something);
+
+            // 3. 嘗試搜尋 (Fuzzy Match: contains)
+            if (!targetTask) {
+                targetTask = tasksArray.find(t => t.content && (t.content.includes(something) || something.includes(t.content)));
+            }
+
+            if (targetTask) {
+                // 4. 更新該事項 (使用 DB 中確切的 content 來當 key)
+                DB().update('todo').where('content', '=', targetTask.content).set('do', 1).execute();
+                return targetTask.content;
+            } else {
+                googleSheet.logInfo('GoogleSheet.do', 'Task not found:', something);
+                return null;
+            }
         } catch (ex) {
             googleSheet.logError('GoogleSheet.do', ex);
+            return null;
         }
     };
 

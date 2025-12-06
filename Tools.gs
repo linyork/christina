@@ -373,8 +373,14 @@ var Tools = (() => {
                     return todoList || '目前沒有待辦事項～喵❤️';
 
                 case 'complete_todo':
-                    GoogleSheet.do(args.task);
-                    return '已完成：' + args.task + '！主人好棒～喵❤️';
+                    var completedTask = GoogleSheet.do(args.task);
+                    if (completedTask) {
+                        return '已將「' + completedTask + '」標記為完成！主人好棒～喵❤️';
+                    } else {
+                        // 嘗試列出目前的待辦事項給使用者參考
+                        var currentList = GoogleSheet.todolist();
+                        return '找不到「' + args.task + '」這個待辦事項耶...主人是指以下哪一個嗎？\n\n' + (currentList || "(目前沒有待辦事項)");
+                    }
 
                 case 'get_meme':
                     var url = GoogleDrive.getImageUrl(args.keyword + '.jpg');
