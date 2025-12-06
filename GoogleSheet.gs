@@ -206,17 +206,6 @@ var GoogleSheet = (() => {
             var memoriesArray = Array.isArray(allMemories) ? allMemories : [allMemories];
             var now = new Date();
             var validMemories = [];
-            var sheet = getChristinaSheet().getSheetByName('short_term_memory');
-            var rowsToDelete = [];
-
-            // 遍歷檢查過期
-            // 注意：因為要刪除行，我們需要知道 Row Index。
-            // DB().get() 回傳的是物件陣列，沒有 Row Index。
-            // 為了簡單起見，這裡我們只做讀取過濾。清理工作建議另外寫一個定期執行的 Trigger 腳本，
-            // 或是這裡簡單做：如果過期就不回傳。
-
-            // 既然 DB 模組不支援直接 Delete Row by Condition，我們先只做「過濾不回傳」。
-            // (如果要實作自動清理，建議直接操作 Sheet)
 
             // 為了保持效能，這裡我們只讀取並過濾
             memoriesArray.forEach(m => {
@@ -242,30 +231,21 @@ var GoogleSheet = (() => {
      */
     googleSheet.searchKnowledge = (query) => {
         try {
-            // 取得所有知識
             var allKnowledge = DB().from('knowledge').execute().get();
-
             if (!allKnowledge || allKnowledge.length === 0) {
                 return '知識庫目前是空的～喵';
             }
 
             var results = [];
             var knowledgeArray = Array.isArray(allKnowledge) ? allKnowledge : [allKnowledge];
-
-            // 將搜尋字串拆解成關鍵字 (以空白分隔)
-            // 例如: "密碼 wifi" -> ["密碼", "wifi"]
             var keywords = query.split(/\s+/).filter(k => k.length > 0);
 
-            // 關鍵字過濾
             knowledgeArray.forEach(k => {
                 var tags = k.tags ? k.tags.toString() : '';
                 var content = k.content ? k.content.toString() : '';
-
-                // 檢查是否所有關鍵字都存在於 tags 或 content 中 (AND 邏輯)
                 var isMatch = keywords.every(keyword =>
                     tags.includes(keyword) || content.includes(keyword)
                 );
-
                 if (isMatch) {
                     results.push('[' + tags + ']: ' + content);
                 }
@@ -275,11 +255,91 @@ var GoogleSheet = (() => {
                 return '沒有找到關於「' + query + '」的知識點～喵';
             }
 
-            // 反轉陣列以取得最新的資料，並只回傳最新的 5 筆
             return results.reverse().slice(0, 5).join('\n');
         } catch (ex) {
             googleSheet.logError('GoogleSheet.searchKnowledge', ex);
             return '搜尋知識庫時發生錯誤～喵💔';
+        }
+    };
+
+    /**
+     * 取得使用者狀態 (好感度)
+     * @param {string} userId - 使用者 ID
+     * @returns {object} { affection: number, lastInteraction: string }
+     */
+    googleSheet.getUserStats = (userId) => {
+        try {
+            var ss = Config.SHEET_ID ? SpreadsheetApp.openById(Config.SHEET_ID) : null;
+            if (!ss) return { affection: 60, lastInteraction: '' };
+
+            var ws = ss.getSheetByName('user_stats');
+
+            // 如果沒有這個 sheet 就建立一個
+            if (!ws) {
+                ws = ss.insertSheet('user_stats');
+                ws.appendRow(['userId', 'affection', 'last_interaction']);
+            }
+
+            var data = ws.getDataRange().getValues();
+
+            for (var i = 1; i < data.length; i++) {
+                if (data[i][0] === userId) {
+                    return {
+                        affection: parseInt(data[i][1]) || 60,
+                        lastInteraction: data[i][2]
+                    };
+                }
+            }
+
+            // 新使用者：預設 60 分 (Level 3 - 信賴的夥伴)
+            var defaultAffection = 60;
+            var nowStr = Utilities.formatDate(new Date(), "GMT+8", "yyyy/MM/dd HH:mm:ss");
+            ws.appendRow([userId, defaultAffection, nowStr]);
+
+            return { affection: defaultAffection, lastInteraction: nowStr };
+
+        } catch (ex) {
+            googleSheet.logError('GoogleSheet.getUserStats', ex);
+            return { affection: 60, lastInteraction: '' }; // Fallback
+        }
+    };
+
+    /**
+     * 更新好感度
+     * @param {string} userId - 使用者 ID
+     * @param {number} delta - 變化值 (正數或負數)
+     * @returns {number} 新的好感度
+     */
+    googleSheet.updateAffection = (userId, delta) => {
+        try {
+            var ss = Config.SHEET_ID ? SpreadsheetApp.openById(Config.SHEET_ID) : null;
+            if (!ss) return 60;
+
+            var ws = ss.getSheetByName('user_stats');
+            if (!ws) return 60;
+
+            var data = ws.getDataRange().getValues();
+            var nowStr = Utilities.formatDate(new Date(), "GMT+8", "yyyy/MM/dd HH:mm:ss");
+
+            for (var i = 1; i < data.length; i++) {
+                if (data[i][0] === userId) {
+                    var current = parseInt(data[i][1]) || 60;
+                    var newScore = current + delta;
+
+                    // 限制範圍 0 - 100
+                    if (newScore > 100) newScore = 100;
+                    if (newScore < 0) newScore = 0;
+
+                    ws.getRange(i + 1, 2).setValue(newScore); // 更新好感度
+                    ws.getRange(i + 1, 3).setValue(nowStr);   // 更新互動時間
+                    return newScore;
+                }
+            }
+            // Should be handled by getUserStats normally, but just in case
+            return 60;
+        } catch (ex) {
+            googleSheet.logError('GoogleSheet.updateAffection', ex);
+            return 60;
         }
     };
 

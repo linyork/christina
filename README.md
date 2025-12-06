@@ -1,57 +1,65 @@
 # Christina LINE Bot
 
-一個可愛的貓娘 LINE Bot，支援多輪對話記憶和各種實用功能。
+一個搭載 Gemini AI 的智慧貓娘女僕助手，具備視覺記憶、生活感知與主動關懷能力。
 
-## ✨ 特色功能
+## ✨ 核心特色
 
-- 🤖 **Gemini AI 對話** - 使用 Google Gemini 1.5 Flash，免費額度高
-- 💭 **持久化記憶** - 每個用戶獨立的對話歷史（最近 20 輪）
-- 🎯 **智能指令系統** - 豐富的指令功能
-- 📊 **資料管理** - 待辦事項、資產記錄等
+- **🧠 強大 AI 大腦**：整合 Google **Gemini 2.5 Flash**，反應快速且聰明。
+- **�️ 視覺記憶**：能看懂圖片內容，並將其轉化為文字記憶永久保存。
+- **📅 智慧日曆**：雙向整合 Google Calendar，可直接幫主人安排或查詢行程。
+- **☀️ 天氣感知**：即時查詢各地天氣狀況，貼心提醒。
+- **💬 主動關懷**：具備「虛擬生活感」，會根據時段與氣氛主動找主人聊天。
+- **📝 全能記憶**：
+  - **長期記憶**：記住重要資訊（如 WiFi 密碼）。
+  - **短期記憶**：有時效性的提醒（如晚餐約定）。
 
 ## 📁 專案結構
 
 ```
 christina/
-├── Config.gs          # 設定檔（環境變數、API 配置）
-├── Utils.gs           # 工具函數
-├── DB.gs              # Google Sheets ORM
-├── GoogleDrive.gs     # Drive 檔案操作（含快取）
-├── GoogleSheet.gs     # Sheets 資料操作
-├── ChatBot.gs         # Gemini AI 整合
-├── Line.gs            # LINE Bot API
-├── Christina.gs       # 指令系統核心
-└── Main.gs            # 主程式入口
+├── Config.gs          # 設定檔（環境變數、System Prompt、API 配置）
+├── Utils.gs           # 通用工具函數
+├── DB.gs              # Google Sheets ORM (資料庫操作)
+├── GoogleDrive.gs     # Drive 檔案操作（含快取機制）
+├── GoogleSheet.gs     # Sheets 業務邏輯封裝
+├── GoogleCalendar.gs  # Google Calendar API 封裝
+├── ChatBot.gs         # Gemini AI 核心（含 Function Calling、RAG、主動發話邏輯）
+├── Tools.gs           # AI 工具定義 (Function Calling Schema)
+├── Line.gs            # LINE Bot API (含圖片處理)
+└── Main.gs            # 主程式入口 (doPost, 定時任務)
 ```
 
-## 🚀 快速開始
+## 🚀 快速部署
 
-### 方案 A：使用 clasp（推薦）
+### 使用 clasp（推薦）
 
 ```powershell
-# 1. 安裝 nvm 和 Node.js
-nvm install lts
-nvm use
-
-# 2. 安裝 clasp
+# 1. 安裝依賴
 npm install -g @google/clasp
 
-# 3. 登入並推送
+# 2. 登入 Google
 clasp login
-clasp create --title "Christina Bot" --type standalone
+
+# 3. 建立專案
+clasp create --title "Christina Bot" --type webapp
+
+# 4. 推送程式碼
 clasp push
-clasp open
+
+# 5. 部署
+clasp deploy
 ```
 
-### 方案 B：手動部署
+### 首次部署注意事項
 
-1. 前往 [Google Apps Script](https://script.google.com/)
-2. 建立新專案
-3. 複製所有 `.gs` 檔案內容
+由於整合了 Google Calendar，初次執行時需要授權：
+1. 部署後，在編輯器中開啟 `Test.gs`。
+2. 執行 `runTestCalendar` 函式。
+3. 在彈出的視窗中完成 Google 帳號授權。
 
 ## ⚙️ 環境變數設定
 
-在 Google Apps Script 專案設定中新增：
+在 Google Apps Script 專案設定中新增 `Script Properties`：
 
 | 變數名稱 | 說明 | 取得方式 |
 |---------|------|---------|
@@ -59,105 +67,48 @@ clasp open
 | `LINE_CHANNEL_SECRET` | LINE Channel Secret | 同上 |
 | `SHEET_ID` | Google Sheets ID | 從 Sheets URL 複製 |
 | `GEMINI_API_KEY` | Gemini API Key | [AI Studio](https://aistudio.google.com/app/apikey) |
-| `ADMIN_SATRING` | 管理員 LINE User ID | 用 `myid` 指令取得 |
+| `ADMIN_STRING` | 主人 LINE User ID | 用 `get_user_id` 工具取得 |
 
-### 取得 Gemini API Key
+## 📊 資料庫 (Google Sheets) 設定
 
-1. 訪問 https://aistudio.google.com/app/apikey
-2. 點選「Create API key」
-3. 選擇專案或建立新專案
-4. 複製 API Key
+請建立一個 Google Sheet，並包含以下工作表（Tab）：
 
-## 📊 Google Sheets 設定
+| 工作表名稱 | 欄位 (Header) | 用途 |
+|-----------|----------------|------|
+| `chat` | `userId`, `role`, `content`, `timestamp` | 對話歷史記錄 |
+| `knowledge` | `tags`, `content`, `created_at` | 長期記憶庫 (RAG) |
+| `short_term_memory`| `key`, `content`, `created_at`, `expires_at` | 短期記憶 (Todo/提醒) |
+| `todo` | `content`, `status`, `created_at` | 待辦事項清單 |
+| `consolelog` | `type`, `function`, `message`, `time` | 系統日誌 |
+| `env` | 自訂 | 環境變數備用 |
 
-建立一個 Google Sheets，包含以下工作表：
+## 🤖 AI 能力與指令
 
-| 工作表名稱 | 欄位 | 說明 |
-|-----------|------|------|
-| `christina` | status | Bot 開關狀態 |
-| `consolelog` | (自動) | 日誌記錄 |
-| `eat_what` | (自訂) | 吃什麼選項 |
-| `money` | money, date | 資產記錄 |
-| `todo` | content, do | 待辦事項 |
-| `chat` | userId, role, content, timestamp | 對話歷史 |
+現在 Christina 主要透過**自然語言**溝通，不需要死記指令：
 
-**重要：** `chat` 表必須包含 4 個欄位：
-```
-| userId | role | content | timestamp |
-```
+- **看圖**：直接傳照片給她 -> 她會回應並記住內容。
+- **記帳/行程**：「幫我記下明天晚上吃飯」、「我下週有什麼事？」
+- **天氣**：「天氣如何？」、「明天會下雨嗎？」
+- **記憶**：「記住我家 WiFi 密碼是 1234」、「我昨天說想吃什麼？」
+- **閒聊**：主動關心、撒嬌、梗圖分享。
 
-## 🎯 指令列表
-
-### 基本指令（所有人）
-- `christina` / `安安` - 指令面板
-- `command` - 指令列表
-- `myid` - 顯示你的 LINE ID
-- `roll` - 擲骰子
-
-### 主人專屬
-- `meme [名稱]` - 梗圖
-- `eat` - 隨機決定吃什麼
-- `money` - 顯示資產
-- `insertmoney [金額]` - 登錄資產
-- `todo [事項]` - 新增待辦
-- `todolist` - 待辦列表
-- `do [事項]` - 完成事項
-- `initchat` - 清除對話記憶
-- `start` / `end` - 上班/下班
-
-### AI 對話
-直接發送訊息即可與 Christina 聊天（僅主人）
-
-## 🔧 進階設定
-
-### 調整對話記憶
-
-在 `Config.gs` 中：
+## 🔧 進階設定 (Config.gs)
 
 ```javascript
-CHAT_MAX_TURNS: 20,        // 保留最近幾輪對話
-CHAT_CLEANUP_DAYS: 30,     // 自動清理幾天前的對話
-GEMINI_MODEL: 'gemini-1.5-flash',  // 或 'gemini-1.5-pro'
+// 對話記憶與清理
+CHAT_MAX_TURNS: 10,        // 給 AI 的上下文輪數
+PROACTIVE_CHECK_INTERVAL_HOURS: 2, // 主動發話的最小間隔
+GEMINI_MODEL: 'gemini-2.5-flash',  // 使用的模型版本
 ```
-
-### 定時任務
-
-在 GAS 觸發條件中設定：
-
-- `takeBreak()` - 提醒休息
-- `removeChat()` - 清理舊對話
-- `dailyMemoryCleanUp()` - 每日記憶整理
-
-## 🐛 除錯
-
-查看 Google Sheets 的 `consolelog` 工作表。
 
 ## 📝 開發工作流
 
 ```powershell
-# 本地編輯
+# 本地開發
 code .
 
-# 推送到 GAS
+# 推送並即時生效
 clasp push
-
-# 監看變更（自動推送）
-clasp push --watch
-
-# 開啟 GAS 編輯器
-clasp open
 ```
 
-## 🎉 優化亮點
-
-- ✅ 模組化架構（9 個獨立模組）
-- ✅ Gemini AI（免費額度高）
-- ✅ 持久化對話記憶（按用戶分離）
-- ✅ 指令查找優化（O(1) 複雜度）
-- ✅ Drive 檔案快取（6 小時）
-- ✅ Webhook 簽章驗證
-- ✅ 完整錯誤處理
-
 ---
-
-Made with ❤️ by Christina～喵❤️

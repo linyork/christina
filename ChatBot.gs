@@ -320,6 +320,16 @@ var ChatBot = (() => {
             // 取得該用戶的對話歷史
             var userHistory = getUserHistory(userId, Config.CHAT_MAX_TURNS);
 
+            // [Affection System] 取得好感度
+            var userStats = GoogleSheet.getUserStats(userId);
+            var affectionScore = userStats.affection;
+            var affectionLevel = "";
+            if (affectionScore >= 100) affectionLevel = "Lv.5 永恆羈絆";
+            else if (affectionScore >= 80) affectionLevel = "Lv.4 靈魂伴侶";
+            else if (affectionScore >= 60) affectionLevel = "Lv.3 信賴的夥伴";
+            else if (affectionScore >= 31) affectionLevel = "Lv.2 熟悉的朋友";
+            else affectionLevel = "Lv.1 點頭之交";
+
             // 建立完整的對話內容
             var contents = [];
 
@@ -331,14 +341,18 @@ var ChatBot = (() => {
             var shortTermMemories = GoogleSheet.getValidShortTermMemories();
             // [Time Awareness] 注入現在時間與時間感知指令
             var nowStr = Utilities.formatDate(new Date(), "GMT+8", "yyyy/MM/dd HH:mm:ss");
-            var contextInfo = "\n\n[System Info]\nCurrent Time: " + nowStr + "\nCurrent User: " + userIdentity + "\nInstruction: " + roleInstruction;
+
+            var contextInfo = "\n\n[System Info]\nCurrent Time: " + nowStr +
+                "\nCurrent User: " + userIdentity +
+                "\n[Affection Status]: " + affectionLevel + " (Score: " + affectionScore + ")" +
+                "\nInstruction: " + roleInstruction;
 
             // 加入時間感知提示
             contextInfo += "\n\n[Time Awareness Instructions]\n" +
                 "請特別注意對話中的時間標籤 [YYYY/MM/DD HH:mm:ss]。\n" +
                 "1. 如果發現上一則對話與現在時間相隔較久（例如超過6小時），請適度表達關心（例如：「主人怎麼這麼久才找我？」）。\n" +
                 "2. 如果時間是連續的，則正常回應即可。\n" +
-                "3. 如果主人之前提到要去做的長時間活動（如睡覺、開會、手術），現在回來了，請根據時間間隔給予適當的問候。";
+                "3. 如果時間與你的虛擬生活衝突（例如現在是深夜），請表現出符合時間的反應（例如想睡）。";
 
             if (shortTermMemories) {
                 contextInfo += "\n\n[Current Context / Short Term Memories]:\n" + shortTermMemories;
@@ -351,7 +365,7 @@ var ChatBot = (() => {
             });
             contents.push({
                 "role": "model",
-                "parts": [{ "text": "好的，我是 Christina～喵❤️ 我了解了！" }]
+                "parts": [{ "text": "好的，我是 Christina～喵❤️ 我了解了！目前的關係是：" + affectionLevel }]
             });
 
             // 加入歷史對話
@@ -442,6 +456,9 @@ var ChatBot = (() => {
 
             // 清理舊對話（保持在限制內）
             cleanOldHistory(userId, Config.CHAT_MAX_TURNS);
+
+            // [Affection System] 增加好感度 (+1)
+            GoogleSheet.updateAffection(userId, 1);
 
             return finalResponse;
         } catch (error) {

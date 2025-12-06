@@ -20,9 +20,7 @@ var Tools = (() => {
                     "properties": {
                         "tags": {
                             "type": "array",
-                            "items": {
-                                "type": "string"
-                            },
+                            "items": { "type": "string" },
                             "description": "知識點的標籤列表，例如：['WiFi', '密碼']"
                         },
                         "content": {
@@ -71,7 +69,7 @@ var Tools = (() => {
             },
             {
                 "name": "add_calendar_event",
-                "description": "新增行事曆活動。當使用者說「提醒我明天開會」、「幫我排行程」等明確有時間點的事件時使用。注意：如果是模糊的未來計畫（沒有具體時間），請改用 add_todo 或 context。",
+                "description": "新增行事曆活動。當使用者說「提醒我明天開會」、「幫我排行程」等明確有時間點的事件時使用。",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -105,8 +103,70 @@ var Tools = (() => {
                 }
             },
             {
+                "name": "update_calendar_event",
+                "description": "修改已存在的行事曆活動。當使用者說「把明天的會議改到下午三點」、「修改行程」時使用。必須先知道原活動的日期與標題關鍵字才能修改。",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "original_keyword": {
+                            "type": "string",
+                            "description": "原活動標題的關鍵字，用於搜尋目標活動。"
+                        },
+                        "search_date": {
+                            "type": "string",
+                            "description": "原活動的日期 (YYYY/MM/DD)。"
+                        },
+                        "new_title": {
+                            "type": "string",
+                            "description": "新的活動標題 (若不修改請留空)。"
+                        },
+                        "new_start_time": {
+                            "type": "string",
+                            "description": "新的開始時間 (格式: YYYY/MM/DD HH:mm:ss)。"
+                        },
+                        "new_duration": {
+                            "type": "number",
+                            "description": "新的持續時間 (小時)。"
+                        }
+                    },
+                    "required": ["original_keyword", "search_date"]
+                }
+            },
+            {
+                "name": "delete_calendar_event",
+                "description": "刪除或取消已存在的行事曆活動。當使用者說「取消明天的會議」、「刪除行程」時使用。",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "keyword": {
+                            "type": "string",
+                            "description": "活動標題的關鍵字，用於搜尋目標活動。"
+                        },
+                        "search_date": {
+                            "type": "string",
+                            "description": "活動的日期 (YYYY/MM/DD)。"
+                        }
+                    },
+                    "required": ["keyword", "search_date"]
+                }
+            },
+            {
+                "name": "search_web",
+                "description": "【高優先級工具】搜尋網際網路上的資訊。當使用者詢問「最新新聞」、「時事」、「今天發生什麼事」、「查詢資料」時，務必立刻呼叫此工具！不要只回答客套話，請直接去搜尋。",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": "搜尋關鍵字，例如：'台灣 熱門新聞'、'今日天氣'、'某某電影評價'"
+                        }
+                    },
+                    "required": ["query"]
+                }
+            },
+            {
                 "name": "get_weather",
-                "description": "取得目前天氣資訊。當使用者問「天氣如何」、「會下雨嗎」時使用。重要：如果使用者沒有指定地點，請直接將 location 參數設為 '台北' 並執行，不要反問使用者，也不要因為不知道使用者的位置而不執行。",
+                "description": "取得目前天氣資訊。當使用者問「天氣如何」、「會下雨嗎」時使用。重要：如果使用者沒有指定地點，請直接將 location 參數設為 '台北' 並執行，不要反問使用者。",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -134,10 +194,7 @@ var Tools = (() => {
             {
                 "name": "get_todo_list",
                 "description": "取得待辦事項列表。",
-                "parameters": {
-                    "type": "object",
-                    "properties": {}
-                }
+                "parameters": { "type": "object", "properties": {} }
             },
             {
                 "name": "complete_todo",
@@ -170,26 +227,17 @@ var Tools = (() => {
             {
                 "name": "leave_current_group",
                 "description": "讓機器人離開目前的群組或聊天室。當使用者說「滾」、「離開」時使用。",
-                "parameters": {
-                    "type": "object",
-                    "properties": {}
-                }
+                "parameters": { "type": "object", "properties": {} }
             },
             {
                 "name": "get_user_id",
                 "description": "取得使用者的 LINE User ID。",
-                "parameters": {
-                    "type": "object",
-                    "properties": {}
-                }
+                "parameters": { "type": "object", "properties": {} }
             },
             {
                 "name": "clear_history",
                 "description": "清除使用者與機器人的所有對話紀錄（重置記憶）。",
-                "parameters": {
-                    "type": "object",
-                    "properties": {}
-                }
+                "parameters": { "type": "object", "properties": {} }
             }
         ];
     };
@@ -206,7 +254,6 @@ var Tools = (() => {
             GoogleSheet.logInfo('Tools.execute', 'Calling: ' + functionName, JSON.stringify(args));
             var event = context || {};
 
-            // 安全檢查：只有 Master 可以執行工具
             if (!event.isMaster) {
                 return '指令執行失敗：使用者權限不足。請告知使用者您只服務主人，無法執行此操作。';
             }
@@ -227,6 +274,45 @@ var Tools = (() => {
                 case 'check_calendar':
                     return GoogleCalendar.getUpcomingEvents(args.days);
 
+                case 'update_calendar_event':
+                    return GoogleCalendar.updateEvent(args.original_keyword, args.search_date, args.new_title, args.new_start_time, args.new_duration);
+
+                case 'delete_calendar_event':
+                    return GoogleCalendar.deleteEvent(args.keyword, args.search_date);
+
+                case 'search_web':
+                    var apiKey = Config.GOOGLE_SEARCH_KEY;
+                    var cx = Config.GOOGLE_SEARCH_CX;
+
+                    if (!apiKey || !cx) {
+                        return "搜尋失敗：主人還沒有設定 Google Custom Search API Key 和 CX 喔～請去設定頁面檢查一下～喵💔";
+                    }
+
+                    var query = args.query;
+                    var searchUrl = `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${cx}&q=${encodeURIComponent(query)}`;
+
+                    try {
+                        var response = UrlFetchApp.fetch(searchUrl);
+                        var data = JSON.parse(response.getContentText());
+
+                        if (!data.items || data.items.length === 0) {
+                            return `找不到關於「${query}」的資料耶～喵💔`;
+                        }
+
+                        // 取前 3 筆結果摘要
+                        var resultText = `【搜尋結果：${query}】\n`;
+                        for (var i = 0; i < Math.min(3, data.items.length); i++) {
+                            var item = data.items[i];
+                            resultText += `${i + 1}. [${item.title}] \n${item.snippet}\n\n`;
+                        }
+
+                        return resultText;
+
+                    } catch (e) {
+                        GoogleSheet.logError('Tools.search_web', e);
+                        return "搜尋連線發生錯誤惹～喵💔";
+                    }
+
                 case 'get_weather':
                     var location = args.location || '台北';
                     var coords = {
@@ -245,7 +331,6 @@ var Tools = (() => {
                     }[location];
 
                     if (!coords) {
-                        // 預設台北
                         coords = { lat: 25.0330, lon: 121.5654 };
                         location += " (幫您查台北喔)";
                     }
@@ -261,7 +346,6 @@ var Tools = (() => {
                     var weatherCode = current.weather_code;
                     var weatherText = "晴朗";
 
-                    // 簡易 WMO Code 轉換
                     if (weatherCode === 0) weatherText = "晴天 ☀️";
                     else if (weatherCode <= 3) weatherText = "多雲 ☁️";
                     else if (weatherCode <= 48) weatherText = "有霧 🌫️";
