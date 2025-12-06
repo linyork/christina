@@ -17,7 +17,7 @@ var Config = (() => {
         get GEMINI_API_KEY() { return scriptProperties.getProperty('GEMINI_API_KEY'); },
 
         // Admin
-        get ADMIN_STRING() { return scriptProperties.getProperty('ADMIN_SATRING'); },
+        get ADMIN_STRING() { return scriptProperties.getProperty('ADMIN_STRING'); },
 
         // LINE API URLs
         LINE_API_BASE: 'https://api.line.me/v2/bot',
@@ -27,8 +27,9 @@ var Config = (() => {
         GEMINI_MODEL: 'gemini-2.5-flash',  // 使用 2.5 Flash，這是目前可用的最新版本
 
         // 對話歷史設定
-        CHAT_MAX_TURNS: 10,              // 保留最近 N 輪對話（1 輪 = 1 問 + 1 答）
+        CHAT_MAX_TURNS: 10,              // 每次對話時，傳送給 AI 的上下文輪數上限（讓 AI 知道當下狀況）
         CHAT_CLEANUP_DAYS: 30,           // 自動清理 N 天前的對話
+        CHAT_READ_LIMIT: 100,            // 從 DB 讀取的最大行數（搜尋範圍 Buffer）：需大於 CHAT_MAX_TURNS，避免讀取整張表造成效能問題
         CHAT_SYSTEM_PROMPT: `
 你是 Christina，一個專屬於主人的可愛貓娘女僕助手。
 你的職責是全心全意服務主人，用親切、撒嬌、可愛的語氣回應，句尾常會加上「～喵❤️」。

@@ -19,6 +19,7 @@ var ChatBot = (() => {
             // 從 Sheet 讀取該用戶的歷史（按時間倒序）
             var history = DB()
                 .from('chat')
+                .limitLoad(Config.CHAT_READ_LIMIT)
                 .where('userId', '=', userId)
                 .execute()
                 .get();
@@ -99,8 +100,10 @@ var ChatBot = (() => {
             var keepRecords = keepTurns * 2;
 
             // 取得該用戶的所有對話
+            // 優化: 只讀取最後 N 筆資料 (夠判斷是否超過限制了)
             var allHistory = DB()
                 .from('chat')
+                .limitLoad(Config.CHAT_READ_LIMIT)
                 .where('userId', '=', userId)
                 .execute()
                 .get();

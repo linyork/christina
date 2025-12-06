@@ -11,7 +11,9 @@ var DB = (() => {
     var whereCondition = [];
     var updateData = [];
     var insertData = [];
-    var table;
+    var limitLoadCount = 0;   // 限制讀取筆數 (優化效能用)
+    var loadFromTail = false; // 是否從尾端讀取
+    var table; // Sheet Object
     var allData;
     var lastColumn;
     var lastRow;
@@ -213,6 +215,8 @@ var DB = (() => {
         return db;
     };
 
+
+
     /**
      * 設定查詢 table (sheet)
      * @param {string} tableName - 表格名稱
@@ -221,13 +225,24 @@ var DB = (() => {
     db.from = (tableName) => {
         type = 'S';
         try {
+            // 優化：不立即讀取資料，延遲到 execute() 時才讀取
+            // 只先儲存 table 參考，以便後續操作
             table = SpreadsheetApp.openById(Config.SHEET_ID).getSheetByName(tableName);
-            lastColumn = table.getLastColumn();
-            lastRow = table.getLastRow();
-            allData = table.getDataRange().getValues();
         } catch (ex) {
             GoogleSheet.logError('DB.from', ex);
         }
+        return db;
+    };
+
+    /**
+     * 設定限制讀取筆數 (優化效能用)
+     * @param {number} count - 讀取筆數
+     * @param {boolean} fromTail - 是否從最後面開始讀取 (預設 true)
+     * @returns {object} DB 實例
+     */
+    db.limitLoad = (count, fromTail) => {
+        limitLoadCount = count;
+        loadFromTail = (fromTail === undefined) ? true : fromTail;
         return db;
     };
 
@@ -255,16 +270,65 @@ var DB = (() => {
         try {
             if (table === undefined) throw new Error("未設定 Table");
             if (type === undefined) throw new Error("未設定 type");
+
+            // 延遲載入邏輯
+            if (!allData || type === 'S') { // 如果是查詢，執行資料載入
+                lastColumn = table.getLastColumn();
+                var realLastRow = table.getLastRow();
+
+                if (limitLoadCount > 0 && realLastRow > 1) {
+                    // 讀取標題列 (Row 1)
+                    var headers = table.getRange(1, 1, 1, lastColumn).getValues()[0];
+                    allData = [headers];
+
+                    // 計算資料範圍
+                    var startRow, numRows;
+                    if (loadFromTail) {
+                        // 從後面讀取 N 筆
+                        startRow = Math.max(2, realLastRow - limitLoadCount + 1);
+                        numRows = realLastRow - startRow + 1;
+                    } else {
+                        // 從前面讀取 N 筆 (跳過 header)
+                        startRow = 2;
+                        numRows = Math.min(limitLoadCount, realLastRow - 1);
+                    }
+
+                    if (numRows > 0) {
+                        var partialData = table.getRange(startRow, 1, numRows, lastColumn).getValues();
+                        allData = allData.concat(partialData);
+                    }
+                } else {
+                    // 全量讀取
+                    allData = table.getDataRange().getValues();
+                }
+
+                // 重設 lastRow 為載入後的資料長度 (給 doResult 迴圈使用)
+                lastRow = allData.length;
+            }
+
             switch (type) {
                 case 'S':
                     doSelectColumn();
                     doResult();
                     break;
                 case 'U':
+                    // Update 需要真實的 Row Index，目前 Lazy Load 只實作於 Select
+                    // 若要支援 Update Lazy Load 需要更複雜的 Row Mapping
+                    // 暫時 fallback 回全量讀取如果沒讀過
+                    if (!allData) {
+                        allData = table.getDataRange().getValues();
+                        lastRow = allData.length;
+                    }
                     doSelectColumn();
                     doUpdate();
                     break;
                 case 'I':
+                    // Insert 需要 lastRow 為真實 Sheet 的 lastRow
+                    lastRow = table.getLastRow();
+                    if (!allData) {
+                        // Insert 需要 headers 來對應欄位
+                        allData = table.getRange(1, 1, 1, table.getLastColumn()).getValues(); // 只讀一行
+                    }
                     doInsert();
                     break;
                 case 'D':
