@@ -214,34 +214,37 @@ function setupTrigger() {
  * 定時任務 - 行為模式分析
  * 建議頻率：每日深夜 (e.g. 03:00)
  */
-function analyzeBehaviorPatterns() {
+/**
+ * 定時任務 - 系統維護 (行為分析 + 記憶整理)
+ * 建議頻率：每 6 小時
+ */
+function performMaintenanceTasks() {
     try {
-        Mind.analyzePatterns();
+        Mind.performMaintenance();
     } catch (ex) {
-        GoogleSheet.logError('analyzeBehaviorPatterns', ex);
+        GoogleSheet.logError('performMaintenanceTasks', ex);
     }
 }
 
 /**
- * 輔助函數：設定行為分析的觸發器
+ * 輔助函數：設定系統維護的觸發器
  */
-function setupAnalysisTrigger() {
+function setupMaintenanceTrigger() {
     // 先刪除舊的
     var triggers = ScriptApp.getProjectTriggers();
     for (var i = 0; i < triggers.length; i++) {
-        if (triggers[i].getHandlerFunction() === 'analyzeBehaviorPatterns') {
+        if (triggers[i].getHandlerFunction() === 'performMaintenanceTasks' || triggers[i].getHandlerFunction() === 'analyzeBehaviorPatterns') {
             ScriptApp.deleteTrigger(triggers[i]);
         }
     }
 
-    // 建立新的每日觸發器 (凌晨 3 點)
-    ScriptApp.newTrigger('analyzeBehaviorPatterns')
+    // 建立新的每 6 小時觸發器
+    ScriptApp.newTrigger('performMaintenanceTasks')
         .timeBased()
-        .everyDays(1)
-        .atHour(3)
+        .everyHours(6)
         .create();
 
-    Logger.log("行為分析觸發器已設定：每日 03:00 執行。");
+    Logger.log("系統維護觸發器已設定：每 6 小時執行一次。");
 }
 
 /**

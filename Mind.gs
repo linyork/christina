@@ -87,14 +87,7 @@ var Mind = (() => {
                 });
             }
 
-            // 2.5 自動速記短期資訊 (Short Term Notes)
-            if (analysis.short_term_notes && Array.isArray(analysis.short_term_notes) && analysis.short_term_notes.length > 0) {
-                analysis.short_term_notes.forEach(note => {
-                    // 存入短期記憶，預設 24 小時過期
-                    // Key 使用 "自動速記"，或根據內容稍微分類(目前簡易處理)
-                    GoogleSheet.addShortTermMemory('自動速記', note, 24);
-                });
-            }
+
 
             // 3. 記錄行為模式 (Pattern Logging)
             if (analysis.detected_behavior) {
@@ -125,18 +118,44 @@ var Mind = (() => {
     };
 
     /**
-     * 分析行為模式並產生洞察
-     * 建議由 Cron Job 每日執行 (e.g. 凌晨 4 點)
+     * 執行定期維護任務 (Cron Job)
+     * 包含：
+     * 1. Context Consolidation: 總結近期對話情境 (每 6 小時)
+     * 2. Pattern Analysis: 分析行為模式
      */
-    mind.analyzePatterns = () => {
+    mind.performMaintenance = () => {
         try {
-            GoogleSheet.logInfo('Mind.analyzePatterns', 'Starting daily behavior analysis...');
+            GoogleSheet.logInfo('Mind.performMaintenance', 'Starting maintenance tasks...');
 
             var userId = Config.ADMIN_STRING;
             if (!userId) {
-                GoogleSheet.logInfo('Mind.analyzePatterns', 'No ADMIN_STRING defined. Skipping analysis.');
+                GoogleSheet.logInfo('Mind.performMaintenance', 'No ADMIN_STRING defined. Skipping.');
                 return;
             }
+
+            // ==========================================
+            // Task 1: Context Consolidation (短期記憶總結)
+            // ==========================================
+            try {
+                // 讀取最近 30 則對話 (假設涵蓋約 6-12 小時的量)
+                var recentHistory = HistoryManager.getUserHistory(userId, 30);
+                if (recentHistory && recentHistory.length > 0) {
+                    var historyText = recentHistory.map(h => `${h.role === 'user' ? '主人' : 'Christina'}: ${h.parts[0].text}`).join('\n');
+                    var summary = mind.updateContextSummary(historyText);
+
+                    if (summary) {
+                        GoogleSheet.addShortTermMemory('current_session_context', summary, 24);
+                        GoogleSheet.logInfo('Mind.performMaintenance', 'Context updated:', summary);
+                    }
+                }
+            } catch (e) {
+                GoogleSheet.logError('Mind.performMaintenance', 'Context task failed', e);
+            }
+
+            // ==========================================
+            // Task 2: Pattern Analysis (行為模式分析)
+            // ==========================================
+            GoogleSheet.logInfo('Mind.performMaintenance', 'Running pattern analysis...');
 
             // 1. 讀取最近 14 天的行為紀錄
             var logs = GoogleSheet.getRecentBehaviors(userId, 14);
@@ -202,23 +221,29 @@ var Mind = (() => {
     };
 
     /**
-     * 將對話紀錄總結為短期記憶
-     * @param {string} chatText
-     * @returns {object|null}
+     * 更新近期對話的狀態摘要 (Short-term Context Consolidation)
+     * @param {string} recentChats - 最近的對話紀錄文字
+     * @returns {string|null} - 更新後的摘要 (String)
      */
-    mind.summarizeChatsToMemory = (chatText) => {
+    mind.updateContextSummary = (recentChats) => {
         try {
             var prompt = `你是 Christina，主人的貼心女僕。
-這裡有一些超過 7 天的舊對話紀錄。請幫我閱讀並判斷：
-是否有任何「暫時性重要」的資訊值得轉存為短期記憶？（例如：主人最近在煩惱的事、正在進行的計畫、或是這幾天的狀態）。
-如果是普通的閒聊，請直接忽略。
+請閱讀以下「最近的對話紀錄」，並生成一段 **「當前對話情境摘要 (Context Summary)」**。
 
-對話紀錄：
-${chatText}
+【目標】
+這段摘要將作為你的「短期記憶」，讓你下次說話時能馬上進入狀況。
+摘要內容應包含：
+1. **當前話題**：我們正在聊什麼？(e.g., 修復程式碼、討論晚餐、閒聊心情)
+2. **主人狀態**：主人現在的心情、忙碌程度或身體狀況。(e.g., 覺得累、很興奮)
+3. **待辦/擱置事項**：是否有什麼事說好等一下要做？(e.g., 晚點要去洗澡、等一下測試 Bug)
 
-如果值得保留，請回傳 JSON 格式：{"key": "主題", "content": "詳細內容"}
-如果不值得保留，請回傳 null (JSON)。
-請只回傳 JSON，不要有其他廢話。`;
+【最近對話】
+${recentChats}
+
+請生成一段 **精簡、流暢的敘述** (約 50-100 字)，以「第三人稱」或「女僕觀察日記」的角度撰寫。
+若對話內容無意義或只是打招呼，請回傳 "null"。
+
+請回傳 JSON 格式：{"summary": "摘要內容..."}`;
 
             var promptContents = [{ "role": "user", "parts": [{ "text": prompt }] }];
             var response = GeminiService.callAPI(promptContents);
@@ -226,15 +251,20 @@ ${chatText}
             if (response && response.candidates && response.candidates[0].content) {
                 var text = response.candidates[0].content.parts[0].text;
                 text = text.replace(/```json/g, '').replace(/```/g, '').trim();
-                if (text === 'null') return null;
-                return JSON.parse(text);
+                if (text === 'null' || text.includes('"null"')) return null;
+
+                var json = JSON.parse(text);
+                return json.summary;
             }
             return null;
         } catch (ex) {
-            GoogleSheet.logError('Mind.summarizeChatsToMemory', ex);
+            GoogleSheet.logError('Mind.updateContextSummary', ex);
             return null;
         }
     };
+
+
+
 
     /**
      * 評估短期記憶是否轉為長期記憶
