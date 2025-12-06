@@ -249,8 +249,6 @@ Busyness: ${userState.busyness}`;
             HistoryManager.saveMessage(userId, 'user', message);
             HistoryManager.saveMessage(userId, 'assistant', finalResponse);
 
-
-
             // [Affection System]
             GoogleSheet.updateAffection(userId, 1);
 
