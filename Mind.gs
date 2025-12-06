@@ -79,11 +79,20 @@ var Mind = (() => {
                 mind.updateUserState(userId, stateUpdates);
             }
 
-            // 2. 自動記憶事實 (Knowledge Consolidation)
+            // 2. 自動記憶事實 (Knowledge Consolidation) - 長期
             if (analysis.facts && Array.isArray(analysis.facts) && analysis.facts.length > 0) {
                 analysis.facts.forEach(fact => {
                     // 呼叫 GoogleSheet.addKnowledge，標籤設為 'auto_learned'
                     GoogleSheet.addKnowledge(['auto_learned'], fact);
+                });
+            }
+
+            // 2.5 自動速記短期資訊 (Short Term Notes)
+            if (analysis.short_term_notes && Array.isArray(analysis.short_term_notes) && analysis.short_term_notes.length > 0) {
+                analysis.short_term_notes.forEach(note => {
+                    // 存入短期記憶，預設 24 小時過期
+                    // Key 使用 "自動速記"，或根據內容稍微分類(目前簡易處理)
+                    GoogleSheet.addShortTermMemory('自動速記', note, 24);
                 });
             }
 

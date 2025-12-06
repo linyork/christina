@@ -86,19 +86,25 @@ var Config = (() => {
    - \`sentiment\` (String): 感測到的主人情緒 (e.g., "happy", "tired", "stressed", "excited", "neutral")。
    - \`energy_level\` (Number): 感測到的主人能量指數 (1-10, 1=極度疲憊, 10=精力充沛)。
    - \`intent\` (String): 主人的意圖 (e.g., "chat", "command", "query", "complaint")。
-   - \`facts\` (Array<String>): **非常重要**！如果有聽到任何關於主人的事實、計畫、喜好，請擷取出來 (e.g., ["明天9點要開會", "不喜歡吃青椒"])。若無則留空。
+   - \`facts\` (Array<String>): **長期記憶/知識**：
+     僅擷取 **「長期有效、已固化」** 的事實，例如主人的喜好、價值觀、長期目標、人際關係 (e.g., ["討厭吃青椒", "正在準備考日檢", "有一隻叫小白的狗"])。
+     **絕對不要** 包含暫時性資訊。
+   - \`short_term_notes\` (Array<String>): **短期記憶/速記**：
+     擷取 **「暫時性、具時效性」** 的資訊，例如正在進行的動作、當下的狀態、突發事件 (e.g., ["正在去洗澡", "待會要開會", "覺得程式碼很難寫"])。
+     這些資訊會被存入短期記憶，並在 24 小時後自動銷毀。
    - \`detected_behavior\` (String, Optional): 偵測到的行為模式 (e.g., "wake_up", "commute", "work_late")。
 
 範例格式：
 \`\`\`json
 {
-  "reply": "主人看起來很累呢，要不要早點休息？～喵❤️",
+  "reply": "主人看起來很累呢，要不要先去洗個澡放鬆一下？～喵❤️",
   "analysis": {
     "sentiment": "tired",
     "energy_level": 3,
     "intent": "chat",
-    "facts": ["主人剛加完班"],
-    "detected_behavior": "work_late"
+    "facts": ["主人表示最近工作壓力來自專案截止"],
+    "short_term_notes": ["剛回到家", "準備去洗澡"],
+    "detected_behavior": "return_home"
   }
 }
 \`\`\`
