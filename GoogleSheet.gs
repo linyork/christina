@@ -49,11 +49,28 @@ var GoogleSheet = (() => {
     };
 
     /**
-     * 記錄 error log
+     * 記錄 error log (增強版)
      * @param {...*} msg - 訊息
      */
     googleSheet.logError = (...msg) => {
-        var args = [...msg].map((v) => JSON.stringify(v));
+        var args = [...msg].map((v) => {
+            if (v instanceof Error) {
+                return JSON.stringify({
+                    message: v.message,
+                    name: v.name,
+                    stack: v.stack
+                });
+            }
+            if (typeof v === 'object' && v !== null) {
+                // 嘗試處理某些特殊物件
+                try {
+                    return JSON.stringify(v);
+                } catch (e) {
+                    return v.toString();
+                }
+            }
+            return v;
+        });
         args.unshift('error');
         googleSheet.setLog(args);
     };

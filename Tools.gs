@@ -292,7 +292,14 @@ var Tools = (() => {
                     var searchUrl = `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${cx}&q=${encodeURIComponent(query)}`;
 
                     try {
-                        var response = UrlFetchApp.fetch(searchUrl);
+                        var response = UrlFetchApp.fetch(searchUrl, { muteHttpExceptions: true });
+
+                        if (response.getResponseCode() !== 200) {
+                            var errorBody = response.getContentText();
+                            GoogleSheet.logError('Tools.search_web', 'API Error: ' + response.getResponseCode(), errorBody);
+                            return `搜尋失敗 (代碼 ${response.getResponseCode()})：${errorBody}`;
+                        }
+
                         var data = JSON.parse(response.getContentText());
 
                         if (!data.items || data.items.length === 0) {
@@ -310,7 +317,7 @@ var Tools = (() => {
 
                     } catch (e) {
                         GoogleSheet.logError('Tools.search_web', e);
-                        return "搜尋連線發生錯誤惹～喵💔";
+                        return "搜尋連線發生錯誤惹～喵💔 (錯誤訊息: " + e.toString() + ")";
                     }
 
                 case 'get_weather':
