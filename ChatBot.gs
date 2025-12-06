@@ -47,9 +47,25 @@ var ChatBot = (() => {
                 if (item.role && item.content) {
                     // Gemini 使用 'user' 和 'model' 作為角色
                     var role = item.role === 'assistant' ? 'model' : 'user';
+
+                    // [Time Awareness] 加入時間戳記讓 AI 感知時間流逝
+                    // 格式: [2024/12/06 13:00:00] 訊息內容
+                    var timeStr = "";
+                    if (item.timestamp) {
+                        try {
+                            // 確保時間格式正確
+                            var date = new Date(item.timestamp);
+                            if (!isNaN(date.getTime())) {
+                                timeStr = "[" + Utilities.formatDate(date, "GMT+8", "yyyy/MM/dd HH:mm:ss") + "] ";
+                            }
+                        } catch (e) {
+                            // 時間格式錯誤則忽略
+                        }
+                    }
+
                     contents.push({
                         "role": role,
-                        "parts": [{ "text": item.content }]
+                        "parts": [{ "text": timeStr + item.content }]
                     });
                 }
             });
@@ -217,7 +233,16 @@ var ChatBot = (() => {
 
             // 取得短期記憶 context
             var shortTermMemories = GoogleSheet.getValidShortTermMemories();
-            var contextInfo = "\n\n[System Info]\nCurrent User: " + userIdentity + "\nInstruction: " + roleInstruction;
+            // [Time Awareness] 注入現在時間與時間感知指令
+            var nowStr = Utilities.formatDate(new Date(), "GMT+8", "yyyy/MM/dd HH:mm:ss");
+            var contextInfo = "\n\n[System Info]\nCurrent Time: " + nowStr + "\nCurrent User: " + userIdentity + "\nInstruction: " + roleInstruction;
+
+            // 加入時間感知提示
+            contextInfo += "\n\n[Time Awareness Instructions]\n" +
+                "請特別注意對話中的時間標籤 [YYYY/MM/DD HH:mm:ss]。\n" +
+                "1. 如果發現上一則對話與現在時間相隔較久（例如超過6小時），請適度表達關心（例如：「主人怎麼這麼久才找我？」）。\n" +
+                "2. 如果時間是連續的，則正常回應即可。\n" +
+                "3. 如果主人之前提到要去做的長時間活動（如睡覺、開會、手術），現在回來了，請根據時間間隔給予適當的問候。";
 
             if (shortTermMemories) {
                 contextInfo += "\n\n[Current Context / Short Term Memories]:\n" + shortTermMemories;
