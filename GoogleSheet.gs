@@ -360,5 +360,164 @@ var GoogleSheet = (() => {
         }
     };
 
+    /**
+     * 取得 User State Matrix
+     * @param {string} userId - 使用者 ID
+     * @returns {object}
+     */
+    googleSheet.getUserMatrix = (userId) => {
+        try {
+            var ss = Config.SHEET_ID ? SpreadsheetApp.openById(Config.SHEET_ID) : null;
+            if (!ss) return null;
+
+            var ws = ss.getSheetByName('user_matrix');
+            // 如果沒有這個 sheet 就建立一個
+            if (!ws) {
+                ws = ss.insertSheet('user_matrix');
+                ws.appendRow(['userId', 'mood', 'energy', 'busyness', 'last_topic', 'timestamp']);
+            }
+
+            var data = ws.getDataRange().getValues();
+            for (var i = 1; i < data.length; i++) {
+                if (data[i][0] === userId) {
+                    return {
+                        mood: data[i][1],
+                        energy: data[i][2],
+                        busyness: data[i][3],
+                        last_topic: data[i][4],
+                        timestamp: data[i][5]
+                    };
+                }
+            }
+
+            // Default state
+            return {
+                mood: 'calm',
+                energy: 5,
+                busyness: 'normal',
+                last_topic: '',
+                timestamp: new Date()
+            };
+        } catch (ex) {
+            googleSheet.logError('GoogleSheet.getUserMatrix', ex);
+            return null;
+        }
+    };
+
+    /**
+     * 更新 User State Matrix
+     * @param {string} userId
+     * @param {object} updates
+     */
+    googleSheet.updateUserMatrix = (userId, updates) => {
+        try {
+            var ss = Config.SHEET_ID ? SpreadsheetApp.openById(Config.SHEET_ID) : null;
+            if (!ss) return;
+
+            var ws = ss.getSheetByName('user_matrix');
+            if (!ws) {
+                ws = ss.insertSheet('user_matrix');
+                ws.appendRow(['userId', 'mood', 'energy', 'busyness', 'last_topic', 'timestamp']);
+            }
+
+            var data = ws.getDataRange().getValues();
+            var rowIndex = -1;
+            var currentState = {
+                mood: 'calm',
+                energy: 5,
+                busyness: 'normal',
+                last_topic: '',
+                timestamp: new Date()
+            };
+
+            // Find user
+            for (var i = 1; i < data.length; i++) {
+                if (data[i][0] === userId) {
+                    rowIndex = i + 1;
+                    currentState = {
+                        mood: data[i][1],
+                        energy: data[i][2],
+                        busyness: data[i][3],
+                        last_topic: data[i][4],
+                        timestamp: data[i][5]
+                    };
+                    break;
+                }
+            }
+
+            // Merge updates
+            var newState = {
+                mood: updates.mood || currentState.mood,
+                energy: updates.energy || currentState.energy,
+                busyness: updates.busyness || currentState.busyness,
+                last_topic: updates.last_topic || currentState.last_topic,
+                timestamp: Utilities.formatDate(new Date(), "GMT+8", "yyyy/MM/dd HH:mm:ss")
+            };
+
+            if (rowIndex > 0) {
+                // Update
+                ws.getRange(rowIndex, 2, 1, 5).setValues([[
+                    newState.mood,
+                    newState.energy,
+                    newState.busyness,
+                    newState.last_topic,
+                    newState.timestamp
+                ]]);
+            } else {
+                // Insert
+                ws.appendRow([
+                    userId,
+                    newState.mood,
+                    newState.energy,
+                    newState.busyness,
+                    newState.last_topic,
+                    newState.timestamp
+                ]);
+            }
+            googleSheet.logInfo('GoogleSheet.updateUserMatrix', 'Updated state for ' + userId, newState);
+
+        } catch (ex) {
+            googleSheet.logError('GoogleSheet.updateUserMatrix', ex);
+        }
+    };
+
+    /**
+     * 記錄行為日誌
+     * @param {string} userId
+     * @param {string} action
+     * @param {string} context
+     */
+    googleSheet.logBehavior = (userId, action, context) => {
+        try {
+            // [Auto-Create Sheet Guard]
+            var ss = Config.SHEET_ID ? SpreadsheetApp.openById(Config.SHEET_ID) : null;
+            if (ss) {
+                var ws = ss.getSheetByName('behavior_log');
+                if (!ws) {
+                    ws = ss.insertSheet('behavior_log');
+                    ws.appendRow(['userId', 'timestamp', 'day_of_week', 'hour', 'action', 'context']);
+                }
+            }
+
+            // 使用 DB 模組寫入
+            var now = new Date();
+            var timestamp = Utilities.formatDate(now, "GMT+8", "yyyy/MM/dd HH:mm:ss");
+            var dayOfWeek = now.getDay(); // 0-6
+            var hour = now.getHours();
+
+            DB().insert('behavior_log')
+                .set('userId', userId)
+                .set('timestamp', timestamp)
+                .set('day_of_week', dayOfWeek)
+                .set('hour', hour)
+                .set('action', action)
+                .set('context', context)
+                .execute();
+
+        } catch (ex) {
+            googleSheet.logError('GoogleSheet.logBehavior', ex);
+        }
+    };
+
     return googleSheet;
 })();

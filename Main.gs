@@ -225,6 +225,40 @@ function setupTrigger() {
 }
 
 /**
+ * 定時任務 - 行為模式分析
+ * 建議頻率：每日深夜 (e.g. 03:00)
+ */
+function analyzeBehaviorPatterns() {
+    try {
+        Mind.analyzePatterns();
+    } catch (ex) {
+        GoogleSheet.logError('analyzeBehaviorPatterns', ex);
+    }
+}
+
+/**
+ * 輔助函數：設定行為分析的觸發器
+ */
+function setupAnalysisTrigger() {
+    // 先刪除舊的
+    var triggers = ScriptApp.getProjectTriggers();
+    for (var i = 0; i < triggers.length; i++) {
+        if (triggers[i].getHandlerFunction() === 'analyzeBehaviorPatterns') {
+            ScriptApp.deleteTrigger(triggers[i]);
+        }
+    }
+
+    // 建立新的每日觸發器 (凌晨 3 點)
+    ScriptApp.newTrigger('analyzeBehaviorPatterns')
+        .timeBased()
+        .everyDays(1)
+        .atHour(3)
+        .create();
+
+    Logger.log("行為分析觸發器已設定：每日 03:00 執行。");
+}
+
+/**
  * 測試函數
  */
 function test() {

@@ -342,9 +342,18 @@ var ChatBot = (() => {
             // [Time Awareness] 注入現在時間與時間感知指令
             var nowStr = Utilities.formatDate(new Date(), "GMT+8", "yyyy/MM/dd HH:mm:ss");
 
+            // [Mind] 取得使用者狀態矩陣
+            var userState = Mind.getUserState(userId);
+            var userStateInfo = `
+[User State Matrix]
+Mood: ${userState.mood}
+Energy: ${userState.energy}/10
+Busyness: ${userState.busyness}`;
+
             var contextInfo = "\n\n[System Info]\nCurrent Time: " + nowStr +
                 "\nCurrent User: " + userIdentity +
                 "\n[Affection Status]: " + affectionLevel + " (Score: " + affectionScore + ")" +
+                userStateInfo +
                 "\nInstruction: " + roleInstruction;
 
             // 加入時間感知提示
@@ -359,9 +368,10 @@ var ChatBot = (() => {
             }
 
             // 加入系統提示（作為第一條 user 訊息）
+            // [Mind System Prompt Injection]
             contents.push({
                 "role": "user",
-                "parts": [{ "text": Config.CHAT_SYSTEM_PROMPT + contextInfo }]
+                "parts": [{ "text": Config.CHAT_SYSTEM_PROMPT + "\n\n" + Config.MIND_SYSTEM_PROMPT + "\n\n" + contextInfo }]
             });
             contents.push({
                 "role": "model",
@@ -435,9 +445,32 @@ var ChatBot = (() => {
                     continue;
                 }
 
-                // 如果是文字回應，結束迴圈
+                // 如果是文字回應，嘗試解析 JSON (Shadow Thinking)
                 if (part.text) {
-                    finalResponse = part.text;
+                    var rawText = part.text;
+                    try {
+                        // 1. 嘗試清理 Markdown
+                        var jsonText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+
+                        // 2. 解析 JSON
+                        var jsonObj = JSON.parse(jsonText);
+
+                        if (jsonObj && jsonObj.reply) {
+                            finalResponse = jsonObj.reply;
+
+                            // 3. 處理 Shadow Thinking 分析結果
+                            if (jsonObj.analysis) {
+                                Mind.processAnalysis(userId, jsonObj.analysis);
+                            }
+                        } else {
+                            // JSON 格式但不包含 reply (不符合預期)，當作純文字
+                            finalResponse = rawText;
+                        }
+                    } catch (e) {
+                        // 解析失敗，代表 AI 回傳純文字 (Fallback)
+                        finalResponse = rawText;
+                        GoogleSheet.logInfo('ChatBot.reply', 'Response is not structured JSON, treating as text');
+                    }
                     break;
                 }
 
