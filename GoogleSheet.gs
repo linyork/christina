@@ -143,6 +143,66 @@ var GoogleSheet = (() => {
         }
     };
 
+
+    /**
+     * 刪除事項 (支援模糊搜尋)
+     * @param {string} something - 刪除的事項
+     * @returns {string|null} 刪除的事項名稱，若找不到則回傳 null
+     */
+    googleSheet.deleteTodo = (something) => {
+        try {
+            // 1. 取得所有事項 (包含已完成? 通常刪除是針對待辦，但也可能想刪除已完成的。這裡我們搜尋全部)
+            // 為了安全起見，我們先只搜尋 'todo' 表中所有的，不分完成狀態
+            var tasks = DB().from('todo').execute().get();
+            var tasksArray = Array.isArray(tasks) ? tasks : (tasks.content ? [tasks] : []);
+            if (Object.keys(tasks).length === 0 && !Array.isArray(tasks)) tasksArray = [];
+
+            if (tasksArray.length === 0) return null;
+
+            var targetTask = null;
+
+            // 2. 嘗試搜尋 (Exact Match)
+            targetTask = tasksArray.find(t => t.content === something);
+
+            // 3. 嘗試搜尋 (Fuzzy Match: contains)
+            if (!targetTask) {
+                targetTask = tasksArray.find(t => t.content && (t.content.includes(something) || something.includes(t.content)));
+            }
+
+            if (targetTask) {
+                // 4. 刪除該事項
+                // DB.gs 支援 delete 嗎？ DB.delete(tableName, rangeString) 看起來是針對 range 清除。
+                // 這裡我們需要的是 row deletion。DB.gs 的 doDelete 是 clear content，可能留下空行。
+                // 我們直接操作 Sheet 比較保險。
+                var sheet = getChristinaSheet().getSheetByName('todo');
+                var data = sheet.getDataRange().getValues();
+
+                // Find row index (data is 0-indexed, row 1 is header)
+                // data[i][0] should be content if col 1 is content. Let's check DB structure implications.
+                // Based on insert('todo').set('content', ...), 'content' implies column name.
+                // Assuming content is in a column. Let's iterate.
+
+                // Re-find in raw data to be sure of row index
+                for (var i = 1; i < data.length; i++) {
+                    // 假設第一欄或第二欄是 content，需要確認 schema。
+                    // 從 DB.gs 來看，它會讀 header。
+                    // 為了兼容性，我們用最笨的方法：遍歷所有欄位找這個值
+                    var rowString = data[i].join(" ");
+                    if (rowString.includes(targetTask.content)) {
+                        sheet.deleteRow(i + 1); // deleteRow takes 1-based index
+                        return targetTask.content;
+                    }
+                }
+                return null; // Should have found it if tasksArray found it, but just in case
+            } else {
+                return null;
+            }
+        } catch (ex) {
+            googleSheet.logError('GoogleSheet.deleteTodo', ex);
+            return null;
+        }
+    };
+
     /**
      * 清除用戶的對話歷史
      * @param {string} userId - 用戶 ID

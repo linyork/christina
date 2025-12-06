@@ -197,6 +197,20 @@ var Tools = (() => {
                 "parameters": { "type": "object", "properties": {} }
             },
             {
+                "name": "delete_todo",
+                "description": "刪除待辦事項（永久移除）。當使用者說「刪除某個任務」、「把xx拿掉」時使用。",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "task": {
+                            "type": "string",
+                            "description": "要刪除的待辦事項內容"
+                        }
+                    },
+                    "required": ["task"]
+                }
+            },
+            {
                 "name": "complete_todo",
                 "description": "標記待辦事項為已完成。",
                 "parameters": {
@@ -371,6 +385,15 @@ var Tools = (() => {
                 case 'get_todo_list':
                     var todoList = GoogleSheet.todolist();
                     return todoList || '目前沒有待辦事項～喵❤️';
+
+                case 'delete_todo':
+                    var deletedTask = GoogleSheet.deleteTodo(args.task);
+                    if (deletedTask) {
+                        return '已將「' + deletedTask + '」從清單中移除囉～喵！';
+                    } else {
+                        var currentList = GoogleSheet.todolist();
+                        return '找不到「' + args.task + '」可以刪除耶...目前清單如下：\n\n' + (currentList || "(空)");
+                    }
 
                 case 'complete_todo':
                     var completedTask = GoogleSheet.do(args.task);
