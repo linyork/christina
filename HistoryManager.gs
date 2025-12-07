@@ -54,9 +54,25 @@ var HistoryManager = (() => {
                         } catch (e) { }
                     }
 
+                    // [Optimization] Strip 'analysis' JSON to save tokens
+                    var finalContent = item.content;
+                    if (role === 'model') { // Only model responses contain JSON analysis
+                        try {
+                            // Simple heuristic to check if it looks like JSON
+                            if (finalContent.trim().startsWith('{')) {
+                                var json = JSON.parse(finalContent);
+                                if (json.reply) {
+                                    finalContent = json.reply;
+                                }
+                            }
+                        } catch (e) {
+                            // Not valid JSON, treat as normal text
+                        }
+                    }
+
                     contents.push({
                         "role": role,
-                        "parts": [{ "text": timeStr + item.content }]
+                        "parts": [{ "text": timeStr + finalContent }]
                     });
                 }
             });

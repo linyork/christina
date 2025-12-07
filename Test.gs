@@ -208,10 +208,8 @@ function testAvailableModels() {
                 // 過濾掉舊的 PaLM 模型，專注於 Gemini
                 if (model.name.indexOf("gemini") !== -1) {
                     Logger.log("ID: " + model.name);
-                    Logger.log("名稱: " + model.displayName);
-                    Logger.log("版本: " + model.version);
-                    Logger.log("描述: " + (model.description || "無"));
-                    Logger.log("--------------------------------------------------");
+                    Logger.log("可用網址: https://generativelanguage.googleapis.com/v1beta/" + model.name);
+                    Logger.log("-");
                 }
             });
         } else {

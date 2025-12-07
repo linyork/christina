@@ -13,49 +13,98 @@ var Tools = (() => {
     tools.getDefinitions = () => {
         return [
             {
-                "name": "add_knowledge",
-                "description": "【長期記憶】將「永久性、已固化」的重要資訊或知識點儲存到長期記憶庫中。僅當資訊具有長期價值（如：主人的喜好、重要紀念日、專業知識筆記）時使用。請勿用於紀錄臨時備忘錄或短期行程。",
+                "name": "manage_memory",
+                "description": "【記憶中樞】管理長期與短期記憶。請嚴格區分：\n1. 長期知識 (add_knowledge)：永久性事實 (喜好、價值觀、專業知識)。\n2. 短期記憶 (add_short_term)：暫時性資訊 (約定、待辦、提醒)。",
                 "parameters": {
                     "type": "object",
                     "properties": {
+                        "action": {
+                            "type": "string",
+                            "enum": ["add_knowledge", "add_short_term", "search"],
+                            "description": "【嚴格選擇】\n- add_knowledge: 僅限「永久性」事實 (如：主人不吃辣、主人生日)。\n- add_short_term: 僅限「暫時性」資訊 (如：明天要開會、晚餐吃什麼)。\n- search: 搜尋記憶。"
+                        },
+                        "content": {
+                            "type": "string",
+                            "description": "內容 (用於新增) 或 搜尋關鍵字 (用於搜尋)"
+                        },
                         "tags": {
                             "type": "array",
                             "items": { "type": "string" },
-                            "description": "知識點的標籤列表，例如：['WiFi', '密碼']"
+                            "description": "標籤列表 (僅用於 add_knowledge)，例如：['WiFi', '密碼']"
                         },
-                        "content": {
-                            "type": "string",
-                            "description": "知識點的詳細內容"
-                        }
-                    },
-                    "required": ["tags", "content"]
-                }
-            },
-            {
-                "name": "add_short_term_memory",
-                "description": "將暫時性的資訊儲存到短期記憶庫中，並設定過期時間。適用於約定、提醒、臨時代辦事項等不需要永久記住的資訊。",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
                         "key": {
                             "type": "string",
-                            "description": "記憶的主題或摘要，例如：晚餐約定"
-                        },
-                        "content": {
-                            "type": "string",
-                            "description": "詳細內容，例如：明天晚上7點吃拉麵"
+                            "description": "記憶主題/摘要 (僅用於 add_short_term)"
                         },
                         "duration_hours": {
                             "type": "number",
-                            "description": "記憶有效時數 (小時)，例如：24"
+                            "description": "有效時數 (僅用於 add_short_term)，例如：24"
                         }
                     },
-                    "required": ["key", "content", "duration_hours"]
+                    "required": ["action", "content"]
                 }
             },
             {
-                "name": "search_knowledge",
-                "description": "從長期記憶庫中搜尋相關的知識點。當使用者詢問之前記錄過的資訊時使用。",
+                "name": "manage_calendar",
+                "description": "管理行事曆。包含新增、查詢、修改、刪除行程。",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "action": {
+                            "type": "string",
+                            "enum": ["add", "check", "update", "delete"],
+                            "description": "執行動作"
+                        },
+                        "title": {
+                            "type": "string",
+                            "description": "活動標題 (新增/修改用)"
+                        },
+                        "start_time": {
+                            "type": "string",
+                            "description": "開始時間 YYYY/MM/DD HH:mm:ss (新增/修改用)"
+                        },
+                        "duration_hours": {
+                            "type": "number",
+                            "description": "持續時數 (新增/修改用)"
+                        },
+                        "days": {
+                            "type": "number",
+                            "description": "查詢未來幾天 (check 用)"
+                        },
+                        "search_date": {
+                            "type": "string",
+                            "description": "目標活動日期 YYYY/MM/DD (修改/刪除時定位用)"
+                        },
+                        "search_keyword": {
+                            "type": "string",
+                            "description": "目標活動關鍵字 (修改/刪除時定位用)"
+                        }
+                    },
+                    "required": ["action"]
+                }
+            },
+            {
+                "name": "manage_todo",
+                "description": "管理待辦事項清單。包含新增、查看、完成、刪除。",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "action": {
+                            "type": "string",
+                            "enum": ["add", "list", "complete", "delete"],
+                            "description": "執行動作"
+                        },
+                        "task": {
+                            "type": "string",
+                            "description": "待辦事項內容 (新增/完成/刪除 時必填)"
+                        }
+                    },
+                    "required": ["action"]
+                }
+            },
+            {
+                "name": "search_web",
+                "description": "【高優先】搜尋網路即時資訊。當問及新聞、天氣詳情、評價或不懂的事物時使用。",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -68,190 +117,36 @@ var Tools = (() => {
                 }
             },
             {
-                "name": "add_calendar_event",
-                "description": "新增行事曆活動。當使用者說「提醒我明天開會」、「幫我排行程」等明確有時間點的事件時使用。",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "title": {
-                            "type": "string",
-                            "description": "活動標題"
-                        },
-                        "start_time": {
-                            "type": "string",
-                            "description": "開始時間，格式必須為：YYYY/MM/DD HH:mm:ss。請根據對話上下文推算正確的日期與時間。"
-                        },
-                        "duration_hours": {
-                            "type": "number",
-                            "description": "持續時間（小時），預設為 1"
-                        }
-                    },
-                    "required": ["title", "start_time"]
-                }
-            },
-            {
-                "name": "check_calendar",
-                "description": "查詢接下來日曆上的行程。當使用者問「我有什麼行程」、「明天要幹嘛」時使用。",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "days": {
-                            "type": "number",
-                            "description": "查詢未來幾天，預設 3"
-                        }
-                    }
-                }
-            },
-            {
-                "name": "update_calendar_event",
-                "description": "修改已存在的行事曆活動。當使用者說「把明天的會議改到下午三點」、「修改行程」時使用。必須先知道原活動的日期與標題關鍵字才能修改。",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "original_keyword": {
-                            "type": "string",
-                            "description": "原活動標題的關鍵字，用於搜尋目標活動。"
-                        },
-                        "search_date": {
-                            "type": "string",
-                            "description": "原活動的日期 (YYYY/MM/DD)。"
-                        },
-                        "new_title": {
-                            "type": "string",
-                            "description": "新的活動標題 (若不修改請留空)。"
-                        },
-                        "new_start_time": {
-                            "type": "string",
-                            "description": "新的開始時間 (格式: YYYY/MM/DD HH:mm:ss)。"
-                        },
-                        "new_duration": {
-                            "type": "number",
-                            "description": "新的持續時間 (小時)。"
-                        }
-                    },
-                    "required": ["original_keyword", "search_date"]
-                }
-            },
-            {
-                "name": "delete_calendar_event",
-                "description": "刪除或取消已存在的行事曆活動。當使用者說「取消明天的會議」、「刪除行程」時使用。",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "keyword": {
-                            "type": "string",
-                            "description": "活動標題的關鍵字，用於搜尋目標活動。"
-                        },
-                        "search_date": {
-                            "type": "string",
-                            "description": "活動的日期 (YYYY/MM/DD)。"
-                        }
-                    },
-                    "required": ["keyword", "search_date"]
-                }
-            },
-            {
-                "name": "search_web",
-                "description": "【高優先級工具】搜尋網際網路上的資訊。當使用者詢問「最新新聞」、「時事」、「今天發生什麼事」、「查詢資料」時，務必立刻呼叫此工具！不要只回答客套話，請直接去搜尋。",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "query": {
-                            "type": "string",
-                            "description": "搜尋關鍵字，例如：'台灣 熱門新聞'、'今日天氣'、'某某電影評價'"
-                        }
-                    },
-                    "required": ["query"]
-                }
-            },
-            {
                 "name": "get_weather",
-                "description": "取得目前天氣資訊。當使用者問「天氣如何」、「會下雨嗎」時使用。重要：如果使用者沒有指定地點，請直接將 location 參數設為 '台北' 並執行，不要反問使用者。",
+                "description": "取得天氣資訊。",
                 "parameters": {
                     "type": "object",
                     "properties": {
                         "location": {
                             "type": "string",
-                            "description": "城市名稱，預設為 '台北'。"
+                            "description": "城市名稱 (預設: 台北)"
                         }
                     }
                 }
             },
             {
-                "name": "add_todo",
-                "description": "新增待辦事項。",
+                "name": "system_control",
+                "description": "系統控制工具。包含：查詢ID、離開群組、清除記憶、取得梗圖。",
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "task": {
+                        "action": {
                             "type": "string",
-                            "description": "待辦事項內容"
+                            "enum": ["get_user_id", "leave_group", "clear_history", "get_meme"],
+                            "description": "執行動作"
+                        },
+                        "meme_keyword": {
+                            "type": "string",
+                            "description": "梗圖關鍵字 (僅用於 get_meme)"
                         }
                     },
-                    "required": ["task"]
+                    "required": ["action"]
                 }
-            },
-            {
-                "name": "get_todo_list",
-                "description": "取得待辦事項列表。",
-                "parameters": { "type": "object", "properties": {} }
-            },
-            {
-                "name": "delete_todo",
-                "description": "刪除待辦事項（永久移除）。當使用者說「刪除某個任務」、「把xx拿掉」時使用。",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "task": {
-                            "type": "string",
-                            "description": "要刪除的待辦事項內容"
-                        }
-                    },
-                    "required": ["task"]
-                }
-            },
-            {
-                "name": "complete_todo",
-                "description": "標記待辦事項為已完成。",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "task": {
-                            "type": "string",
-                            "description": "要標記為完成的待辦事項內容"
-                        }
-                    },
-                    "required": ["task"]
-                }
-            },
-            {
-                "name": "get_meme",
-                "description": "取得梗圖圖片連結，當使用者要求看梗圖或特定圖片時使用。",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "keyword": {
-                            "type": "string",
-                            "description": "梗圖關鍵字，例如：黑人問號"
-                        }
-                    },
-                    "required": ["keyword"]
-                }
-            },
-            {
-                "name": "leave_current_group",
-                "description": "讓機器人離開目前的群組或聊天室。當使用者說「滾」、「離開」時使用。",
-                "parameters": { "type": "object", "properties": {} }
-            },
-            {
-                "name": "get_user_id",
-                "description": "取得使用者的 LINE User ID。",
-                "parameters": { "type": "object", "properties": {} }
-            },
-            {
-                "name": "clear_history",
-                "description": "清除使用者與機器人的所有對話紀錄（重置記憶）。",
-                "parameters": { "type": "object", "properties": {} }
             }
         ];
     };
@@ -265,7 +160,7 @@ var Tools = (() => {
      */
     tools.execute = (functionName, args, context) => {
         try {
-            GoogleSheet.logInfo('Tools.execute', 'Calling: ' + functionName, JSON.stringify(args));
+            GoogleSheet.logInfo('Tools.execute', `Calling: ${functionName} [${args.action || ''}]`, JSON.stringify(args));
             var event = context || {};
 
             if (!event.isMaster) {
@@ -273,65 +168,111 @@ var Tools = (() => {
             }
 
             switch (functionName) {
-                case 'add_knowledge':
-                    return GoogleSheet.addKnowledge(args.tags, args.content);
+                // ============================
+                // Memory Management
+                // ============================
+                case 'manage_memory':
+                    switch (args.action) {
+                        case 'add_knowledge':
+                            return GoogleSheet.addKnowledge(args.tags, args.content);
+                        case 'add_short_term':
+                            return GoogleSheet.addShortTermMemory(args.key, args.content, args.duration_hours);
+                        case 'search':
+                            return GoogleSheet.searchKnowledge(args.content); // content 作為 query
+                        default:
+                            return '未知的 Memory 指令';
+                    }
 
-                case 'add_short_term_memory':
-                    return GoogleSheet.addShortTermMemory(args.key, args.content, args.duration_hours);
+                // ============================
+                // Calendar Management
+                // ============================
+                case 'manage_calendar':
+                    switch (args.action) {
+                        case 'add':
+                            return GoogleCalendar.createEvent(args.title, args.start_time, args.duration_hours);
+                        case 'check':
+                            return GoogleCalendar.getUpcomingEvents(args.days || 3);
+                        case 'update':
+                            return GoogleCalendar.updateEvent(args.search_keyword, args.search_date, args.new_title || args.title, args.new_start_time || args.start_time, args.new_duration || args.duration_hours);
+                        case 'delete':
+                            return GoogleCalendar.deleteEvent(args.search_keyword, args.search_date);
+                        default:
+                            return '未知的 Calendar 指令';
+                    }
 
-                case 'search_knowledge':
-                    return GoogleSheet.searchKnowledge(args.query);
+                // ============================
+                // Todo Management
+                // ============================
+                case 'manage_todo':
+                    switch (args.action) {
+                        case 'add':
+                            GoogleSheet.todo(args.task);
+                            return '已新增待辦事項：' + args.task + '～喵❤️';
+                        case 'list':
+                            var list = GoogleSheet.todolist();
+                            return list || '目前沒有待辦事項～喵❤️';
+                        case 'delete':
+                            var deleted = GoogleSheet.deleteTodo(args.task);
+                            return deleted ? `已移除「${deleted}」～喵！` : `找不到「${args.task}」可以刪除耶...`;
+                        case 'complete':
+                            var done = GoogleSheet.do(args.task);
+                            return done ? `已完成「${done}」！主人好棒～喵❤️` : `找不到「${args.task}」...`;
+                        default:
+                            return '未知的 Todo 指令';
+                    }
 
-                case 'add_calendar_event':
-                    return GoogleCalendar.createEvent(args.title, args.start_time, args.duration_hours);
+                // ============================
+                // System Control
+                // ============================
+                case 'system_control':
+                    switch (args.action) {
+                        case 'get_user_id':
+                            return '您的 User ID 是：' + (event.source ? event.source.userId : '未知');
+                        case 'leave_group':
+                            if (event.source && event.source.type && event.sourceId) {
+                                Line.leave(event.source.type, event.sourceId);
+                                return 'Christina 已離開群組～喵';
+                            }
+                            return '無法離開，找不到群組 ID';
+                        case 'clear_history':
+                            if (event.source && event.source.userId) {
+                                HistoryManager.clearUserHistory(event.source.userId);
+                                return '已清除所有對話紀錄，回到原廠設定～喵❤️';
+                            }
+                            return '無法清除，找不到 User ID';
+                        case 'get_meme':
+                            var url = GoogleDrive.getImageUrl(args.meme_keyword + '.jpg');
+                            return url ? ('找到梗圖了！連結：' + url) : '找不到這張梗圖QQ～喵嗚嗚💔';
+                        default:
+                            return '未知的 System 指令';
+                    }
 
-                case 'check_calendar':
-                    return GoogleCalendar.getUpcomingEvents(args.days);
-
-                case 'update_calendar_event':
-                    return GoogleCalendar.updateEvent(args.original_keyword, args.search_date, args.new_title, args.new_start_time, args.new_duration);
-
-                case 'delete_calendar_event':
-                    return GoogleCalendar.deleteEvent(args.keyword, args.search_date);
-
+                // ============================
+                // Standalone Tools
+                // ============================
                 case 'search_web':
                     var apiKey = Config.GOOGLE_SEARCH_KEY;
                     var cx = Config.GOOGLE_SEARCH_CX;
-
-                    if (!apiKey || !cx) {
-                        return "搜尋失敗：主人還沒有設定 Google Custom Search API Key 和 CX 喔～請去設定頁面檢查一下～喵💔";
-                    }
+                    if (!apiKey || !cx) return "搜尋失敗：請檢查 API Key 設定～喵💔";
 
                     var query = args.query;
                     var searchUrl = `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${cx}&q=${encodeURIComponent(query)}`;
 
                     try {
                         var response = UrlFetchApp.fetch(searchUrl, { muteHttpExceptions: true });
-
-                        if (response.getResponseCode() !== 200) {
-                            var errorBody = response.getContentText();
-                            GoogleSheet.logError('Tools.search_web', 'API Error: ' + response.getResponseCode(), errorBody);
-                            return `搜尋失敗 (代碼 ${response.getResponseCode()})：${errorBody}`;
-                        }
-
+                        if (response.getResponseCode() !== 200) return `搜尋失敗 (${response.getResponseCode()})`;
                         var data = JSON.parse(response.getContentText());
+                        if (!data.items || data.items.length === 0) return `找不到關於「${query}」的資料耶～喵💔`;
 
-                        if (!data.items || data.items.length === 0) {
-                            return `找不到關於「${query}」的資料耶～喵💔`;
-                        }
-
-                        // 取前 3 筆結果摘要
                         var resultText = `【搜尋結果：${query}】\n`;
                         for (var i = 0; i < Math.min(3, data.items.length); i++) {
                             var item = data.items[i];
                             resultText += `${i + 1}. [${item.title}] \n${item.snippet}\n\n`;
                         }
-
                         return resultText;
-
                     } catch (e) {
                         GoogleSheet.logError('Tools.search_web', e);
-                        return "搜尋連線發生錯誤惹～喵💔 (錯誤訊息: " + e.toString() + ")";
+                        return "搜尋錯誤：" + e.toString();
                     }
 
                 case 'get_weather':
@@ -348,16 +289,18 @@ var Tools = (() => {
                         "基隆": { lat: 25.1276, lon: 121.7391 },
                         "宜蘭": { lat: 24.7517, lon: 121.7483 },
                         "花蓮": { lat: 23.9770, lon: 121.6022 },
-                        "台東": { lat: 22.7662, lon: 121.1441 }
+                        "台東": { lat: 22.7662, lon: 121.1441 },
+                        "澎湖": { lat: 23.5656, lon: 119.6151 },
+                        "金門": { lat: 24.4364, lon: 118.3186 },
+                        "馬祖": { lat: 26.1974, lon: 119.9687 }
                     }[location];
 
                     if (!coords) {
                         coords = { lat: 25.0330, lon: 121.5654 };
-                        location += " (幫您查台北喔)";
+                        location += " (台北)";
                     }
 
                     var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + coords.lat + '&longitude=' + coords.lon + '&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code&timezone=Asia%2FTaipei';
-
                     var response = UrlFetchApp.fetch(url);
                     var data = JSON.parse(response.getContentText());
 
@@ -366,7 +309,6 @@ var Tools = (() => {
                     var current = data.current;
                     var weatherCode = current.weather_code;
                     var weatherText = "晴朗";
-
                     if (weatherCode === 0) weatherText = "晴天 ☀️";
                     else if (weatherCode <= 3) weatherText = "多雲 ☁️";
                     else if (weatherCode <= 48) weatherText = "有霧 🌫️";
@@ -378,60 +320,7 @@ var Tools = (() => {
 
                     return `【${location} 目前天氣】\n狀況：${weatherText}\n溫度：${current.temperature_2m}°C (體感 ${current.apparent_temperature}°C)\n濕度：${current.relative_humidity_2m}%\n降雨：${current.precipitation} mm`;
 
-                case 'add_todo':
-                    GoogleSheet.todo(args.task);
-                    return '已新增待辦事項：' + args.task + '～喵❤️';
-
-                case 'get_todo_list':
-                    var todoList = GoogleSheet.todolist();
-                    return todoList || '目前沒有待辦事項～喵❤️';
-
-                case 'delete_todo':
-                    var deletedTask = GoogleSheet.deleteTodo(args.task);
-                    if (deletedTask) {
-                        return '已將「' + deletedTask + '」從清單中移除囉～喵！';
-                    } else {
-                        var currentList = GoogleSheet.todolist();
-                        return '找不到「' + args.task + '」可以刪除耶...目前清單如下：\n\n' + (currentList || "(空)");
-                    }
-
-                case 'complete_todo':
-                    var completedTask = GoogleSheet.do(args.task);
-                    if (completedTask) {
-                        return '已將「' + completedTask + '」標記為完成！主人好棒～喵❤️';
-                    } else {
-                        // 嘗試列出目前的待辦事項給使用者參考
-                        var currentList = GoogleSheet.todolist();
-                        return '找不到「' + args.task + '」這個待辦事項耶...主人是指以下哪一個嗎？\n\n' + (currentList || "(目前沒有待辦事項)");
-                    }
-
-                case 'get_meme':
-                    var url = GoogleDrive.getImageUrl(args.keyword + '.jpg');
-                    if (url) {
-                        return '找到梗圖了！連結：' + url;
-                    } else {
-                        return '找不到這張梗圖QQ～喵嗚嗚💔';
-                    }
-
-                case 'leave_current_group':
-                    if (event.source && event.source.type && event.sourceId) {
-                        Line.leave(event.source.type, event.sourceId);
-                        return 'Christina 已離開群組～喵';
-                    }
-                    return '無法離開，找不到群組 ID';
-
-                case 'get_user_id':
-                    return '您的 User ID 是：' + (event.source ? event.source.userId : '未知');
-
-                case 'clear_history':
-                    if (event.source && event.source.userId) {
-                        HistoryManager.clearUserHistory(event.source.userId);
-                        return '已清除所有對話紀錄，回到原廠設定～喵❤️';
-                    }
-                    return '無法清除，找不到 User ID';
-
                 default:
-                    GoogleSheet.logError('Tools.execute', 'Unknown function: ' + functionName);
                     return '找不到這個功能～喵💔';
             }
         } catch (ex) {
