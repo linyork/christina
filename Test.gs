@@ -209,7 +209,6 @@ function testAvailableModels() {
                 if (model.name.indexOf("gemini") !== -1) {
                     Logger.log("ID: " + model.name);
                     Logger.log("可用網址: https://generativelanguage.googleapis.com/v1beta/" + model.name);
-                    Logger.log("-");
                 }
             });
         } else {

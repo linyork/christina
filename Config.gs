@@ -28,7 +28,7 @@ var Config = (() => {
 
     // Gemini API URLs
     GEMINI_API_BASE: 'https://generativelanguage.googleapis.com/v1beta',
-    GEMINI_MODEL: 'gemini-1.5-flash',
+    GEMINI_MODEL: 'gemini-2.0-flash',
 
     // 對話歷史設定
     CHAT_MAX_TURNS: 8,              // 每次對話時，傳送給 AI 的上下文輪數上限 (已從 10 調降)
