@@ -221,18 +221,54 @@ Busyness: ${userState.busyness}`;
                 if (part.text) {
                     var rawText = part.text;
                     try {
-                        // 1. 嘗試清理 Markdown 標記
-                        var jsonText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+                        // 1. 嘗試清理 Markdown
+                        var cleanText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
 
-                        // 2. 如果清理後還不是以 { 開頭，嘗試用 Regex 抓取第一個 JSON 物件
-                        if (!jsonText.startsWith('{')) {
-                            var match = jsonText.match(/\{[\s\S]*\}/);
-                            if (match) {
-                                jsonText = match[0];
-                            }
+                        // 2. 嘗試抓取 JSON 範圍
+                        var jsonMatch = cleanText.match(/\{[\s\S]*\}/);
+                        if (jsonMatch) {
+                            cleanText = jsonMatch[0];
                         }
 
-                        var jsonObj = JSON.parse(jsonText);
+                        // 3. 嘗試解析
+                        var jsonObj;
+                        try {
+                            // 先嘗試正規解析
+                            jsonObj = JSON.parse(cleanText);
+                        } catch (e1) {
+                            // 解析失敗 (通常是 Bad control character)
+                            GoogleSheet.logInfo('ChatBot.reply', 'Standard JSON parse failed, trying Regex fallback. Error:', e1.message);
+
+                            // 備用方案：使用 Regex 硬抓 reply 內容
+                            // 這能避開字串內未跳脫的換行符號問題，且支援跨行匹配
+                            var replyMatch = cleanText.match(/"reply"\s*:\s*"((?:[^"\\]|\\.|[\r\n])*)"/);
+                            if (replyMatch && replyMatch[1]) {
+                                // 抓到了！還原跳脫字元
+                                finalResponse = replyMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"');
+
+                                // 順便試試看抓 analysis (非必要)
+                                try {
+                                    // 簡單抓取 analysis 物件 (假設它是最後一個)
+                                    var analysisIndex = cleanText.lastIndexOf('"analysis"');
+                                    if (analysisIndex !== -1) {
+                                        var analysisText = cleanText.substring(analysisIndex);
+                                        // 這裡很難用 regex 精準抓到結尾，暫時放棄 analysis，保住 reply 最重要
+                                        // 或是簡單的 regex
+                                        var analysisMatch = analysisText.match(/"analysis"\s*:\s*(\{[\s\S]*?\})\s*\}/);
+                                        if (analysisMatch) {
+                                            Mind.processAnalysis(userId, JSON.parse(analysisMatch[1]));
+                                        }
+                                    }
+                                } catch (e2) {
+                                    GoogleSheet.logInfo('ChatBot.reply', 'Analysis regex fallback failed (non-critical). Error:', e2.message);
+                                }
+
+                                // 跳出迴圈，因為我們已經手動解析成功了
+                                break;
+                            } else {
+                                throw e1; // Regex 也抓不到，只好拋出錯誤
+                            }
+                        }
 
                         if (jsonObj && jsonObj.reply) {
                             finalResponse = jsonObj.reply;
@@ -240,7 +276,6 @@ Busyness: ${userState.busyness}`;
                                 Mind.processAnalysis(userId, jsonObj.analysis);
                             }
                         } else {
-                            // JSON 解析成功但沒有 reply 欄位
                             finalResponse = rawText;
                         }
                     } catch (e) {
