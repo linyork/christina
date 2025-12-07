@@ -71,7 +71,6 @@ christina/
 | `knowledge` | 長期事實 | `tags`, `content`, `created_at` |
 | `short_term_memory` | 短期提醒 | `key`, `content`, `expire_at` |
 | `todo` | 待辦清單 | `task`, `status`, `created_at` |
-| `user_stats` | 用戶狀態與好感度 | `userId`, `affection`, `mood`, `energy` |
 | `behavior_log` | 行為日誌 (AI 分析用) | `userId`, `action`, `context`, `timestamp` |
 | `env` | 動態開關 | `key`, `value` (e.g. DEBUG_MODE) |
 

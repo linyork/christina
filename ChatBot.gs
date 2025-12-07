@@ -95,16 +95,6 @@ var ChatBot = (() => {
             // 取得對話歷史
             var userHistory = HistoryManager.getUserHistory(userId, Config.CHAT_MAX_TURNS);
 
-            // [Affection System] 取得好感度
-            var userStats = GoogleSheet.getUserStats(userId);
-            var affectionScore = userStats.affection;
-            var affectionLevel = "";
-            if (affectionScore >= 100) affectionLevel = "Lv.5 永恆羈絆";
-            else if (affectionScore >= 80) affectionLevel = "Lv.4 靈魂伴侶";
-            else if (affectionScore >= 60) affectionLevel = "Lv.3 信賴的夥伴";
-            else if (affectionScore >= 31) affectionLevel = "Lv.2 熟悉的朋友";
-            else affectionLevel = "Lv.1 點頭之交";
-
             // 建立完整的對話內容
             var contents = [];
 
@@ -126,7 +116,6 @@ Busyness: ${userState.busyness}`;
 
             var contextInfo = "\n\n[System Info]\nCurrent Time: " + nowStr +
                 "\nCurrent User: " + userIdentity +
-                "\n[Affection Status]: " + affectionLevel + " (Score: " + affectionScore + ")" +
                 userStateInfo +
                 "\nInstruction: " + roleInstruction;
 
@@ -147,7 +136,7 @@ Busyness: ${userState.busyness}`;
             });
             contents.push({
                 "role": "model",
-                "parts": [{ "text": "好的，我是 Christina～喵❤️ 我了解了！目前的關係是：" + affectionLevel }]
+                "parts": [{ "text": "好的，我是 Christina～喵❤️ 我了解了！" }]
             });
 
             // 加入歷史對話
@@ -293,11 +282,6 @@ Busyness: ${userState.busyness}`;
             // 儲存對話
             HistoryManager.saveMessage(userId, 'user', message);
             HistoryManager.saveMessage(userId, 'assistant', finalResponse);
-
-
-
-            // [Affection System]
-            GoogleSheet.updateAffection(userId, 1);
 
             return finalResponse;
         } catch (error) {
