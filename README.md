@@ -40,7 +40,6 @@ christina/
 ├── GeminiService.gs   # Gemini API 通訊層
 ├── GoogleSheet.gs     # 資料庫 ORM 層 (讀寫 Sheets)
 ├── GoogleCalendar.gs  # 日曆串接
-
 ├── Line.gs            # LINE Messaging API 封裝
 └── Utils.gs           # 通用工具
 ```
