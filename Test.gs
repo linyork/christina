@@ -227,7 +227,7 @@ function testAvailableModels() {
 function testRDS() {
     Logger.log("=== 開始執行 DB.gs (RDS) 完整功能測試 ===");
     var testUserId = 'TEST_RDS_USER_001';
-    var tableName = 'behavior_log'; // 使用 behavior_log 作為測試表，相對安全且有 userId 欄位
+    var tableName = 'test'; // 使用 test 資料表
 
     try {
         // ============================
