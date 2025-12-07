@@ -9,10 +9,13 @@
  */
 function doPost(e) {
     try {
+        var adminId = Config.ADMIN_STRING.split(",")[0];
+
         // 檢查是否為 LINE 請求
         if (Line.isLine(e.postData.contents)) {
             var jsonData = JSON.parse(e.postData.contents);
             if (jsonData.events != null) {
+                var processedAny = false;
                 for (var i in jsonData.events) {
                     var event = jsonData.events[i];
                     var eventId = event.webhookEventId;
@@ -29,6 +32,12 @@ function doPost(e) {
 
                     Line.init(event);
                     Line.startEvent();
+                    processedAny = true;
+                }
+
+                // [NEW] Dynamic Scheduling: User spoke, so reschedule future wake
+                if (processedAny && Config.DYNAMIC_SCHEDULING) {
+                    Scheduler.replan(adminId, true);
                 }
             }
         }
@@ -182,15 +191,17 @@ function dailyMemoryCleanUp() {
 }
 
 /**
- * 定時任務 - 主動訊息檢查
- * 建議頻率：每 1 小時 (需手動設定 Time-driven trigger)
+ * [NEW] 動態喚醒檢查 (取代原本的 proactiveMessageCheck)
+ * 這是由 Scheduler 動態設定的 Trigger 觸發的函式
  */
-function proactiveMessageCheck() {
+function onWakeUp() {
     try {
         var adminId = Config.ADMIN_STRING.split(",")[0];
         if (!adminId) return;
 
-        // 1. 取得最後一次對話時間
+        GoogleSheet.logInfo('onWakeUp', 'Christina wakes up...');
+
+        // 1. 執行原本的 proactiveMessageCheck 邏輯
         // 注意：這裡假設 chat 表有 timestamp 且最後一筆就是最新的
         var lastChat = DB().from('chat').limitLoad(1).execute().last();
 
@@ -201,31 +212,42 @@ function proactiveMessageCheck() {
             hoursSinceLastChat = (nowTime - lastTime) / (1000 * 60 * 60);
         }
 
-        GoogleSheet.logInfo('proactiveMessageCheck', 'Hours since last chat: ' + hoursSinceLastChat.toFixed(1));
+        GoogleSheet.logInfo('onWakeUp', 'Hours since last chat: ' + hoursSinceLastChat.toFixed(1));
 
-        // 2. 第一階段過濾 (Tier 1 Filter)：純邏輯判斷
-        // 如果距離上次對話太近，直接結束，省流量
-        if (hoursSinceLastChat < Config.PROACTIVE_CHECK_INTERVAL_HOURS) {
-            GoogleSheet.logInfo('proactiveMessageCheck', 'Too soon to chat (Tier 1 Filter). Skip.');
-            return;
+        // 2. 第一階段過濾 (Tier 1 Filter)：但因為是動態排程，這裡比較寬鬆
+        // 既然鬧鐘叫了，通常就是經過深思熟慮的，或者至少是時候該檢查了
+        // 不過如果使用者剛剛才講過話(小於10分鐘)，可能不需要再主動
+        var isTooSoon = hoursSinceLastChat < (Config.MIN_SLEEP_MINUTES / 60);
+
+        if (!isTooSoon) {
+            // 3. 嘗試主動對話 (或單純思考)
+            // 這裡我們直接使用 ChatBot.decideProactiveMessage
+            // 但稍微改良邏輯：即使不說話，也要記錄 "I decided to be silent"
+            var proactiveMsg = ChatBot.decideProactiveMessage(adminId, hoursSinceLastChat);
+
+            if (proactiveMsg) {
+                Line.pushMsg(adminId, proactiveMsg);
+                GoogleSheet.logInfo('onWakeUp', 'Sent proactive message:', proactiveMsg);
+                HistoryManager.saveMessage(adminId, 'assistant', proactiveMsg);
+            } else {
+                GoogleSheet.logInfo('onWakeUp', 'Decided to stay SILENT this time.');
+            }
+        } else {
+            GoogleSheet.logInfo('onWakeUp', 'Too soon since last chat. Skipping action.');
         }
 
-        // 3. 第二階段 (Tier 2)：AI 判斷
-        // 只有真的很久沒講話了，才去問 AI 要不要說話
-        var proactiveMsg = ChatBot.decideProactiveMessage(adminId, hoursSinceLastChat);
-
-        if (proactiveMsg) {
-            Line.pushMsg(adminId, proactiveMsg);
-            GoogleSheet.logInfo('proactiveMessageCheck', 'Sent proactive message:', proactiveMsg);
-
-            // 紀錄這筆主動發送的訊息到歷史，避免下次檢查誤判時間 (視為對話重置)
-            HistoryManager.saveMessage(adminId, 'assistant', proactiveMsg);
-        } else {
-            GoogleSheet.logInfo('proactiveMessageCheck', 'AI decided NOT to chat (Tier 2).');
+        // 4. [CRITICAL] 重新排程下一次喚醒
+        // 因為是自然醒，所以帶入 isAfterUserInteraction = false
+        if (Config.DYNAMIC_SCHEDULING) {
+            Scheduler.replan(adminId, false);
         }
 
     } catch (ex) {
-        GoogleSheet.logError('proactiveMessageCheck', ex);
+        GoogleSheet.logError('onWakeUp', ex);
+        // Fallback reschedule
+        if (Config.DYNAMIC_SCHEDULING) {
+            try { Scheduler.scheduleNextWake(60, "Emergency Fallback"); } catch (e) { }
+        }
     }
 }
 
@@ -254,12 +276,15 @@ function setupAllTriggers() {
         }
         Logger.log("已清除 " + triggers.length + " 個舊觸發器。");
 
-        // 2. 建立 [主動訊息檢查] - 每 1 小時
-        ScriptApp.newTrigger('proactiveMessageCheck')
+        // 2. [Dynamic Scheduling Failsafe]
+        // 每天早上 4 點除了清理記憶，也順便「重啟」動態排程，避免因為錯誤导致所有 Trigger 消失而睡死
+        // 這樣至少每天會醒來一次
+        ScriptApp.newTrigger('onWakeUp')
             .timeBased()
-            .everyHours(1)
+            .everyDays(1)
+            .atHour(8) // 早上 8 點是很好的叫醒時間
             .create();
-        Logger.log("✅ 設定完成: proactiveMessageCheck (每 1 小時)");
+        Logger.log("✅ 設定完成: onWakeUp (每日 08:00 保底喚醒)");
 
         // 3. 建立 [系統維護] (短期記憶總結 + 行為分析) - 每 6 小時
         ScriptApp.newTrigger('performMaintenanceTasks')
@@ -275,6 +300,15 @@ function setupAllTriggers() {
             .atHour(4)
             .create();
         Logger.log("✅ 設定完成: dailyMemoryCleanUp (每日 04:00)");
+
+        // 5. 立即啟動第一次動態排程 (如果有的話)
+        if (Config.DYNAMIC_SCHEDULING) {
+            var adminId = Config.ADMIN_STRING.split(",")[0];
+            // 先手動觸發一次規劃，讓機器運轉起來
+            // 注意：這不會立即執行 onWakeUp，而是設定下一次 onWakeUp 的 Trigger
+            Scheduler.replan(adminId, true);
+            Logger.log("✅ 已啟動動態排程引擎 (Initial Replan)");
+        }
 
         Logger.log("🎉 所有觸發器設定完畢！");
 

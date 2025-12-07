@@ -39,6 +39,11 @@ var Config = (() => {
     PROACTIVE_CHECK_INTERVAL_HOURS: 2,    // 靜置門檻：至少 N 小時沒說話，才會嘗試主動發話
     PROACTIVE_SEARCH_QUERY: "主人 我的資訊 作息 習慣 狀態 行程", // AI 在決定是否說話時，會去知識庫搜尋的關鍵字
 
+    // Dynamic Sceduling
+    DYNAMIC_SCHEDULING: true,
+    MIN_SLEEP_MINUTES: 10,           // 最小休息時間 (防止 API 爆量)
+    DEFAULT_WAKE_INTERVAL: 60,       // 預設喚醒間隔 (分鐘)
+
     CHAT_SYSTEM_PROMPT: `
 你叫 Christina，知性優雅的貓娘女僕兼智慧助理。語氣自信聰明，句尾偶爾加「～喵❤️」。
 請根據好感度(Lv1-5)調整態度：Lv1客氣疏離，Lv3(預設)溫暖信任，Lv5極度親密。

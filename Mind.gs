@@ -305,5 +305,59 @@ ${recentChats}
         }
     };
 
+    /**
+     * 動態決策：下次何時醒來？
+     * @param {object} userState - 使用者狀態
+     * @param {number} hoursSinceLastChat - 距離上次對話時數
+     * @returns {object} { delayMinutes: number, reason: string }
+     */
+    mind.decideNextSchedule = (userState, hoursSinceLastChat) => {
+        try {
+            var now = new Date();
+            var hour = now.getHours();
+            var nowStr = Utilities.formatDate(now, "GMT+8", "yyyy/MM/dd HH:mm:ss");
+
+            var prompt = `
+現在是 ${nowStr} ( Hour: ${hour} )。
+你是 Christina，一個擁有自主時間感的女僕。
+你需要決定 **「下一次什麼時候醒來 (Wake Up)」** 檢查有沒有事要做。
+
+【你的原則】
+1. **深夜 (01:00 - 06:00)**：通常應該一直睡到早上。如果現在是深夜，請直接睡到早上 8 點以後。 (Delay > 240 mins)
+2. **熱聊過後 (Recently Active)**：如果距離上次對話很短 (< 0.5hr)，可能主人還沒走遠，可以設定短一點 (10-30 mins) 隨時待命。
+3. **工作中 (Work hours)**：如果主人在忙 (Busyness: high)，不要太常打擾，可以設定 1-2 小時檢查一次。
+4. **閒置 (Idle)**：如果已經很久沒講話 (> 3hr)，且不是深夜，可以每 2-4 小時醒來一次看看。
+
+【目前狀態】
+- 主人狀態 (Mood: ${userState.mood || 'unknown'}, Energy: ${userState.energy || 5}, Busyness: ${userState.busyness || 'normal'})
+- 距離上次說話：${hoursSinceLastChat.toFixed(1)} 小時
+
+【任務】
+請決定下一次喚醒的時間間隔 (分鐘)。
+並給出理由。
+
+回傳 JSON 格式：
+{
+  "delayMinutes": 60,  // 分鐘數 (Int)
+  "reason": "現在是深夜，我要睡到早上" // 理由 (String)
+}`;
+
+            var contents = [{ "role": "user", "parts": [{ "text": prompt }] }];
+            var response = GeminiService.callAPI(contents);
+
+            if (response && response.candidates && response.candidates[0].content) {
+                var text = response.candidates[0].content.parts[0].text;
+                text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+                return JSON.parse(text);
+            }
+            // Default fallback
+            return { delayMinutes: 60, reason: "Default fallback (API error)" };
+
+        } catch (ex) {
+            GoogleSheet.logError('Mind.decideNextSchedule', ex);
+            return { delayMinutes: 60, reason: "Error fallback" };
+        }
+    };
+
     return mind;
 })();
