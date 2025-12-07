@@ -221,7 +221,17 @@ Busyness: ${userState.busyness}`;
                 if (part.text) {
                     var rawText = part.text;
                     try {
+                        // 1. 嘗試清理 Markdown 標記
                         var jsonText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+
+                        // 2. 如果清理後還不是以 { 開頭，嘗試用 Regex 抓取第一個 JSON 物件
+                        if (!jsonText.startsWith('{')) {
+                            var match = jsonText.match(/\{[\s\S]*\}/);
+                            if (match) {
+                                jsonText = match[0];
+                            }
+                        }
+
                         var jsonObj = JSON.parse(jsonText);
 
                         if (jsonObj && jsonObj.reply) {
@@ -230,11 +240,13 @@ Busyness: ${userState.busyness}`;
                                 Mind.processAnalysis(userId, jsonObj.analysis);
                             }
                         } else {
+                            // JSON 解析成功但沒有 reply 欄位
                             finalResponse = rawText;
                         }
                     } catch (e) {
+                        // JSON 解析失敗
                         finalResponse = rawText;
-                        GoogleSheet.logInfo('ChatBot.reply', 'Response is not structured JSON, treating as text');
+                        GoogleSheet.logInfo('ChatBot.reply', 'JSON Parse Failed: ' + e.message + ' | Raw: ' + rawText.substring(0, 50) + '...');
                     }
                     break;
                 }
