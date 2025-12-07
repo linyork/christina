@@ -21,6 +21,22 @@ var DB = (() => {
     var range;
 
     /**
+     * 取得 Spreadsheet 實例 (快取機制)
+     * 避免同一執行週期重複呼叫 SpreadsheetApp.openById (Expensive Operation)
+     */
+    var getSpreadsheet = () => {
+        // 使用 Config 中定義的 Key 來作為 Cache Key，確保如果 Config.SHEET_ID 改變也能正確運作
+        // 由於 DB 是閉包，我們利用全域變數或 PropertiesService 太慢
+        // 這裡利用 JS 模組範圍變數 (Module-scoped variable) 模擬單例
+        // 但注意：在 GAS 中，每次 Execution 全域變數會重置，所以這僅針對「單次執行中多次呼叫 DB」有效
+        if (typeof DB._cachedSpreadsheet === 'undefined' || DB._cachedId !== Config.SHEET_ID) {
+            DB._cachedSpreadsheet = SpreadsheetApp.openById(Config.SHEET_ID);
+            DB._cachedId = Config.SHEET_ID;
+        }
+        return DB._cachedSpreadsheet;
+    };
+
+    /**
      * 處理讀取的 columns
      */
     var doSelectColumn = () => {
@@ -110,24 +126,32 @@ var DB = (() => {
         try {
             let rowData = {};
             let tempRowData = {};
-            if (Object.keys(selectColumns).length === 0) {
-                for (let i = 1; i < lastRow; i++) {
-                    for (let j = 0; j < lastColumn; j++) {
-                        rowData[selectColumns[j]] = allData[i][j];
-                    }
-                    if (doWhere(rowData)) result.push(rowData);
-                    rowData = {};
+            var headers = allData[0];
+            if (Object.keys(selectColumns).length === 0) { // Should be based on columns.length really, but safe if doSelectColumn logic holds
+                // Actually, let's rewrite to be robust
+            }
+
+            for (let i = 1; i < lastRow; i++) {
+                let fullRowData = {};
+                // 1. Build full row data for filtering (WHERE condition needs all columns)
+                for (let j = 0; j < lastColumn; j++) {
+                    fullRowData[headers[j]] = allData[i][j];
                 }
-            } else {
-                for (let i = 1; i < lastRow; i++) {
-                    for (let j = 0; j < lastColumn; j++) {
-                        tempRowData[selectColumns[j]] = allData[i][j];
-                        if (j in selectColumns) {
-                            rowData[selectColumns[j]] = allData[i][j];
-                        }
+
+                // 2. Check condition
+                if (doWhere(fullRowData)) {
+                    // 3. Project result (select specific columns or all)
+                    if (columns.length > 0) {
+                        let rowData = {};
+                        columns.forEach(col => {
+                            if (fullRowData.hasOwnProperty(col)) {
+                                rowData[col] = fullRowData[col];
+                            }
+                        });
+                        result.push(rowData);
+                    } else {
+                        result.push(fullRowData);
                     }
-                    if (doWhere(tempRowData)) result.push(rowData);
-                    rowData = {};
                 }
             }
         } catch (ex) {
@@ -140,23 +164,62 @@ var DB = (() => {
      */
     var doUpdate = () => {
         try {
+            var minRowIndex = -1;
+            var maxRowIndex = -1;
+            var isAnyRowUpdated = false;
+
+            // 建立標題索引對照表 (Header Map)
+            var headerMap = {};
+            if (allData && allData.length > 0) {
+                allData[0].forEach((col, idx) => {
+                    headerMap[col] = idx;
+                });
+            }
+
+            // 暫存資料物件
             var rowData = {};
+
+            // 1. 在記憶體中執行篩選與更新
             for (var i = 1; i < lastRow; i++) {
+                // 建構 rowData 用於 Where 條件判斷
                 for (var j = 0; j < lastColumn; j++) {
-                    rowData[selectColumns[j]] = allData[i][j];
+                    if (selectColumns[j]) {
+                        rowData[selectColumns[j]] = allData[i][j];
+                    }
                 }
+
                 if (doWhere(rowData)) {
+                    isAnyRowUpdated = true;
+                    if (minRowIndex === -1) minRowIndex = i;
+                    maxRowIndex = i;
+
                     updateData.forEach((data) => {
                         var key = Object.keys(data)[0];
-                        rowData[key] = data[key];
+                        var newVal = data[key];
+
+                        // 如果 updateData 的 key 有在 headerMap 中找到，才進行更新
+                        if (headerMap.hasOwnProperty(key)) {
+                            allData[i][headerMap[key]] = newVal;
+                        }
                     });
-                    var tmpArray = [];
-                    Object.keys(rowData).forEach((key) => {
-                        tmpArray.push(rowData[key]);
-                    });
-                    table.getRange(i + 1, 1, 1, tmpArray.length).setValues([tmpArray]);
                 }
                 rowData = {};
+            }
+
+            // 2. 批次寫回 Sheet (僅寫回有變動的最外圍範圍)
+            if (isAnyRowUpdated) {
+                // allData index 從 0 開始 (0是Header)
+                // Sheet Row 從 1 開始. allData[minRowIndex] 是 Sheet Row (minRowIndex + 1)
+                var startSheetRow = minRowIndex + 1;
+                var numRows = maxRowIndex - minRowIndex + 1;
+
+                // 擷取修改過的資料區塊
+                var dataToWrite = allData.slice(minRowIndex, maxRowIndex + 1);
+
+                table.getRange(startSheetRow, 1, numRows, lastColumn).setValues(dataToWrite);
+
+                // Logging (Optional but helpful)
+                // GoogleSheet.logInfo('DB.doUpdate', `Batch updated rows ${startSheetRow} to ${startSheetRow + numRows - 1}`);
             }
         } catch (ex) {
             GoogleSheet.logError('DB.doUpdate', ex);
@@ -201,14 +264,14 @@ var DB = (() => {
     };
 
     /**
-     * 處理刪除符合條件的 Row (由後往前刪)
+     * 處理刪除符合條件的 Row (批次優化)
      */
     var doDeleteRows = () => {
         try {
             var rowsToDelete = [];
             var rowData = {};
 
-            // 遍歷尋找符合的 row (從 1 開始，因為 0 是 header)
+            // 1. 掃描需刪除的列
             for (var i = 1; i < lastRow; i++) {
                 for (var j = 0; j < lastColumn; j++) {
                     rowData[selectColumns[j]] = allData[i][j];
@@ -220,11 +283,27 @@ var DB = (() => {
                 rowData = {};
             }
 
-            // 從後往前刪除
+            if (rowsToDelete.length === 0) return;
+
+            // 2. 排序 (由大到小)
             rowsToDelete.sort((a, b) => b - a);
-            rowsToDelete.forEach(row => {
-                table.deleteRow(row);
-            });
+
+            // 3. 批次刪除 (Group contiguous rows)
+            // 範例: [10, 9, 8, 5, 2] -> del(8, 3), del(5, 1), del(2, 1)
+            for (var i = 0; i < rowsToDelete.length; i++) {
+                var currentBlockStart = rowsToDelete[i]; // 現在處理的 Block (最大值)
+                var count = 1;
+
+                // 檢查下一筆 (rowsToDelete[i+1]) 是否連續 (比當前小1)
+                while (i + 1 < rowsToDelete.length && rowsToDelete[i + 1] === currentBlockStart - 1) {
+                    currentBlockStart = rowsToDelete[i + 1]; // Block 往前延伸
+                    count++;
+                    i++;
+                }
+
+                // 執行刪除 (一次刪除 count 行，從該區塊最小的 row 開始)
+                table.deleteRows(currentBlockStart, count);
+            }
 
             GoogleSheet.logInfo('DB.doDeleteRows', 'Deleted ' + rowsToDelete.length + ' rows.');
 
@@ -255,7 +334,7 @@ var DB = (() => {
     db.select = (...column) => {
         try {
             [...column].map((columnName) => {
-                if (columnName instanceof String && columnName !== '') {
+                if (typeof columnName === 'string' && columnName !== '') {
                     columns.push(columnName);
                 }
             });
@@ -275,9 +354,8 @@ var DB = (() => {
     db.from = (tableName) => {
         type = 'S';
         try {
-            // 優化：不立即讀取資料，延遲到 execute() 時才讀取
-            // 只先儲存 table 參考，以便後續操作
-            table = SpreadsheetApp.openById(Config.SHEET_ID).getSheetByName(tableName);
+            // 優化：使用快取 Spreadsheet 物件
+            table = getSpreadsheet().getSheetByName(tableName);
         } catch (ex) {
             GoogleSheet.logError('DB.from', ex);
         }
@@ -317,12 +395,24 @@ var DB = (() => {
      * @returns {object} DB 實例
      */
     db.execute = () => {
-        try {
-            if (table === undefined) throw new Error("未設定 Table");
-            if (type === undefined) throw new Error("未設定 type");
+        if (table === undefined) throw new Error("未設定 Table");
+        if (type === undefined) throw new Error("未設定 type");
 
+        // --- 併發控制 (Concurrency Control) ---
+        // 若為寫入操作 (I, U, D, DR)，啟用 LockService 防止 Race Condition
+        var lock = null;
+        var isWriteOp = ['I', 'U', 'D', 'DR'].includes(type);
+
+        if (isWriteOp) {
+            lock = LockService.getScriptLock();
+            // 等待最多 10 秒，若無法取得鎖則拋出錯誤 (避免資料覆蓋)
+            var success = lock.tryLock(10000);
+            if (!success) throw new Error('DB is busy (Lock Timeout). Please try again.');
+        }
+
+        try {
             // 延遲載入邏輯
-            if (!allData || type === 'S') { // 如果是查詢，執行資料載入
+            if ((!allData && type !== 'I' && type !== 'D') || type === 'S') { // 如果是查詢或更新/刪除列，執行資料載入 (Insert/Delete 另外處理)
                 lastColumn = table.getLastColumn();
                 var realLastRow = table.getLastRow();
 
@@ -377,7 +467,11 @@ var DB = (() => {
                     lastRow = table.getLastRow();
                     if (!allData) {
                         // Insert 需要 headers 來對應欄位
-                        allData = table.getRange(1, 1, 1, table.getLastColumn()).getValues(); // 只讀一行
+                        var lastCol = table.getLastColumn();
+                        if (lastCol < 1) {
+                            throw new Error("表格 '" + table.getName() + "' 為空，無法執行插入操作。請確認第一列包含欄位名稱 (Headers)。");
+                        }
+                        allData = table.getRange(1, 1, 1, lastCol).getValues(); // 只讀一行
                     }
                     doInsert();
                     break;
@@ -396,6 +490,12 @@ var DB = (() => {
             }
         } catch (ex) {
             GoogleSheet.logError('DB.execute', ex);
+            throw ex; // 重新拋出例外，確保呼叫端知道失敗 (特別是 Lock 失敗)
+        } finally {
+            // 釋放鎖
+            if (lock) {
+                lock.releaseLock();
+            }
         }
         return db;
     };
@@ -446,10 +546,11 @@ var DB = (() => {
     db.update = (tableName) => {
         type = 'U';
         try {
-            table = SpreadsheetApp.openById(Config.SHEET_ID).getSheetByName(tableName);
+            table = getSpreadsheet().getSheetByName(tableName);
             lastColumn = table.getLastColumn();
             lastRow = table.getLastRow();
-            allData = table.getDataRange().getValues();
+            // Lazy Load: 延遲到 execute 時才讀取資料
+            allData = undefined;
         } catch (ex) {
             GoogleSheet.logError('DB.update', ex);
         }
@@ -464,10 +565,11 @@ var DB = (() => {
     db.insert = (tableName) => {
         type = 'I';
         try {
-            table = SpreadsheetApp.openById(Config.SHEET_ID).getSheetByName(tableName);
+            table = getSpreadsheet().getSheetByName(tableName);
             lastColumn = table.getLastColumn();
             lastRow = table.getLastRow();
-            allData = table.getDataRange().getValues();
+            // Lazy Load: 延遲到 execute 時才讀取 (且 Insert 只需 Header)
+            allData = undefined;
         } catch (ex) {
             GoogleSheet.logError('DB.insert', 'Error: ' + ex.message + '\nStack: ' + ex.stack);
         }
@@ -482,8 +584,9 @@ var DB = (() => {
     db.deleteRows = (tableName) => {
         type = 'DR';
         try {
-            table = SpreadsheetApp.openById(Config.SHEET_ID).getSheetByName(tableName);
-            // We need to load data in execute to check conditions
+            table = getSpreadsheet().getSheetByName(tableName);
+            // Lazy Load: execute 會處理 loading
+            allData = undefined;
         } catch (ex) {
             GoogleSheet.logError('DB.deleteRows', ex);
         }
@@ -499,7 +602,7 @@ var DB = (() => {
     db.delete = (tableName, rangeString) => {
         type = 'D';
         try {
-            table = SpreadsheetApp.openById(Config.SHEET_ID).getSheetByName(tableName);
+            table = getSpreadsheet().getSheetByName(tableName);
             range = rangeString;
         } catch (ex) {
             GoogleSheet.logError('DB.delete', ex);

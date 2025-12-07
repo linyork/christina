@@ -255,6 +255,7 @@ function testRDS() {
             .set('userId', testUserId)
             .set('action', 'TEST_ACTION_2')
             .set('params', 'param2')
+            .set('timestamp', new Date())
             .execute();
 
         // 插入第三筆 (給 limit 測試用)
@@ -262,6 +263,7 @@ function testRDS() {
             .set('userId', testUserId)
             .set('action', 'TEST_ACTION_3')
             .set('params', 'param3')
+            .set('timestamp', new Date())
             .execute();
 
         Logger.log("  - Insert 3筆資料: OK (稍後透過 Select 驗證)");
