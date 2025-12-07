@@ -25,13 +25,17 @@ var Scheduler = (() => {
 
             // 2. 蒐集決策所需的資訊
             var lastChatTime = 0;
+            var lastChatRole = 'user'; // Default to user if unknown
+
             if (isAfterUserInteraction) {
                 lastChatTime = new Date().getTime();
+                lastChatRole = 'user';
             } else {
-                // 從 DB 讀取最後對話時間
+                // 從 DB 讀取最後對話時間與角色
                 var lastChat = DB().from('chat').limitLoad(1).execute().last();
                 if (lastChat && lastChat.timestamp) {
                     lastChatTime = new Date(lastChat.timestamp).getTime();
+                    lastChatRole = lastChat.role || 'user';
                 }
             }
 
@@ -39,7 +43,8 @@ var Scheduler = (() => {
 
             // 3. 呼叫 Brain (Mind) 進行決策
             var userState = Mind.getUserState(userId);
-            var decision = Mind.decideNextSchedule(userState, hoursSinceLastChat);
+            // 傳遞 lastChatRole 給 Mind，讓它知道是誰最後講話
+            var decision = Mind.decideNextSchedule(userState, hoursSinceLastChat, lastChatRole);
 
             // 4. 執行決策 (設定 Trigger)
             var delayMinutes = decision.delayMinutes || Config.DEFAULT_WAKE_INTERVAL;

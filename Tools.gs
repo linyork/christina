@@ -118,14 +118,14 @@ var Tools = (() => {
             },
             {
                 "name": "system_control",
-                "description": "系統控制工具。包含：查詢ID、離開群組、清除記憶。",
+                "description": "系統控制工具。注意：這包含危險操作，請謹慎使用。",
                 "parameters": {
                     "type": "object",
                     "properties": {
                         "action": {
                             "type": "string",
                             "enum": ["get_user_id", "leave_group", "clear_history"],
-                            "description": "執行動作"
+                            "description": "執行動作：\n- get_user_id: 查詢使用者 ID。\n- leave_group: 離開群組。\n- clear_history: 【極度危險】清除所有對話紀錄。⚠️ 嚴格禁止自主使用！只有在主人「明確要求」清除歷史或重置對話時才能執行。"
                         }
                     },
                     "required": ["action"]
