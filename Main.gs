@@ -14,7 +14,20 @@ function doPost(e) {
             var jsonData = JSON.parse(e.postData.contents);
             if (jsonData.events != null) {
                 for (var i in jsonData.events) {
-                    Line.init(jsonData.events[i]);
+                    var event = jsonData.events[i];
+                    var eventId = event.webhookEventId;
+
+                    // Deduplication: 防止 LINE 重送導致的重複處理
+                    var cache = CacheService.getScriptCache();
+                    if (eventId && cache.get(eventId)) {
+                        GoogleSheet.logInfo('doPost', 'Duplicate event ignored:', eventId);
+                        continue;
+                    }
+                    if (eventId) {
+                        cache.put(eventId, 'processed', 60);
+                    }
+
+                    Line.init(event);
                     Line.startEvent();
                 }
             }

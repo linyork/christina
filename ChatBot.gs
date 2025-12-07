@@ -179,8 +179,8 @@ Busyness: ${userState.busyness}`;
                 var content = candidate.content;
 
                 if (!content || !content.parts || content.parts.length === 0) {
-                    GoogleSheet.logError('ChatBot.reply', 'No content in response');
-                    return '主人不好意思我有點混亂～喵💔';
+                    GoogleSheet.logInfo('ChatBot.reply', 'No content in response. FinishReason: ' + (candidate.finishReason || 'Unknown'));
+                    return null;
                 }
 
                 var part = content.parts[0];

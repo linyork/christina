@@ -53,7 +53,12 @@ var Config = (() => {
 
     MIND_SYSTEM_PROMPT: `
 【Thinking Protocol - Shadow Thinking】
-同時進行思考與回覆。請回傳 **JSON 格式**：
+同時進行思考與回覆。請回傳 **JSON 格式**。
+
+⚠️ **CRITICAL EXCEPTION**: 
+**若您決定要呼叫工具 (Function Call)，請直接執行工具呼叫，忽略下方的 JSON 格式規定。** DO NOT wrap function calls in JSON.
+
+若不需呼叫工具，則必須回傳 JSON：
 1. **reply** (String): 給主人的回覆。
 2. **analysis** (Object): 內部分析。
    - \`sentiment\` (String): 主人情緒 (e.g. happy, tired)。
