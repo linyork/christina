@@ -210,16 +210,7 @@ var Line = (() => {
                     // 暫不動作
                     break;
                 case 'memberLeft':
-                    // line.pushMsg(line.event.sourceId, '有人離開了！我們緬懷他');
-                    break;
-                case 'memberJoined':
-                    // line.pushMsg(line.event.sourceId, '歡迎新朋友！我是 Christina');
-                    break;
-                case 'follow':
-                    line.pushMsg(line.event.sourceId, '主人您好！我是您的專屬女僕 Christina～喵❤️');
-                    break;
-                case 'unfollow':
-                    // line.pushMsg(line.event.sourceId, '好可惜以後 Christina 會提供更多服務的');
+                    // 暫不動作
                     break;
                 default:
                     break;
@@ -261,47 +252,7 @@ var Line = (() => {
         }
     };
 
-    /**
-     * 回覆按鈕模板
-     * @param {string} replyToken - Reply Token
-     * @param {string} altText - 替代文字
-     * @param {object} template - 模板物件
-     */
-    line.replyBtnTemp = (replyToken, altText, template) => {
-        try {
-            sendMsg(apiBase + '/message/reply', JSON.stringify({
-                'replyToken': replyToken,
-                'messages': [{
-                    'type': 'template',
-                    'altText': altText,
-                    'template': template
-                }]
-            }));
-        } catch (ex) {
-            GoogleSheet.logError('Line.replyBtnTemp', ex);
-        }
-    };
 
-    /**
-     * 回覆圖片
-     * @param {string} replyToken - Reply Token
-     * @param {string} originalUrl - 原始圖片 URL
-     * @param {string} previewUrl - 預覽圖片 URL
-     */
-    line.replyImageTemp = (replyToken, originalUrl, previewUrl) => {
-        try {
-            sendMsg(apiBase + '/message/reply', JSON.stringify({
-                'replyToken': replyToken,
-                'messages': [{
-                    'type': 'image',
-                    'originalContentUrl': originalUrl,
-                    'previewImageUrl': previewUrl
-                }]
-            }));
-        } catch (ex) {
-            GoogleSheet.logError('Line.replyImageTemp', ex);
-        }
-    };
 
     /**
      * 離開群組或聊天室

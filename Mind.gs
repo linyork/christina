@@ -57,7 +57,7 @@ var Mind = (() => {
      *   energy_level: 1-10,
      *   intent: "chat" | "work" | "command",
      *   facts: ["使用者明天要早起", "使用者喜歡吃草莓"], // 知識點
-     *   detected_behavior: "ask_weather_morning" // 行為模式標籤 (可選)
+     *   detected_behavior: "wake_up_morning" // 行為模式標籤 (可選)
      * }
      */
     mind.processAnalysis = (userId, analysis) => {
@@ -106,7 +106,7 @@ var Mind = (() => {
     /**
      * 記錄使用者行為
      * @param {string} userId
-     * @param {string} action - 行為類別 (e.g., 'wake_up', 'sleep', 'commute', 'ask_weather')
+     * @param {string} action - 行為類別 (e.g., 'wake_up', 'sleep', 'commute')
      * @param {string} context - 上下文資訊
      */
     mind.logBehavior = (userId, action, context) => {

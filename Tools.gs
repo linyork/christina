@@ -117,32 +117,15 @@ var Tools = (() => {
                 }
             },
             {
-                "name": "get_weather",
-                "description": "取得天氣資訊。",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "location": {
-                            "type": "string",
-                            "description": "城市名稱 (預設: 台北)"
-                        }
-                    }
-                }
-            },
-            {
                 "name": "system_control",
-                "description": "系統控制工具。包含：查詢ID、離開群組、清除記憶、取得梗圖。",
+                "description": "系統控制工具。包含：查詢ID、離開群組、清除記憶。",
                 "parameters": {
                     "type": "object",
                     "properties": {
                         "action": {
                             "type": "string",
-                            "enum": ["get_user_id", "leave_group", "clear_history", "get_meme"],
+                            "enum": ["get_user_id", "leave_group", "clear_history"],
                             "description": "執行動作"
-                        },
-                        "meme_keyword": {
-                            "type": "string",
-                            "description": "梗圖關鍵字 (僅用於 get_meme)"
                         }
                     },
                     "required": ["action"]
@@ -240,9 +223,7 @@ var Tools = (() => {
                                 return '已清除所有對話紀錄，回到原廠設定～喵❤️';
                             }
                             return '無法清除，找不到 User ID';
-                        case 'get_meme':
-                            var url = GoogleDrive.getImageUrl(args.meme_keyword + '.jpg');
-                            return url ? ('找到梗圖了！連結：' + url) : '找不到這張梗圖QQ～喵嗚嗚💔';
+
                         default:
                             return '未知的 System 指令';
                     }
@@ -274,51 +255,6 @@ var Tools = (() => {
                         GoogleSheet.logError('Tools.search_web', e);
                         return "搜尋錯誤：" + e.toString();
                     }
-
-                case 'get_weather':
-                    var location = args.location || '台北';
-                    var coords = {
-                        "台北": { lat: 25.0330, lon: 121.5654 },
-                        "新北": { lat: 25.0169, lon: 121.4627 },
-                        "桃園": { lat: 24.9936, lon: 121.3009 },
-                        "新竹": { lat: 24.8138, lon: 120.9674 },
-                        "台中": { lat: 24.1477, lon: 120.6736 },
-                        "嘉義": { lat: 23.4800, lon: 120.4491 },
-                        "台南": { lat: 22.9997, lon: 120.2270 },
-                        "高雄": { lat: 22.6272, lon: 120.3014 },
-                        "基隆": { lat: 25.1276, lon: 121.7391 },
-                        "宜蘭": { lat: 24.7517, lon: 121.7483 },
-                        "花蓮": { lat: 23.9770, lon: 121.6022 },
-                        "台東": { lat: 22.7662, lon: 121.1441 },
-                        "澎湖": { lat: 23.5656, lon: 119.6151 },
-                        "金門": { lat: 24.4364, lon: 118.3186 },
-                        "馬祖": { lat: 26.1974, lon: 119.9687 }
-                    }[location];
-
-                    if (!coords) {
-                        coords = { lat: 25.0330, lon: 121.5654 };
-                        location += " (台北)";
-                    }
-
-                    var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + coords.lat + '&longitude=' + coords.lon + '&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code&timezone=Asia%2FTaipei';
-                    var response = UrlFetchApp.fetch(url);
-                    var data = JSON.parse(response.getContentText());
-
-                    if (!data.current) return '讀取天氣資料失敗～喵💔';
-
-                    var current = data.current;
-                    var weatherCode = current.weather_code;
-                    var weatherText = "晴朗";
-                    if (weatherCode === 0) weatherText = "晴天 ☀️";
-                    else if (weatherCode <= 3) weatherText = "多雲 ☁️";
-                    else if (weatherCode <= 48) weatherText = "有霧 🌫️";
-                    else if (weatherCode <= 55) weatherText = "毛毛雨 🌧️";
-                    else if (weatherCode <= 67) weatherText = "下雨 ☔";
-                    else if (weatherCode <= 77) weatherText = "下雪 ❄️";
-                    else if (weatherCode <= 82) weatherText = "陣雨 🌦️";
-                    else if (weatherCode <= 99) weatherText = "雷雨 ⛈️";
-
-                    return `【${location} 目前天氣】\n狀況：${weatherText}\n溫度：${current.temperature_2m}°C (體感 ${current.apparent_temperature}°C)\n濕度：${current.relative_humidity_2m}%\n降雨：${current.precipitation} mm`;
 
                 default:
                     return '找不到這個功能～喵💔';

@@ -71,8 +71,6 @@ var ChatBot = (() => {
                 HistoryManager.saveMessage(userId, 'user', memoryContent);
                 HistoryManager.saveMessage(userId, 'assistant', reply);
 
-
-
                 return reply;
             }
 

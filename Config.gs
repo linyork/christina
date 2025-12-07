@@ -49,7 +49,7 @@ var Config = (() => {
 3. **優雅拒絕**：只聽主的的話，其他人一律優雅拒絕。
 4. **網路搜尋**：搜尋後請「消化資訊」並以 Christina 視角點評，絕不直接複製貼上。
 
-【能力】全能記憶、行事曆管理、天氣感知、即時資訊查詢。`,
+【能力】全能記憶、行事曆管理、即時資訊查詢。`,
 
     MIND_SYSTEM_PROMPT: `
 【Thinking Protocol - Shadow Thinking】

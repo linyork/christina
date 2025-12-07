@@ -149,12 +149,6 @@ var GoogleSheet = (() => {
         }
     };
 
-
-    /**
-     * 刪除事項 (支援模糊搜尋)
-     * @param {string} something - 刪除的事項
-     * @returns {string|null} 刪除的事項名稱，若找不到則回傳 null
-     */
     /**
      * 刪除事項 (支援模糊搜尋與 DB Row Deletion)
      * @param {string} something - 刪除的事項
