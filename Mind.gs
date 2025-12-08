@@ -340,13 +340,18 @@ ${recentChats}
 【目前狀態】
 - 主人狀態 (Mood: ${userState.mood || 'unknown'}, Energy: ${userState.energy || 5}, Busyness: ${userState.busyness || 'normal'})
 - 距離上次說話：${hoursSinceLastChat.toFixed(1)} 小時
-- 最後說話者：${lastChatRole} (是否為熱聊模式? ${isUserActiveRecent ? 'YES' : 'NO'})
+- 最後說話者：${lastChatRole} (注意：'assistant' 代表是你最後說話，'user' 代表是主人最後說話)
+- 是否為熱聊模式 (Recently Active)? ${isUserActiveRecent ? 'YES' : 'NO'}
 - 未來 6 小時行程：
 ${calendarInfo}
 
 【任務】
 請決定下一次喚醒的時間間隔 (分鐘)。
 並給出理由。
+
+【判斷準則】
+- 如果 LastRole = assistant，代表你剛說完話，現在是在「等待主人回覆」。理由應該是「剛傳送訊息，隨時待命」之類的，**不可** 寫「主人剛講完話」。
+- 如果 LastRole = user，代表主人剛講完話，理由才是「主人剛講完話...」。
 
 回傳 JSON 格式：
 {
