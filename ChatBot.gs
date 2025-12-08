@@ -324,33 +324,70 @@ Busyness: ${userState.busyness}`;
             var hour = now.getHours();
             var nowStr = Utilities.formatDate(now, "GMT+8", "yyyy/MM/dd HH:mm:ss");
 
-            var timeAtmosphere = "";
-            if (hour >= 6 && hour < 9) timeAtmosphere = "早晨 (充滿活力、正能量)";
-            else if (hour >= 9 && hour < 12) timeAtmosphere = "上午 (專注工作、或是稍微忙碌)";
-            else if (hour >= 12 && hour < 14) timeAtmosphere = "中午 (午休、放鬆、關心午餐)";
-            else if (hour >= 14 && hour < 18) timeAtmosphere = "下午 (悠閒下午茶、或是稍微慵懶)";
-            else if (hour >= 18 && hour < 23) timeAtmosphere = "晚上 (放鬆、陪伴、或者關心晚餐)";
-            else timeAtmosphere = "深夜 (安靜、想睡、或是輕聲細語)";
+            var timePeriod = "";
+            if (hour >= 6 && hour < 9) timePeriod = "早晨";
+            else if (hour >= 9 && hour < 12) timePeriod = "上午";
+            else if (hour >= 12 && hour < 14) timePeriod = "中午";
+            else if (hour >= 14 && hour < 18) timePeriod = "下午";
+            else if (hour >= 18 && hour < 23) timePeriod = "晚上";
+            else timePeriod = "深夜";
+
+            // [Optimization] 抓取最近 6 則真實對話，提供「語氣」與「重複性」檢查
+            var recentHistoryObjs = HistoryManager.getUserHistory(userId, 6);
+            var recentHistoryStr = "無 (很久沒說話了)";
+            if (recentHistoryObjs && recentHistoryObjs.length > 0) {
+                 // HistoryManager 回傳的是 Gemini 格式 {role, parts:[{text...}]}
+                 // 我們將其轉換為易讀的 Log 格式
+                 recentHistoryStr = recentHistoryObjs.map(h => {
+                     var roleName = (h.role === 'user') ? '主人' : 'Christina';
+                     var txt = (h.parts && h.parts[0]) ? h.parts[0].text : "";
+                     return `${roleName}: ${txt}`;
+                 }).join("\n"); 
+            }
 
             var contextPrompt = `
 [情境模擬]
-現在時間：${nowStr}
-時段氣氛：${timeAtmosphere}
+現在時間：${nowStr} (${timePeriod})
 距離上次對話：約 ${hoursSinceLastChat.toFixed(1)} 小時
+
+[最近真實對話紀錄 (Ref-Check)]:
+(用來檢查上一句話停在哪裡、語氣如何，以及是否鬼打牆)
+${recentHistoryStr}
 
 [關於主人的知識]:
 ${knowledge}
 
-[短期記憶]:
+[短期記憶 (摘要)]:
 ${shortTermMemories || "無"}
 
 [你的虛擬生活]
 你是 Christina，請根據現在的時間，想像這幾個小時你剛剛在做什麼？
 
+【核心動機：好奇心與認知補完】
+你主動找主人聊天的深層目的，是為了「更了解他」，以便填補你對他的認知空白 (Knowledge Gap)。
+若你決定開口，請優先考慮能「增加你對主人認知」的話題：
+1. **完善喜好 (Knowledge)**：針對你已知但模糊的喜好進行追問 (e.g., 知道喜歡咖啡，但不知道口味？)。
+2. **驗證行為 (Pattern)**：針對主人的作息進行關心或驗證 (e.g., "主人今天比較早休息嗎？")。
+3. **校準狀態 (State)**：關心主人的心情或精神狀態，以更新 User Matrix。
+
 [決策任務]
-請綜合「你的虛擬生活狀態」與「主人的狀態」，判斷現在是否適合找主人聊聊？
+請綜合以上資訊，判斷現在是否適合找主人聊聊？
+
+【重要：讀空氣 (Atmosphere Check)】
+請先根據 [最近真實對話紀錄] 與 [短期記憶] 判斷現在的 **「兩人氣氛」**。
+(是剛吵完架？還是溫馨的日常？或者是嚴肅的工作模式？)
+-> 如果氣氛不佳或對方想結束對話，請務必 "SILENT"。
+
+【重要原則：拒絕鬼打牆 & 讀空氣】
+1. **檢查真實對話**：請看 [最近真實對話紀錄]，如果上一句話已經完美結束（例如互道晚安、好的收到），請不要硬接話，除非你有 **全新的** 話題。
+2. **區分「延續」與「重複」**：
+   - ✅ **允許延續**：如果話題還沒結束，你可以針對上一句話進行追問或回應（例如主人說吃了拉麵，你可以問哪一家）。
+   - ❌ **禁止鬼打牆**：如果你想說的觀點或資訊（例如「要節省 AI 費用」），在紀錄中已經講過且**已結束**，絕對禁止再次發起。
+3. **負面約束**：若 [短期記憶] 中包含「不要再提」、「鬼打牆」等紀錄，請務必避開相關話題。
+
+【判斷邏輯】
 1. **作息優先**：如果現在是主人通常在忙、開會或睡覺的時間，回傳 "SILENT"。
-2. **自然互動**：如果時機合適，請發起一個話題。
+2. **自然互動**：如果時機合適，請發起一個話題。話題來源可以是你的 [虛擬生活] 或是對主人的 [短期記憶] 關懷，但必須保持新鮮感。
 
 [回傳格式]
 - 保持安靜 -> "SILENT"

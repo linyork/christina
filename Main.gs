@@ -35,7 +35,7 @@ function doPost(e) {
                     processedAny = true;
                 }
 
-                // [NEW] Dynamic Scheduling: User spoke, so reschedule future wake
+                // Dynamic Scheduling: User spoke, so reschedule future wake
                 if (processedAny && Config.DYNAMIC_SCHEDULING) {
                     Scheduler.replan(adminId, true);
                 }
@@ -191,7 +191,7 @@ function dailyMemoryCleanUp() {
 }
 
 /**
- * [NEW] 動態喚醒檢查 (取代原本的 proactiveMessageCheck)
+ * 動態喚醒檢查 (取代原本的 proactiveMessageCheck)
  * 這是由 Scheduler 動態設定的 Trigger 觸發的函式
  */
 function onWakeUp() {
