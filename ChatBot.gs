@@ -114,10 +114,14 @@ Mood: ${userState.mood}
 Energy: ${userState.energy}/10
 Busyness: ${userState.busyness}`;
 
+            // [Improvement] Inject basic knowledge (habits/schedule) into reply context
+            var basicKnowledge = GoogleSheet.searchKnowledge(Config.PROACTIVE_SEARCH_QUERY);
+
             var contextInfo = "\n\n[System Info]\nCurrent Time: " + nowStr +
                 "\nCurrent User: " + userIdentity +
                 userStateInfo +
-                "\nInstruction: " + roleInstruction;
+                "\n[Basic User Knowledge]:\n" + basicKnowledge +
+                "\n\nInstruction: " + roleInstruction;
 
             contextInfo += "\n\n[Time Awareness Instructions]\n" +
                 "請特別注意對話中的時間標籤 [YYYY/MM/DD HH:mm:ss]。\n" +
@@ -409,9 +413,17 @@ ${modeInstruction}
 核心動機：填補對主人的認知空白 (Knowledge Gap) 或 驗證主人的行為模式。
 
 [決策任務]
-請綜合以上模式與資訊，判斷是否要發送訊息？
-- 保持安靜 -> "SILENT"
-- 主動開口 -> 直接依照【當前模式】的限制回傳內容（不需要 JSON）。`;
+請綜合以上模式與資訊，判斷是否要發送訊息？請回傳 JSON 格式：
+{
+  "should_send": boolean, // true = 發送訊息, false = 保持安靜
+  "message": "...", // 如果 should_send=true，請填寫訊息內容
+  "reason": "...", // 決策理由
+  "state_update": { // (Optional) 如果你覺得主人的狀態變了(例如判斷他在忙)，請更新
+    "busyness": "high" | "normal" | "low",
+    "mood": "..."
+  }
+}
+`;
 
             var contents = [
                 { "role": "user", "parts": [{ "text": Config.CHAT_SYSTEM_PROMPT + "\n\n" + contextPrompt }] }
@@ -421,13 +433,36 @@ ${modeInstruction}
 
             if (data && data.candidates && data.candidates[0].content) {
                 var responseText = data.candidates[0].content.parts[0].text.trim();
-
-                if (responseText.toUpperCase().includes("SILENT")) {
-                    GoogleSheet.logInfo('ChatBot.decideProactiveMessage', 'AI decided to be SILENT');
-                    return null;
+                
+                // Parse JSON
+                var decision = null;
+                try {
+                    responseText = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+                    decision = JSON.parse(responseText);
+                } catch (e) {
+                    // Fallback for non-JSON response (backward compatibility)
+                    if (responseText.toUpperCase().includes("SILENT")) {
+                        decision = { should_send: false, reason: "Fallback SILENT" };
+                    } else {
+                        decision = { should_send: true, message: responseText, reason: "Fallback Message" };
+                    }
                 }
 
-                return responseText;
+                if (decision) {
+                    // 1. Update State if needed
+                    if (decision.state_update) {
+                         Mind.updateUserState(userId, decision.state_update);
+                         GoogleSheet.logInfo('ChatBot.decideProactiveMessage', 'State updated via proactive decision', decision.state_update);
+                    }
+
+                    // 2. Return message or null
+                    if (decision.should_send && decision.message) {
+                        return decision.message;
+                    } else {
+                        GoogleSheet.logInfo('ChatBot.decideProactiveMessage', 'AI decided to be SILENT. Reason: ' + (decision.reason || 'N/A'));
+                        return null;
+                    }
+                }
             }
 
             return null;
