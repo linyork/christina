@@ -81,9 +81,43 @@ var Mind = (() => {
 
             // 2. 自動記憶事實 (Knowledge Consolidation) - 長期
             if (analysis.facts && Array.isArray(analysis.facts) && analysis.facts.length > 0) {
-                analysis.facts.forEach(fact => {
-                    // 呼叫 GoogleSheet.addKnowledge，標籤設為 'auto_learned'
-                    GoogleSheet.addKnowledge(['auto_learned'], fact);
+                // Pre-fetch knowledge for deduplication
+                var existingKnowledge = [];
+                try {
+                     var result = DB().from('knowledge').execute().get();
+                     existingKnowledge = Array.isArray(result) ? result : (result ? [result] : []);
+                } catch (e) { GoogleSheet.logError('Mind.processAnalysis', 'DB Read Error', e); }
+
+                analysis.facts.forEach(factItem => {
+                    // Extract content and tag based on format (Object or String fallback)
+                    var factContent = "";
+                    var factTag = "auto_learned";
+
+                    if (typeof factItem === 'object' && factItem !== null && factItem.content) {
+                        factContent = factItem.content;
+                        if (factItem.tag) factTag = factItem.tag;
+                    } else if (typeof factItem === 'string') {
+                        factContent = factItem;
+                    }
+
+                    if (!factContent) return;
+
+                    // Check for duplicates
+                    var isDuplicate = existingKnowledge.some(k => {
+                        var kContent = (k.content || "").replace(/\s+/g, '').toLowerCase();
+                        var newFact = factContent.replace(/\s+/g, '').toLowerCase();
+                        return kContent.includes(newFact);
+                    });
+
+                    if (!isDuplicate) {
+                        // 呼叫 GoogleSheet.addKnowledge，使用分析出的 Tag
+                        GoogleSheet.addKnowledge([factTag, 'auto_learned'], factContent);
+                        
+                        // Add to local cache
+                        existingKnowledge.push({ content: factContent });
+                    } else {
+                        GoogleSheet.logInfo('Mind.processAnalysis', 'Skipped duplicate fact:', factContent);
+                    }
                 });
             }
 

@@ -70,10 +70,12 @@ var Config = (() => {
    - \`sentiment\` (String): 主人情緒 (e.g. happy, tired)。
    - \`energy_level\` (1-10): 能量 (影響你下次醒來的時間規劃)。
    - \`intent\` (String): 意圖 (chat, command, sleep, busy)。
-   - \`facts\` (Array): **長期事實** (如喜好、目標)。不含暫時資訊。
+   - \`facts\` (Array): **長期事實列表**。每項需包含：
+     - \`tag\` (String): 分類標籤 (e.g., "work", "preference", "health", "life")。⚠️ 務必分類，勿全部使用 auto。
+     - \`content\` (String): 事實內容。⚠️ 嚴格過濾：僅儲存「永久性、新穎」的資訊。禁止儲存重複資訊或短期狀態。
    - \`detected_behavior\` (String): 行為模式 (如 wake_up, go_to_sleep)。
 
-格式範例：{"reply": "...", "analysis": {"sentiment": "tired", "energy_level": 3, "intent": "sleep", "facts": [], "detected_behavior": "go_to_sleep"}}
+格式範例：{"reply": "...", "analysis": {"sentiment": "tired", "energy_level": 3, "intent": "sleep", "facts": [{"tag": "work", "content": "主人是工程師"}], "detected_behavior": "go_to_sleep"}}
 `,
 
     // Debug Mode (從 env sheet B2 讀取)
